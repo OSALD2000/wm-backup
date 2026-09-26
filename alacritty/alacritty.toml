@@ -1,0 +1,17 @@
+[general]
+import = [
+    "~/.config/alacritty/themes/themes/autumn.toml"
+]
+
+[font]
+size=9
+
+
+[[keyboard.bindings]]
+key = "Return"
+mods = "Shift"
+chars = "\u001B\r"
+
+[[keyboard.bindings]]
+key = "Back"
+chars = "\u0008"

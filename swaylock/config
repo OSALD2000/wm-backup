@@ -1,0 +1,54 @@
+# swaylock — Nord. Sway-Session only: i3 benutzt i3lock, ein anderes Binary,
+# das diese Datei nie liest. Deshalb braucht es hier keine Isolation.
+#
+# Gelesen wird die Datei automatisch bei jedem `swaylock` ohne Argumente —
+# also auch aus swayidle und aus dem Power-Menue. Farben ohne '#'.
+
+image=/home/osa/Private/wallpaper.jpg
+scaling=fill
+
+# KEIN effect-blur / effect-vignette: die gibt es nur in swaylock-EFFECTS,
+# einem Fork, der nicht in den Ubuntu-Repos liegt. Plain swaylock 1.8.4 bricht
+# mit "unrecognized option" ab und sperrt dann GAR NICHT.
+# Ebenso kein blankes "indicator" — getopt hier meldet
+# "option '--indicator' is ambiguous", weil es nur die laengeren Varianten
+# gibt. Der Indikator erscheint ohnehin bei Eingabe.
+# Config gegen die echte Optionsliste pruefen:
+#   swaylock --help | grep -oE '\-\-[a-z-]+' | sort > /tmp/opts
+indicator-radius=96
+indicator-thickness=6
+indicator-caps-lock
+
+font=Iosevka Nerd Font
+font-size=12
+
+# Ruhezustand: warmes Tan auf Warmschwarz
+ring-color=8A8069
+inside-color=1C1A15CC
+line-color=00000000
+text-color=E8E1CF
+separator-color=00000000
+
+# Eingabe
+ring-ver-color=A89B77
+inside-ver-color=1C1A15CC
+text-ver-color=C4B78F
+
+key-hl-color=C4B78F
+bs-hl-color=D8A24A
+
+# Falsches Passwort: Ziegelrot
+ring-wrong-color=C4553D
+inside-wrong-color=1C1A15CC
+text-wrong-color=C4553D
+
+# Caps Lock aktiv — der Grund, warum man sich dreimal vertippt
+ring-caps-lock-color=D8A24A
+caps-lock-key-hl-color=D8A24A
+caps-lock-bs-hl-color=C4553D
+text-caps-lock-color=D8A24A
+
+# Leerer Ring, solange nichts passiert
+ring-clear-color=A89B77
+inside-clear-color=1C1A15CC
+text-clear-color=A89B77

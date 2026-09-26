@@ -1,0 +1,295 @@
+// waybar — Sway-Session. i3 behaelt swaybar + i3status unveraendert.
+//
+// Form: GNOME-artig. Links Launcher + Workspaces + Fenstertitel, mittig die
+// Uhr mit Kalender, rechts der Status-Cluster mit echten Klick-Menues.
+// Kein Fenster-Button-Streifen — die 12 assign-Workspaces leisten das schon.
+//
+// ALLE Icons stehen als \uXXXX-Escape, nicht als Zeichen. Nerd-Font-Glyphen
+// liegen in der Private Use Area (U+E000–U+F8FF) und gehen beim Kopieren durch
+// Editoren, Terminals und Zwischenablagen gerne verloren — dann steht hier ein
+// leerer String und die Bar zeigt nackte Zahlen. Escapes sind reines ASCII und
+// ueberleben das. Vor dem Aendern pruefen, ob der Codepoint im Font ist:
+//   fc-list ':charset=f185' family | grep Iosevka
+//
+// ponytail: Tray und Glocke laufen auf *jeder* Bar, nicht nur auf dem
+// Mittelschirm. waybar kennt keine Fallback-Listen wie `workspace output`, und
+// ein dreifaches Tray ist haesslicher als ein fehlendes gefaehrlich ist.
+// Upgrade-Pfad wenn es stoert: zwei Bar-Objekte in diesem Array, das zweite
+// mit "output": ["!DP-7", "*"] und ohne tray/custom-notification.
+{
+  "layer": "top",
+  "position": "top",
+  // Durchgehend von links nach rechts, kein Rand, keine Inseln.
+  // Die Flaeche traegt window#waybar in style.css.
+  "height": 30,
+  "spacing": 0,
+
+  "modules-left": [
+    "custom/launcher",
+    "sway/workspaces",
+    "sway/mode",
+    "sway/scratchpad",
+    "sway/window"
+  ],
+  "modules-center": ["clock"],
+  "modules-right": [
+    "custom/ipv6",
+    "network#v4",
+    "disk",
+    "memory",
+    "cpu",
+    "idle_inhibitor",
+    "backlight",
+    "pulseaudio",
+    "network",
+    "power-profiles-daemon",
+    "battery",
+    "tray",
+    "custom/notification",
+    "custom/power"
+  ],
+
+  // ── links ──────────────────────────────────────────────────────────────────
+  "custom/launcher": {
+    "format": "\uf00a",
+    "tooltip": false,
+    "on-click": "rofi -config ~/.config/rofi/config-nord.rasi -modi drun,run -show drun"
+  },
+
+  "sway/workspaces": {
+    "disable-scroll": true,
+    "all-outputs": false,
+    // Die Workspace-Namen sind "1 : Home", "9 : Teams" usw. In der Bar reicht
+    // die Zahl. Wichtig: {icon}, nicht {name} — mit {name} waere die
+    // format-icons-Tabelle unten wirkungslos und es stuende "1 : Home" in der
+    // Leiste.
+    "format": "{icon}",
+    "format-icons": {
+      "1 : Home": "1",
+      "2 : Chrome": "2",
+      "3 : Chrome": "3",
+      "4 : IDE": "4",
+      "5 : Intellij": "5",
+      "6 : VsCode": "6",
+      "7 : KeePassXC": "7",
+      "8 : Todos": "8",
+      "9 : Teams": "9",
+      "10 : youtube": "10",
+      "11 : Trading": "11",
+      "12 : Trading": "12"
+    }
+  },
+
+  "sway/mode": {
+    "format": "{}",
+    "tooltip": false
+  },
+
+  "sway/scratchpad": {
+    "format": "\uf0c9 {count}",
+    "show-empty": false,
+    "tooltip": true,
+    "tooltip-format": "{app}: {title}"
+  },
+
+  "sway/window": {
+    "format": "{title}",
+    "max-length": 60,
+    "tooltip": false,
+    "rewrite": {
+      "(.*) — Mozilla Firefox": "$1",
+      "(.*) - Google Chrome": "$1",
+      "(.*) - Visual Studio Code": "$1"
+    }
+  },
+
+  // ── mitte ──────────────────────────────────────────────────────────────────
+  "clock": {
+    "format": "{:%H:%M}",
+    "format-alt": "{:%a %d. %B %Y   %H:%M}",
+    "tooltip-format": "<tt>{calendar}</tt>",
+    "calendar": {
+      "mode": "month",
+      "weeks-pos": "left",
+      "format": {
+        "months": "<span color='#ECEFF4'><b>{}</b></span>",
+        "weeks": "<span color='#4C566A'>{}</span>",
+        "weekdays": "<span color='#81A1C1'><b>{}</b></span>",
+        "today": "<span color='#88C0D0'><b>{}</b></span>"
+      }
+    },
+    "actions": {
+      "on-click": "mode",
+      "on-scroll-up": "shift_up",
+      "on-scroll-down": "shift_down"
+    }
+  },
+
+  // ── rechts ─────────────────────────────────────────────────────────────────
+  "idle_inhibitor": {
+    "format": "{icon}",
+    "format-icons": { "activated": "\uf06e", "deactivated": "\uf070" },
+    "tooltip-format-activated": "Bildschirm bleibt an",
+    "tooltip-format-deactivated": "Sperre nach 10 min aktiv"
+  },
+
+  "backlight": {
+    "device": "amdgpu_bl1",
+    "format": "\uf185 {percent}%",
+    "tooltip-format": "Helligkeit {percent}%",
+    "on-scroll-up": "brightnessctl set 5%+",
+    "on-scroll-down": "brightnessctl set 5%-"
+  },
+
+  "pulseaudio": {
+    "format": "{icon} {volume}%",
+    // stummgeschaltet: dieselbe Glyphe, aber per CSS (.muted) auf nord3
+    // gedaempft. Zustand ueber Farbe, nicht ueber eine zweite Form.
+    "format-muted": "\uf026",
+    "format-bluetooth": "{icon}\uf293 {volume}%",
+    "format-bluetooth-muted": "\uf026\uf293",
+    "format-icons": {
+      "headphone": "\uf025",
+      "headset": "\uf025",
+      "default": ["\uf026", "\uf027", "\uf028"]
+    },
+    "tooltip-format": "{desc} — {volume}%",
+    "on-click": "pavucontrol",
+    "on-click-right": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
+    "scroll-step": 5
+  },
+
+  // NICHT in modules-right: bluetooth.service ist auf diesem System
+  // inactive+disabled, also gibt es kein org.bluez und waybar meldet einen
+  // Fehler. Willst du Bluetooth nutzen:
+  //   sudo systemctl enable --now bluetooth
+  // dann "bluetooth" wieder in modules-right eintragen. Der Block hier ist
+  // fertig konfiguriert und wartet nur.
+  "bluetooth": {
+    "format": "\uf293",
+    "format-disabled": "\uf293",
+    "format-connected": "\uf294 {num_connections}",
+    "tooltip-format": "{controller_alias}",
+    "tooltip-format-connected": "{controller_alias}\n{device_enumerate}",
+    "tooltip-format-enumerate-connected": "{device_alias}",
+    "on-click": "blueman-manager"
+  },
+
+  // ── Systeminfo ────────────────────────────────────────────────────────────
+  // Ersetzt, was i3status hatte (disk /, memory, load) — dort war es
+  // allerdings ungefiltert: zwei RAM-Werte, Akku mit zwei Dezimalstellen und
+  // ein leerer Block. Hier steht pro Modul genau eine Zahl, Details im Tooltip.
+  "disk": {
+    "path": "/",
+    "interval": 60,
+    "format": "\uf0a0 {free}",
+    "tooltip-format": "{path}  {used} von {total} belegt ({percentage_used}%)\n{free} frei"
+  },
+
+  // Glyphen gegen die Fontdatei gerendert geprueft, nicht nach Namen geraten:
+  // U+F0A0 Festplatte, U+F2DB Mikrochip, U+F0E4 Tacho. U+F538 heisst in
+  // Nerd-Font-Tabellen "memory", ist in Iosevka aber ein KOMPASS.
+  // Pruefen mit:
+  //   magick -font ~/.local/share/fonts/iosevka_nerd_font.ttf -pointsize 40 \
+  //     label:"$(printf '\uf2db')" out.png
+  "memory": {
+    "interval": 5,
+    // {avail} ist der wirklich nutzbare Speicher (ohne Cache), nicht {free}.
+    "format": "\uf2db {avail:0.0f}G",
+    "tooltip-format": "RAM  {used:0.1f}G von {total:0.1f}G belegt ({percentage}%)\n{avail:0.1f}G verfuegbar\nSwap {swapUsed:0.1f}G von {swapTotal:0.1f}G ({swapPercentage}%)"
+  },
+
+  "cpu": {
+    "interval": 5,
+    "format": "\uf0e4 {load:0.2f}",
+    "tooltip-format": "Last {load:0.2f}  |  Auslastung {usage}%"
+  },
+
+  // Zwei network-Instanzen: waybar hat kein IPv6-Format-Token, aber eine
+  // family-Option. Textlabel statt Icon, weil "v4"/"v6" eindeutig ist und in
+  // Monospace schmaler baut als ein Globus plus Erklaerung.
+  "network#v4": {
+    "family": "ipv4",
+    "interval": 10,
+    "format": "v4 {ipaddr}",
+    "format-disconnected": "v4 —",
+    "tooltip-format": "{ifname}  {ipaddr}/{cidr}\nGateway {gwaddr}"
+  },
+
+  // Kein network#v6: waybar nimmt dort die ERSTE Adresse mit global scope,
+  // und das ist auf diesem Rechner eine ULA (fd00:..., privat, routet nicht
+  // ins Internet). Das Skript filtert fc00::/7 weg und liefert die
+  // oeffentliche 2a02:... — dieselbe, die i3status unter i3 zeigte.
+  "custom/ipv6": {
+    "exec": "~/.config/sway/scripts/ipv6.sh",
+    "interval": 30,
+    "format": "v6 {}",
+    "tooltip": false
+  },
+
+  "network": {
+    "format-wifi": "\uf1eb {signalStrength}%",
+    "format-ethernet": "\uf0e8",
+    "format-linked": "\uf0e8",
+    "format-disconnected": "\uf127",
+    "tooltip-format-wifi": "{essid}\n{ipaddr}\n↓ {bandwidthDownBits}  ↑ {bandwidthUpBits}",
+    "tooltip-format-ethernet": "{ifname}\n{ipaddr}\n↓ {bandwidthDownBits}  ↑ {bandwidthUpBits}",
+    "tooltip-format-disconnected": "Keine Verbindung",
+    "on-click": "nm-connection-editor"
+  },
+
+  "power-profiles-daemon": {
+    "format": "{icon}",
+    "tooltip-format": "Profil: {profile}\nTreiber: {driver}",
+    "format-icons": {
+      "default": "\uf24e",
+      "performance": "\uf0e7",
+      "balanced": "\uf24e",
+      "power-saver": "\uf06c"
+    }
+  },
+
+  "battery": {
+    "states": { "warning": 25, "critical": 12 },
+    "format": "{icon} {capacity}%",
+    "format-charging": "\uf0e7 {capacity}%",
+    "format-plugged": "\uf1e6 {capacity}%",
+    "format-icons": ["\uf244", "\uf243", "\uf242", "\uf241", "\uf240"],
+    "tooltip-format": "{timeTo}  ({power:.1f} W)",
+    "interval": 30
+  },
+
+  "tray": {
+    "icon-size": 16,
+    "spacing": 10
+  },
+
+  // swaync-Anbindung: liefert JSON mit Zustand + Zaehler.
+  // \uf0f3 = Glocke, \uf1f6 = Glocke durchgestrichen (Nicht-Stoeren).
+  "custom/notification": {
+    "tooltip": false,
+    "format": "{icon}",
+    "format-icons": {
+      "notification": "<span foreground='#6E2620'>\uf0f3</span>",
+      "none": "\uf0f3",
+      "dnd-notification": "<span foreground='#6E2620'>\uf1f6</span>",
+      "dnd-none": "\uf1f6",
+      "inhibited-notification": "<span foreground='#6E2620'>\uf0f3</span>",
+      "inhibited-none": "\uf0f3",
+      "dnd-inhibited-notification": "<span foreground='#6E2620'>\uf1f6</span>",
+      "dnd-inhibited-none": "\uf1f6"
+    },
+    "return-type": "json",
+    "exec-if": "which swaync-client",
+    "exec": "swaync-client -swb",
+    "on-click": "swaync-client -t -sw",
+    "on-click-right": "swaync-client -d -sw",
+    "escape": true
+  },
+
+  "custom/power": {
+    "format": "\uf011",
+    "tooltip": false,
+    "on-click": "~/.config/sway/scripts/powermenu.sh"
+  }
+}

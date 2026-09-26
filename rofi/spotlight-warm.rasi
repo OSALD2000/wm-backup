@@ -1,0 +1,146 @@
+/* SPOTLIGHT WARM — App-Menue der Sway-Session.
+ *
+ * Abgeleitet von themes/spotlight-dark.rasi (Newman Sanchez), umgefaerbt auf
+ * denselben warmen Ton wie die waybar-Leiste (#A89B77) und auf kleinere
+ * Schrift gezogen. Die Vorlage liegt unveraendert in themes/ (gehoert root,
+ * deshalb steht diese Datei eine Ebene hoeher).
+ * Die i3-Session nutzt weiter windows11-list-dark.
+ *
+ * KONTRASTE gegen den Grund #1C1A15 — gerechnet, nicht geschaetzt:
+ *   #E8E1CF warmweiss      13.33:1   Primaertext
+ *   #C4B78F tan hell        8.71:1   Treffer-Hervorhebung
+ *   #A89B77 tan (Leiste)    6.31:1   Akzent, Fuellung
+ *   #8A8069 gedaempft       4.45:1   Sekundaertext, Platzhalter
+ *   #6B6250                 2.89:1   ZU WENIG, nicht benutzen
+ * Markierte Zeile: Fuellung #A89B77 mit Text #1C1A15 = 6.31:1.
+ *
+ * ACHTUNG bei Variablennamen: rofi-rasi erlaubt KEINE Unterstriche. "tan_hi"
+ * laesst das ganze Theme mit "Failed to parse theme" durchfallen — und zwar
+ * OHNE Zeilenangabe, anders als bei anderen Syntaxfehlern. Deshalb "tanhi".
+ * Testen mit: rofi -theme <datei> -dump-theme 2>&1 | grep -i failed
+ */
+
+* {
+    /* kleiner als vorher: Zeilen 13 -> 11, Suchzeile 19 -> 15 */
+    font:   "Iosevka Nerd Font 11";
+
+    ground:     #1C1A15;
+    ink:        #E8E1CF;
+    dim:        #8A8069;
+    tan:        #A89B77;
+    tanhi:     #C4B78F;
+
+    /* Transparenz: EB = 92%.
+     *
+     * Bei C4 (77%) war der Kontrast rechnerisch weiter ok (6.31:1 selbst ueber
+     * Weiss), aber der Text DAHINTER blieb als Muster lesbar und stoerte die
+     * Liste. Das ist kein Luminanzproblem, dagegen hilft nur Deckkraft —
+     * Weichzeichnen kann Sway nicht (dafuer braeuchte es SwayFX, nicht in den
+     * Ubuntu-Repos).
+     *
+     * Stellschraube: die letzten zwei Hex-Stellen. C4=77% D9=85% EB=92%
+     * F5=96% FF=deckend. Unter ~E0 wird es ueber Textfenstern unruhig. */
+    bg0:        #1C1A15EB;
+    sep:        #A89B7733;
+
+    background-color:   transparent;
+    text-color:         @ink;
+
+    margin:     0;
+    padding:    0;
+    spacing:    0;
+}
+
+window {
+    background-color:   @bg0;
+
+    location:       center;
+    anchor:         center;
+    /* schmaler: 680 -> 600 */
+    width:          600px;
+    border:         1px;
+    border-color:   #A89B7759;
+    border-radius:  10px;
+}
+
+/* ── Suchzeile ─────────────────────────────────────────────────────────────*/
+inputbar {
+    font:       "Iosevka Nerd Font 15";
+    padding:    12px 16px;
+    spacing:    11px;
+    children:   [ icon-search, entry ];
+}
+
+icon-search {
+    expand:     false;
+    filename:   "system-search-symbolic";
+    size:       20px;
+}
+
+icon-search, entry, element-icon, element-text {
+    vertical-align: 0.5;
+}
+
+entry {
+    font:               inherit;
+    text-color:         @ink;
+    placeholder:        "Suchen";
+    placeholder-color:  @dim;
+    cursor:             text;
+}
+
+/* ── Liste ─────────────────────────────────────────────────────────────────*/
+listview {
+    lines:          8;
+    columns:        1;
+    fixed-height:   false;
+    scrollbar:      false;
+    /* seitlicher Innenabstand, damit die markierte Pille eingerueckt sitzt */
+    padding:        5px 6px;
+    border:         1px 0 0;
+    border-color:   @sep;
+}
+
+element {
+    /* flacher: 11px -> 7px Innenabstand */
+    padding:            7px 14px;
+    spacing:            12px;
+    border-radius:      7px;
+    background-color:   transparent;
+    cursor:             pointer;
+}
+
+element normal active,
+element alternate active { text-color: @tanhi; }
+
+element selected normal,
+element selected active {
+    background-color:   @tan;
+    text-color:         @ground;
+}
+
+element-icon {
+    /* App-Icons kleiner: 26 -> 20 */
+    size:               20px;
+    background-color:   transparent;
+}
+
+element-text {
+    text-color:         inherit;
+    /* highlight nimmt keine @-Referenz, nur einen Literalwert — rofi meldet
+     * sonst "syntax error, unexpected Reference". Deshalb hier Hex. */
+    highlight:          bold #C4B78F;
+}
+
+element selected element-text { highlight: bold #1C1A15; }
+
+/* ── Meldungen (z. B. "kein Treffer") ──────────────────────────────────────*/
+message {
+    padding:        8px 16px;
+    border:         1px 0 0;
+    border-color:   @sep;
+}
+textbox {
+    text-color:     @dim;
+    padding:        0;
+}
