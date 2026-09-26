@@ -1,0 +1,16 @@
+/* Neuer Tab / Startseite: gelbes λ auf Schwarz wie das Wallpaper. */
+@-moz-document url("about:newtab"), url("about:home") {
+  body, html {
+    background: #1B1B1C url("ntp.jpg") center / cover no-repeat fixed !important;
+    color: #FFDC00 !important;
+  }
+  /* Firefox-Lila der Startseite -> HUD-Gelb */
+  :root {
+    --newtab-primary-action-background: #FFDC00 !important;
+    --newtab-primary-element-hover-color: #FFE84D !important;
+    --newtab-primary-element-text-color: #000 !important;
+    --newtab-background-color-secondary: rgba(40, 36, 24, 0.85) !important;
+    --newtab-text-primary-color: #FFDC00 !important;
+    --newtab-element-hover-color: rgba(255, 220, 0, 0.12) !important;
+  }
+}
