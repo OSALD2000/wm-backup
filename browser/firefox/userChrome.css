@@ -1,0 +1,40 @@
+/* Firefox-Oberflaeche im HL2-HUD-Stil (2004), passend zu Sway/Waybar/eww.
+ * BrightFg #FFDC00 auf warmem Schwarz, gedimmtes Gelb fuer Nebensachen.
+ * Aktiviert ueber user.js (toolkit.legacyUserProfileCustomizations.stylesheets).
+ * Zurueck: diese Datei loeschen. */
+:root {
+  --hl2-bright: #FFDC00;
+  --hl2-dim:    #8C7A1E;
+  --hl2-ground: #141310;
+  --hl2-box:    #282418;
+  --hl2-edge:   rgba(255, 220, 0, 0.25);
+
+  --lwt-accent-color: var(--hl2-ground) !important;
+  --lwt-accent-color-inactive: var(--hl2-ground) !important;
+  --lwt-text-color: var(--hl2-dim) !important;
+  --tab-selected-bgcolor: var(--hl2-box) !important;
+  --tab-selected-textcolor: var(--hl2-bright) !important;
+  --toolbar-bgcolor: var(--hl2-box) !important;
+  --toolbar-color: var(--hl2-bright) !important;
+  --toolbarbutton-icon-fill: var(--hl2-bright) !important;
+  --toolbar-field-background-color: var(--hl2-ground) !important;
+  --toolbar-field-focus-background-color: var(--hl2-ground) !important;
+  --toolbar-field-color: var(--hl2-bright) !important;
+  --toolbar-field-focus-color: var(--hl2-bright) !important;
+  --toolbar-field-border-color: var(--hl2-edge) !important;
+  --toolbar-field-focus-border-color: var(--hl2-bright) !important;
+  --urlbarView-highlight-background: var(--hl2-bright) !important;
+  --urlbarView-highlight-color: #000 !important;
+  --arrowpanel-background: var(--hl2-ground) !important;
+  --arrowpanel-color: var(--hl2-bright) !important;
+  --arrowpanel-border-color: var(--hl2-edge) !important;
+  --sidebar-background-color: var(--hl2-ground) !important;
+  --sidebar-text-color: var(--hl2-bright) !important;
+  --focus-outline-color: var(--hl2-bright) !important;
+  --toolbarseparator-color: var(--hl2-edge) !important;
+}
+
+/* aktiver Tab: gelbe Kante oben, wie der aktive Workspace-Kasten in der Waybar */
+.tab-background[selected] {
+  border-top: 2px solid var(--hl2-bright) !important;
+}

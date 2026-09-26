@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "HL2 HUD",
+  "version": "1.0",
+  "description": "Half-Life-2-HUD-Farben passend zu Sway/Waybar/eww: #FFDC00 auf warmem Schwarz.",
+  "theme": {
+    "images": {
+      "theme_ntp_background": "images/ntp.jpg"
+    },
+    "colors": {
+      "frame": [20, 19, 16],
+      "frame_inactive": [20, 19, 16],
+      "frame_incognito": [20, 19, 16],
+      "frame_incognito_inactive": [20, 19, 16],
+      "toolbar": [40, 36, 24],
+      "toolbar_text": [255, 220, 0],
+      "toolbar_button_icon": [255, 220, 0],
+      "tab_text": [255, 220, 0],
+      "tab_background_text": [140, 122, 30],
+      "tab_background_text_inactive": [140, 122, 30],
+      "bookmark_text": [212, 208, 196],
+      "omnibox_background": [20, 19, 16],
+      "omnibox_text": [255, 220, 0],
+      "ntp_background": [27, 27, 28],
+      "ntp_text": [255, 220, 0],
+      "ntp_link": [255, 220, 0],
+      "button_background": [40, 36, 24]
+    },
+    "properties": {
+      "ntp_background_alignment": "center",
+      "ntp_background_repeat": "no-repeat"
+    }
+  }
+}
