@@ -1,0 +1,339 @@
+# sway config — Port von ~/.config/i3/config
+# Ultra minimal — white/grey palette, clean bar
+#
+# Sway liest diese Datei statt ~/.config/i3/config. Die i3-Config bleibt
+# unangetastet und weiter funktionsfaehig: Rollback = am GDM-Anmeldebildschirm
+# Session "i3" waehlen.
+
+# Diese Schrift traegt die Tab-Titel im tabbed/stacked-Layout
+# ($mod+w / $mod+s). 9 -> 8, damit die App-Namen dort kleiner sind.
+font pango:JetBrains Mono, Iosevka Nerd Font 8
+
+# ── Input ─────────────────────────────────────────────────────────────────────
+# Kommt unter X11 aus /etc/default/keyboard, das liest Sway nicht. Ohne diesen
+# Block laeuft jede Tastatur auf us.
+input type:keyboard {
+    xkb_layout de
+    xkb_options caps:escape
+}
+
+input type:touchpad {
+    tap enabled
+    natural_scroll disabled
+}
+
+# ── Environment ───────────────────────────────────────────────────────────────
+# Sway kennt keine env-Direktive (das ist Hyprland). Die Wayland-/Qt-Vars stehen
+# in ~/.config/environment.d/50-wayland.conf, systemd --user vererbt sie beim
+# Login an die Session. Aenderungen dort brauchen ein Logout.
+
+# ── Autostart ─────────────────────────────────────────────────────────────────
+exec --no-startup-id dex --autostart --environment sway
+# Monitore anordnen: dynamisch, egal wie viele angesteckt sind. Bei Dock-Wechsel
+# mitten in der Session: $mod+Shift+s. exec_always, weil ein Reload ($mod+Shift+c)
+# die per swaymsg gesetzten Positionen verwirft und Sway dann selbst anordnet.
+exec_always --no-startup-id ~/.config/sway/scripts/screens.py
+# xss-lock + i3lock -> swayidle + swaylock. before-sleep deckt ab, was
+# --transfer-sleep-lock in i3 gemacht hat.
+# Kein -i/--scaling hier: das steht in ~/.config/swaylock/config und gilt damit
+# auch fuer den Ruf aus dem Power-Menue.
+# learn.py stop: Lern-Timer anhalten (bei Idle ohne die 10 Leerlauf-Minuten)
+exec --no-startup-id swayidle -w \
+    timeout 600 '/home/osa/.config/eww/scripts/learn.py stop --idle 600; swaylock -f' \
+    before-sleep '/home/osa/.config/eww/scripts/learn.py stop; swaylock -f'
+# nm-applet ist auf diesem System nicht installiert — die Zeile war schon in
+# der i3-Config ein No-op. Wieder haben wollen:
+#   sudo apt install network-manager-gnome
+#   exec --no-startup-id nm-applet --indicator   (--indicator, sonst kein Tray)
+exec --no-startup-id keepassxc
+# swaync statt dunst: Verlauf, Nicht-Stoeren und ein Panel hinter der Glocke in
+# der Bar — das GNOME-Gegenstueck. dunst hat keinen Verlauf. i3 behaelt dunst
+# und sein dunstrc unveraendert.
+#
+# Das pkill davor ist kein Aberglaube: dunst und swaync streiten sich um
+# org.freedesktop.Notifications auf dem D-Bus. Wer zuerst da ist, gewinnt, der
+# zweite beendet sich still — und dann zeigt die Glocke in der Bar fuer immer
+# "keine Benachrichtigungen", waehrend dunst sie im alten Blassgelb zustellt.
+# Gilt auch nach dem Wechsel aus einer i3-Session ohne Neustart.
+exec_always --no-startup-id "pkill -x dunst; pkill -x swaync; swaync"
+# exec_always ohne pkill wuerde bei jedem $mod+Shift+c eine weitere waybar
+# starten, bis drei uebereinander liegen.
+exec_always --no-startup-id "pkill -x waybar; waybar"
+exec_always --no-startup-id copyq
+
+exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=sway
+# picom entfaellt — Sway komponiert selbst. Die picom.conf machte nur Shadows,
+# Fading und corner-radius, alle Opacity-Werte standen auf 1.0. Rein kosmetisch.
+# xset s off / xset -dpms entfallen — Blanking regelt allein swayidle oben.
+
+# ── Variables ─────────────────────────────────────────────────────────────────
+set $mod Mod4
+set $up l
+set $down k
+set $left j
+set $right semicolon
+set $private_shell /home/osa/Private/shell_scripts
+
+# ── Colors — Nord ─────────────────────────────────────────────────────────────
+# Dieselbe Palette wie waybar, rofi, swaync, swaylock und Alacritty-nord.
+# i3 behaelt sein Grau; die Werte hier gelten nur fuer die Sway-Session.
+set $nord0  #2E3440
+set $nord1  #3B4252
+set $nord2  #434C5E
+set $nord3  #4C566A
+set $nord4  #D8DEE9
+set $nord6  #ECEFF4
+set $nord8  #88C0D0
+set $nord11 #BF616A
+
+# Warme Palette — dieselbe wie waybar, rofi und swaync. Die nord*-Werte
+# darueber stehen nur noch als Referenz drin.
+# Kontraste gegen den Grund #1C1A15: #E8E1CF 13.33:1, #A89B77 6.31:1,
+# #8A8069 4.45:1, #C4553D 3.90:1.
+set $warm         #A89B77
+set $warm_ground  #1C1A15
+set $warm_card    #343026
+set $warm_line    #3A352C
+set $warm_ink     #E8E1CF
+set $warm_dim     #8A8069
+set $warm_brick   #C4553D
+
+set $black        $warm_ground
+set $dark         $warm_card
+set $border_act   $warm
+set $border_inact $warm_line
+set $text         $warm_ink
+set $text_dim     $warm_dim
+set $urgent       $warm_brick
+
+# ── Wallpaper ─────────────────────────────────────────────────────────────────
+# native Direktive statt feh; kein separater swaybg-exec noetig
+output * bg /home/osa/Private/wallpaper.jpg fill
+
+# ── Window Borders ────────────────────────────────────────────────────────────
+# i3 hatte hier for_window [class="^.*"] border pixel 1 — ein class-Match
+# greift bei nativen Wayland-Fenstern gar nicht, also die echten Defaults:
+default_border pixel 1
+default_floating_border pixel 1
+hide_edge_borders both
+smart_borders on
+
+# border          background  text       indicator     child_border
+client.focused          $border_act   $dark   $text      $border_act   $border_act
+client.unfocused        $border_inact $black  $text_dim  $border_inact $border_inact
+client.focused_inactive $border_inact $black  $text_dim  $border_inact $border_inact
+client.urgent           $urgent       $urgent $text      $urgent       $urgent
+
+# ── Gaps ──────────────────────────────────────────────────────────────────────
+gaps inner 10
+gaps outer 2
+smart_gaps on
+
+# ── Volume / Brightness ───────────────────────────────────────────────────────
+# $refresh_i3status entfaellt: waybar bekommt Pegel und Helligkeit ueber
+# PipeWire bzw. sysfs selbst mit, es gibt nichts anzustossen.
+bindsym XF86AudioRaiseVolume  exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ +5% && $HOME/Private/shell_scripts/volume_script.sh
+bindsym XF86AudioLowerVolume  exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ -5% && $HOME/Private/shell_scripts/volume_script.sh
+bindsym XF86AudioMute         exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle
+bindsym XF86AudioMicMute      exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle
+bindsym XF86MonBrightnessUp   exec --no-startup-id /usr/bin/brightnessctl set 25+
+bindsym XF86MonBrightnessDown exec --no-startup-id /usr/bin/brightnessctl set 25-
+
+# ── Screenshot ────────────────────────────────────────────────────────────────
+# nur der fokussierte Monitor (~/.local/bin/shot-wl); grim/slurp statt scrot/xclip
+bindsym Print       exec --no-startup-id ~/.local/bin/shot-wl
+bindsym Ctrl+Print  exec --no-startup-id ~/.local/bin/shot-wl clip
+bindsym Shift+Print exec --no-startup-id grim -g "$(slurp)" - | wl-copy
+
+# ── Window Management ─────────────────────────────────────────────────────────
+tiling_drag enable
+bindsym $mod+Return      exec alacritty
+bindsym $mod+Shift+q     kill
+bindsym $mod+d           exec "rofi -config ~/.config/rofi/config-nord.rasi -modi drun,run -show drun"
+
+bindsym $mod+$left  focus left
+bindsym $mod+$down  focus down
+bindsym $mod+$up    focus up
+bindsym $mod+$right focus right
+bindsym $mod+Left   focus left
+bindsym $mod+Down   focus down
+bindsym $mod+Up     focus up
+bindsym $mod+Right  focus right
+bindsym $mod+q      focus up
+
+bindsym $mod+Shift+$left  move left
+bindsym $mod+Shift+$down  move down
+bindsym $mod+Shift+$up    move up
+bindsym $mod+Shift+$right move right
+bindsym $mod+Shift+Left   move left
+bindsym $mod+Shift+Down   move down
+bindsym $mod+Shift+Up     move up
+bindsym $mod+Shift+Right  move right
+
+bindsym $mod+h          split h
+bindsym $mod+v          split v
+bindsym $mod+f          fullscreen toggle
+bindsym $mod+s          layout stacking
+bindsym $mod+w          layout tabbed
+bindsym $mod+e          layout toggle split
+bindsym $mod+Shift+space floating toggle
+bindsym $mod+space      focus mode_toggle
+bindsym $mod+a          focus parent
+
+bindsym $mod+Shift+minus move scratchpad
+bindsym $mod+minus       scratchpad show
+
+# ── Workspaces ────────────────────────────────────────────────────────────────
+set $ws1  "1 : Home"
+set $ws2  "2 : Chrome"
+set $ws3  "3 : Chrome"
+set $ws4  "4 : IDE"
+set $ws5  "5 : Intellij"
+set $ws6  "6 : VsCode"
+set $ws7  "7 : KeePassXC"
+set $ws8  "8 : Todos"
+set $ws9  "9 : Teams"
+set $ws10 "10 : youtube"
+set $ws11 "11 : Trading"
+set $ws12 "12 : Trading"
+
+# Jede Regel zweimal: class/instance greift bei XWayland-Fenstern, app_id bei
+# nativen Wayland-Fenstern (dort ist class immer null). Welchen Weg eine App
+# nimmt, entscheidet sie selbst und kann sich mit dem naechsten Update aendern
+# — beide Varianten anzugeben ist billiger als es nachzujagen.
+# Nachpruefen mit: swaymsg -t get_tree | grep -E '"(app_id|class|instance)"'
+assign [class="jetbrains-idea"]                          $ws5
+assign [app_id="jetbrains-idea"]                         $ws5
+assign [class="Code"]                                    $ws6
+assign [app_id="code"]                                   $ws6
+assign [class="KeePassXC"]                               $ws7
+assign [app_id="org.keepassxc.KeePassXC"]                $ws7
+assign [instance="crx_pkakhoojapanfmkoegaeonmdcmmcjfll"] $ws8
+assign [app_id="chrome-pkakhoojapanfmkoegaeonmdcmmcjfll-Profile_1"] $ws8
+assign [instance="crx_cifhbcnohmdccbgoicgdjpfamggdegmo"] $ws9
+assign [app_id="chrome-cifhbcnohmdccbgoicgdjpfamggdegmo-Profile_1"] $ws9
+assign [instance="crx_agimnkijcaahngcdmfeangaknmldooml"] $ws10
+assign [app_id="chrome-agimnkijcaahngcdmfeangaknmldooml-Profile_1"] $ws10
+
+# ── Workspace → Output ────────────────────────────────────────────────────────
+# Fallback-Listen: Sway nimmt den ersten *aktiven* Output der Liste und wertet
+# das bei Hotplug selbst neu aus. Deckt jeden Platz ab (links ist HDMI-A-1,
+# DP-8 oder DP-9, je nach Dock) und faellt auf den Laptop zurueck, wenn nichts
+# angesteckt ist. Reihenfolge = scripts/screens.py: extern absteigend, Laptop
+# zuletzt.
+# Achtung: unter X11 hiess der HDMI-Ausgang HDMI-1, Sway nutzt den
+# DRM-Connector-Namen HDMI-A-1.
+set $mon_l HDMI-A-1 DP-9 DP-8 DP-7 eDP-1
+set $mon_m DP-7 DP-8 DP-9 HDMI-A-1 eDP-1
+# $mon_r: Laptop zuerst. Faellt danach auf *links* zurueck, nicht auf die
+# Mitte — wenn der Laptop aus ist ($mod+Ctrl+s), soll der Code-Schirm nicht
+# zusaetzlich Teams und YouTube abbekommen.
+set $mon_r eDP-1 HDMI-A-1 DP-9 DP-8 DP-7
+
+# links: Home + Browser
+workspace $ws1  output $mon_l
+workspace $ws2  output $mon_l
+workspace $ws3  output $mon_l
+# mitte: Code
+workspace $ws4  output $mon_m
+workspace $ws5  output $mon_m
+workspace $ws6  output $mon_m
+# Laptop rechts: Nebenkram
+workspace $ws7  output $mon_r
+workspace $ws8  output $mon_r
+workspace $ws9  output $mon_r
+workspace $ws10 output $mon_r
+
+bindsym $mod+1 workspace number $ws1
+bindsym $mod+2 workspace number $ws2
+bindsym $mod+3 workspace number $ws3
+bindsym $mod+4 workspace number $ws4
+bindsym $mod+5 workspace number $ws5
+bindsym $mod+6 workspace number $ws6
+bindsym $mod+7 workspace number $ws7
+bindsym $mod+8 workspace number $ws8
+bindsym $mod+9 workspace number $ws9
+bindsym $mod+0 workspace number $ws10
+bindsym $mod+F11 workspace number $ws11
+bindsym $mod+F12 workspace number $ws12
+
+bindsym $mod+Shift+1 move container to workspace number $ws1
+bindsym $mod+Shift+2 move container to workspace number $ws2
+bindsym $mod+Shift+3 move container to workspace number $ws3
+bindsym $mod+Shift+4 move container to workspace number $ws4
+bindsym $mod+Shift+5 move container to workspace number $ws5
+bindsym $mod+Shift+6 move container to workspace number $ws6
+bindsym $mod+Shift+7 move container to workspace number $ws7
+bindsym $mod+Shift+8 move container to workspace number $ws8
+bindsym $mod+Shift+9 move container to workspace number $ws9
+bindsym $mod+Shift+0 move container to workspace number $ws10
+bindsym $mod+Shift+F11 move container to workspace number $ws11
+bindsym $mod+Shift+F12 move container to workspace number $ws12
+
+# ── Session ───────────────────────────────────────────────────────────────────
+# Sway kennt kein "restart" — reload reicht, der Compositor bleibt stehen.
+bindsym $mod+Shift+c reload
+bindsym $mod+Shift+e exec "swaynag -t warning -m 'Exit sway?' -B 'Yes, exit' '~/.config/eww/scripts/learn.py stop; swaymsg exit'"
+bindsym $mod+Shift+x exec "~/.config/eww/scripts/learn.py stop; swaylock"
+
+# ── App Shortcuts ─────────────────────────────────────────────────────────────
+bindsym $mod+Shift+f exec nautilus
+bindsym $mod+Shift+i exec "/usr/share/code/bin/code /home/osa/.config/sway"
+bindsym $mod+x       exec --no-startup-id keepassxc
+bindsym $mod+Shift+p exec --no-startup-id alacritty -e calcurse
+bindsym $mod+Shift+v exec --no-startup-id "copyq toggle"
+bindsym $mod+Tab     exec --no-startup-id rofi -config ~/.config/rofi/config-nord.rasi -show window
+# Notification-Center auch per Tastatur, nicht nur ueber die Glocke
+bindsym $mod+n       exec --no-startup-id swaync-client -t -sw
+bindsym $mod+Shift+n exec --no-startup-id swaync-client -d -sw
+
+bindsym $mod+t       exec --no-startup-id "$private_shell/get_pwa_id.sh todo       | xargs $private_shell/pwa_launcher.sh"
+bindsym $mod+Shift+t exec --no-startup-id "teams-for-linux"
+bindsym $mod+Shift+m exec --no-startup-id "$private_shell/get_pwa_id.sh outlook    | xargs $private_shell/pwa_launcher.sh"
+bindsym $mod+Shift+w exec --no-startup-id "$private_shell/get_pwa_id.sh whatsapp   | xargs $private_shell/pwa_launcher.sh"
+bindsym $mod+Shift+h exec --no-startup-id "$private_shell/get_pwa_id.sh whiteboard | xargs $private_shell/pwa_launcher.sh"
+bindsym $mod+Shift+o exec --no-startup-id "$private_shell/get_pwa_id.sh office365  | xargs $private_shell/pwa_launcher.sh"
+bindsym $mod+Shift+s exec --no-startup-id ~/.config/sway/scripts/screens.py
+bindsym $mod+Ctrl+s  exec --no-startup-id ~/.config/sway/scripts/screens.py --no-laptop
+
+# ── Floating Rules ────────────────────────────────────────────────────────────
+for_window [class="copyq"]                floating enable, resize set 320 480, move position 0 0
+for_window [app_id="copyq"]               floating enable, resize set 320 480, move position 0 0
+for_window [class="Pavucontrol"]          floating enable
+for_window [app_id="org.pulseaudio.pavucontrol"] floating enable
+for_window [class="nm-connection-editor"] floating enable
+for_window [app_id="nm-connection-editor"] floating enable
+
+# ── Resize Mode — visually distinct ───────────────────────────────────────────
+bindsym $mod+r mode "[ RESIZE ]"
+mode "[ RESIZE ]" {
+        bindsym $left  resize shrink width  10 px or 10 ppt
+        bindsym $down  resize grow   height 10 px or 10 ppt
+        bindsym $up    resize shrink height 10 px or 10 ppt
+        bindsym $right resize grow   width  10 px or 10 ppt
+        bindsym Left   resize shrink width  10 px or 10 ppt
+        bindsym Down   resize grow   height 10 px or 10 ppt
+        bindsym Up     resize shrink height 10 px or 10 ppt
+        bindsym Right  resize grow   width  10 px or 10 ppt
+        bindsym Return mode "default"
+        bindsym Escape mode "default"
+        bindsym $mod+r mode "default"
+}
+
+# ── Bar ───────────────────────────────────────────────────────────────────────
+# Kein bar{}-Block: waybar laeuft als eigener Client (exec_always oben).
+# Gestaltung in ~/.config/waybar/{config.jsonc,style.css}.
+#
+# Warum nicht swaybar: swaybar kann Bloecke nur einfaerben, nicht gestalten —
+# kein Padding pro Modul, keine Klick-Menues, kein Kalender, kein Tray-Padding,
+# kein Scroll auf dem Lautstaerkeregler. Fuer eine Leiste im Stil von GNOME
+# oder Windows ist waybar die einzige Option.
+#
+# i3 behaelt swaybar + i3status genau wie bisher — inklusive des leeren Blocks
+# aus `order += "read_file uptime"`, dessen Definition dort auskommentiert ist.
+# Wenn du den in i3 auch weghaben willst: die order-Zeile in
+# ~/.config/i3status/config loeschen.
+
+# eww: Desktop-Widget + Lern-Timer auf dem Laptop-Bildschirm (eDP-1), Super+Z klappt das Panel auf/zu
+exec --no-startup-id eww open desk
+bindsym $mod+z exec --no-startup-id eww open --toggle learn

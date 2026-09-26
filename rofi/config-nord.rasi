@@ -1,0 +1,42 @@
+/* rofi — Sway-Session (warm, Spotlight-Form).
+ *
+ * Der Dateiname sagt noch "nord": die sway-Config und powermenu.sh zeigen an
+ * drei Stellen hierauf, das Umbenennen waere mehr Risiko als Nutzen. Das
+ * THEME heisst korrekt spotlight-warm.rasi.
+ *
+ * i3 benutzt weiter ~/.config/rofi/config.rasi mit windows11-list-dark.
+ * Diese Datei wird nur ueber `rofi -config ...` aus der Sway-Config und dem
+ * Power-Menue gezogen; sie ueberschreibt nichts.
+ *
+ * Uebernommen aus config.rasi sind die Einstellungen, die dort wirklich aktiv
+ * waren — der Rest der Datei ist auskommentierter rofi-Default.
+ * Absichtlich NICHT uebernommen: location: 3 (oben rechts). Ein Spotlight
+ * gehoert in die Mitte.
+ */
+configuration {
+    show-icons:    true;
+    /* Ohne icon-theme nimmt rofi den Default und findet die meisten
+     * App-Icons nicht — dann bleiben die Zeilen leer und die Liste sieht
+     * wieder aus wie 2012. Yaru-sage-dark ist das, was auch GTK benutzt
+     * (gsettings org.gnome.desktop.interface icon-theme). */
+    icon-theme:    "Yaru-sage-dark";
+
+    /* Fensterliste: App-Icon, Klasse, Titel */
+    window-format: "{c}   {t}";
+
+    /* Fuzzy statt exaktem Praefix — tippst du "chrm", soll Chrome kommen. */
+    matching:      "fuzzy";
+    sort:          true;
+    sorting-method: "fzf";
+
+    timeout {
+        action: "kb-cancel";
+        delay:  0;
+    }
+    filebrowser {
+        directories-first: true;
+        sorting-method:    "name";
+    }
+}
+
+@theme "/home/osa/.config/rofi/spotlight-warm.rasi"

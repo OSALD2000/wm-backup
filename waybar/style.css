@@ -1,0 +1,251 @@
+/* waybar — durchgehende Leiste in #A89B77 mit Transparenz.
+ * Sway-Session only; i3 nutzt swaybar.
+ *
+ * Keine Inseln mehr: eine Flaeche von links nach rechts, ohne Abstand zur
+ * Kante, ohne Rundung. Duenner als vorher (30 statt 40).
+ *
+ * WARUM HIER ALLES DUNKEL IST — nachgerechnet, nicht geschaetzt:
+ * #A89B77 hat Luminanz 0.331, ist also mittelhell. Kontrast gegen die Leiste:
+ *   #232019 nahschwarz  5.90:1   ok
+ *   #2E3440 nord0       4.53:1   ok
+ *   #ECEFF4 nord6       2.39:1   zu wenig
+ *   #88C0D0 frost       1.38:1   zu wenig
+ *   #BF616A aurora      1.48:1   zu wenig
+ * Heller Text und die Nord-Akzente fallen alle durch. Deshalb laufen Zustaende
+ * hier NICHT ueber farbigen Text, sondern ueber gefuellte dunkle Flaechen mit
+ * hellem Text darauf. Wer das umfaerbt, sollte die Zahlen neu rechnen.
+ */
+
+/* Leiste: warm, halbdurchsichtig.
+ *
+ * Gemessen am gerenderten Bild: hinter der Leiste liegt immer das Wallpaper
+ * (die Leiste hat eine exclusive zone, Fenster kommen nicht darunter), dort
+ * #1D1B19. Bei 0.82 rendert #A89B77 als #8F8466 — sichtbar dunkler als
+ * gewuenscht. 0.88 trifft den Ton und laesst den Hintergrund noch durch.
+ *
+ * Stellschraube: letzter Wert. 1.0 = exakt #A89B77, keine Transparenz.
+ * Willst du MEHR Transparenz UND trotzdem genau #A89B77, geht das nur ueber
+ * eine hellere Basis, die den Wallpaper-Anteil vorwegnimmt — bei 0.85 waere
+ * das rgba(193, 178, 136, 0.85). Das haengt dann aber am Wallpaper. */
+@define-color bar      rgba(168, 155, 119, 0.88);
+@define-color hover    rgba(35, 32, 25, 0.13);
+
+@define-color ink      #232019;   /* Primaertext   5.90:1 */
+@define-color ink_dim  #443E33;   /* Sekundaer     3.84:1 */
+@define-color fill     #2E3440;   /* aktive Fuellung, 4.53:1 zur Leiste */
+@define-color on_fill  #ECEFF4;   /* Text darauf, 10.84:1 */
+@define-color alert    #6E2620;   /* Urgent-Fuellung, 3.89:1 zur Leiste */
+@define-color on_alert #F5E9E0;   /* Text darauf, 8.98:1 */
+@define-color warn     #6B4B12;   /* Warnung als Text, dunkel genug */
+
+* {
+  font-family: "JetBrains Mono", "Iosevka Nerd Font", monospace;
+  font-size: 11px;
+  font-weight: 500;
+  border: none;
+  border-radius: 0;
+  min-height: 0;
+  box-shadow: none;
+  text-shadow: none;
+}
+
+window#waybar {
+  background: @bar;
+  color: @ink;
+  /* eine dunkle Haarlinie als Abschluss statt eines Rahmens */
+  border-bottom: 1px solid rgba(35, 32, 25, 0.22);
+}
+
+/* keine Karten mehr — die Gruppen sind wieder Teil der Flaeche */
+.modules-left,
+.modules-center,
+.modules-right {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+}
+
+tooltip {
+  background: #2E3440;
+  border: 1px solid #4C566A;
+  border-radius: 6px;
+  color: #ECEFF4;
+}
+tooltip label { padding: 5px 7px; }
+
+/* ── Launcher ───────────────────────────────────────────────────────────────*/
+#custom-launcher {
+  color: @ink;
+  font-size: 14px;
+  padding: 0 11px;
+}
+#custom-launcher:hover {
+  background: @fill;
+  color: @on_fill;
+}
+
+/* ── Workspaces ─────────────────────────────────────────────────────────────*/
+#workspaces { margin: 0 2px; }
+
+#workspaces button {
+  color: @ink_dim;
+  padding: 0 9px;
+  background: transparent;
+  /* unsichtbare Linie, damit aktiv/inaktiv nicht um 2px springen. An einer
+   * geraden Leiste sitzt der Unterstrich wieder sauber. */
+  border-bottom: 2px solid transparent;
+}
+#workspaces button:hover {
+  background: @hover;
+  color: @ink;
+}
+#workspaces button.visible { color: @ink; }
+#workspaces button.focused {
+  color: @ink;
+  font-weight: bold;
+  border-bottom: 2px solid @fill;
+}
+#workspaces button.urgent {
+  background: @alert;
+  color: @on_alert;
+  font-weight: bold;
+  border-bottom: 2px solid @alert;
+}
+
+/* ── Mode / Scratchpad / Titel ──────────────────────────────────────────────*/
+#mode {
+  background: @fill;
+  color: @on_fill;
+  font-weight: bold;
+  padding: 0 10px;
+  margin: 0 4px;
+}
+#scratchpad {
+  color: @ink_dim;
+  padding: 0 8px;
+}
+#window {
+  color: @ink_dim;
+  padding: 0 12px;
+}
+window#waybar.empty #window { padding: 0; }
+
+/* ── Uhr ────────────────────────────────────────────────────────────────────*/
+#clock {
+  color: @ink;
+  font-weight: bold;
+  padding: 0 12px;
+}
+#clock:hover { background: @hover; }
+
+/* ── Systeminfo ─────────────────────────────────────────────────────────────*/
+/* Zahlen in @ink, damit sie lesbar sind; die Trennung zum Hardware-Cluster
+ * macht eine senkrechte Haarlinie, nicht ein Abstand — bei 11px verschwimmt
+ * blosser Abstand. */
+#disk,
+#memory,
+#cpu,
+#network.v4,
+#custom-ipv6 {
+  color: @ink;
+  padding: 0 8px;
+}
+#disk:hover,
+#memory:hover,
+#cpu:hover,
+#network.v4:hover,
+#custom-ipv6:hover { background: @hover; }
+
+/* Die IP-Adressen sind der einzige Ort, an dem hier Fliesstext steht —
+ * gedaempft, damit sie nicht mit den Messwerten konkurrieren. */
+#network.v4,
+#custom-ipv6 { color: @ink_dim; }
+
+/* v6 ist 39 Zeichen lang. Trennlinie dahinter, damit der Block als Gruppe
+ * lesbar bleibt und nicht in die Messwerte laeuft. */
+#network.v4 {
+  border-right: 1px solid rgba(35, 32, 25, 0.25);
+  padding-right: 10px;
+  margin-right: 2px;
+}
+#cpu {
+  border-right: 1px solid rgba(35, 32, 25, 0.25);
+  padding-right: 10px;
+  margin-right: 2px;
+}
+
+/* ── Status-Cluster ─────────────────────────────────────────────────────────*/
+#idle_inhibitor,
+#backlight,
+#pulseaudio,
+#bluetooth,
+#network,
+#power-profiles-daemon,
+#battery {
+  color: @ink;
+  padding: 0 9px;
+}
+
+#idle_inhibitor:hover,
+#backlight:hover,
+#pulseaudio:hover,
+#bluetooth:hover,
+#network:hover,
+#power-profiles-daemon:hover,
+#battery:hover { background: @hover; }
+
+/* Gedaempft = aus/inaktiv. Farbige Akzente gehen auf diesem Grund nicht,
+ * also bleibt nur der Helligkeitsunterschied. */
+#idle_inhibitor.activated { color: @warn; font-weight: bold; }
+
+#pulseaudio.muted    { color: @ink_dim; }
+#bluetooth.disabled  { color: @ink_dim; }
+#bluetooth.connected { color: @ink; font-weight: bold; }
+
+#network.disconnected,
+#network.disabled {
+  background: @alert;
+  color: @on_alert;
+}
+#network.wifi { color: @ink; }
+
+#power-profiles-daemon.performance { color: @alert; font-weight: bold; }
+#power-profiles-daemon.balanced    { color: @ink; }
+#power-profiles-daemon.power-saver { color: @ink_dim; }
+
+#battery.charging { color: @ink; font-weight: bold; }
+#battery.warning:not(.charging) { color: @warn; font-weight: bold; }
+#battery.critical:not(.charging) {
+  background: @alert;
+  color: @on_alert;
+  font-weight: bold;
+}
+
+/* ── Tray ───────────────────────────────────────────────────────────────────*/
+#tray { padding: 0 8px; }
+#tray > .passive { -gtk-icon-effect: dim; }
+#tray > .needs-attention { -gtk-icon-effect: highlight; }
+#tray menu {
+  background: #2E3440;
+  color: #ECEFF4;
+  border: 1px solid #4C566A;
+  border-radius: 6px;
+}
+
+/* ── Glocke + Power ────────────────────────────────────────────────────────*/
+#custom-notification {
+  color: @ink;
+  padding: 0 10px;
+}
+#custom-notification:hover { background: @hover; }
+
+#custom-power {
+  color: @ink;
+  padding: 0 12px 0 10px;
+}
+#custom-power:hover {
+  background: @alert;
+  color: @on_alert;
+}

@@ -1,0 +1,76 @@
+// Warme Palette aus ~/.config/sway/config (dieselbe wie waybar, rofi, swaylock)
+$ground: #1C1A15;   // $warm_ground
+$card:   #343026;   // $warm_card
+$line:   #3A352C;   // $warm_line
+$ink:    #E8E1CF;   // $warm_ink
+$dim:    #8A8069;   // $warm_dim
+$warm:   #A89B77;   // $warm – Akzent (Fensterrahmen)
+$light:  #C4B78F;   // swaylock Eingabe-Highlight
+$brick:  #C4553D;   // $warm_brick
+
+* { all: unset; font-family: "JetBrains Mono", "Iosevka Nerd Font", monospace; }
+window { background: transparent; }
+tooltip { background: $ground; color: $ink; border: 1px solid $line; border-radius: 6px; padding: 4px 8px; }
+
+// ── Desktop-Widget ──────────────────────────────────────────────
+.desk {
+  background: rgba(28, 26, 21, 0.85); color: $ink;
+  border: 1px solid $line; border-radius: 12px; padding: 16px; font-size: 12px;
+}
+.desk button { padding: 4px 8px; border-radius: 6px; color: $dim; }
+.desk button:hover { background: $card; color: $ink; }
+.clock { font-size: 34px; font-weight: bold; color: $warm; }
+.live  { color: $light; font-weight: bold; margin: 4px 0; }
+
+// ── Lern-Panel ──────────────────────────────────────────────────
+.panel {
+  background: $ground; color: $ink; font-size: 12px;
+  padding: 18px; border-radius: 12px; border: 1px solid $warm;
+}
+.muted { color: $dim; }
+.small { font-size: 10px; }
+.section { color: $dim; font-size: 11px; }
+
+.hero { background: $card; border-radius: 10px; padding: 16px; border: 1px solid $line; }
+.hero.on { border-color: $warm; }
+.hero-topic { color: $dim; font-size: 12px; }
+.hero-time { font-size: 42px; font-weight: bold; color: $ink; }
+.hero.on .hero-time { color: $light; }
+
+.btn { padding: 5px 14px; border-radius: 8px; background: $line; color: $ink; }
+.btn:hover { background: $dim; color: $ground; }
+.btn.go   { background: $warm;  color: $ground; font-weight: bold; }
+.btn.stop { background: $brick; color: $ink;    font-weight: bold; }
+.btn.go:hover   { background: $light; }
+.btn.stop:hover { background: #D66A52; }
+.btn.ghost { background: transparent; color: $dim; }
+.btn.ghost:hover { background: $line; color: $ink; }
+.btn.small { padding: 3px 8px; font-size: 11px; }
+
+.stat { background: $card; border-radius: 8px; padding: 8px 4px; margin: 0 3px; }
+.stat-value { font-size: 15px; font-weight: bold; color: $ink; }
+.stat-label { font-size: 10px; color: $dim; }
+
+.chart, .heat { background: $card; border-radius: 10px; padding: 12px; }
+.bar trough { min-width: 14px; min-height: 80px; border-radius: 4px; background: $line; }
+.bar progress { min-width: 14px; border-radius: 4px; background: $dim; }
+.bar.today progress { background: $warm; }
+.bar-label { font-size: 10px; color: $dim; }
+
+// Heatmap: Stufen von Linie zu hellem Tan, wie GitHub nur warm
+.cell { min-width: 11px; min-height: 11px; border-radius: 2px; }
+.cell.l0 { background: #262219; }
+.cell.l1 { background: #4A4434; }
+.cell.l2 { background: $dim; }
+.cell.l3 { background: $warm; }
+.cell.l4 { background: $light; }
+.cell.lfuture { background: transparent; }
+
+.topic { border-radius: 8px; }
+.topic:hover { background: $card; }
+.topic.active { background: $card; border: 1px solid $warm; }
+.topic-btn { padding: 7px 10px; }
+.x { padding: 0 10px; color: $dim; }
+.x:hover { color: $brick; }
+.new { background: $card; border-radius: 8px; padding: 7px 10px; border: 1px solid $line; }
+.new entry { color: $ink; caret-color: $warm; }

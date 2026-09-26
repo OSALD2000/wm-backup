@@ -1,0 +1,85 @@
+(defpoll time :interval "1s" "date +%H:%M:%S")
+(deflisten learn
+  :initial `{"running":false,"topic":"","elapsed":"","today":"0m","week":"0m","total":"0m","streak":0,"all_today":"0m","all_streak":0,"bars":[],"heat":[],"topics":[],"has_last":false}`
+  "~/.config/eww/scripts/learn.py watch")
+(defvar new_topic "")
+
+(defwindow desk
+  :monitor "eDP-1"
+  :geometry (geometry :x "40px" :y "40px" :width "300px" :anchor "top left")
+  :stacking "bottom"   ; unter den Fenstern, über dem Hintergrundbild
+  :exclusive false
+  :focusable false
+  (box :class "desk" :orientation "v" :space-evenly false
+    (label :class "clock" :text time)
+    (label :text "CPU: ${round(EWW_CPU.avg, 0)}%")
+    (label :text "RAM: ${round(EWW_RAM.used_mem_perc, 0)}%")
+    (label :class "live" :visible {learn.running} :text "● ${learn.topic}  ${learn.elapsed}")
+    (button :onclick "alacritty &" "Terminal öffnen")
+    (button :onclick "eww open --toggle learn" "⏱ Lernen")))
+
+(defwidget stat [label value]
+  (box :class "stat" :orientation "v" :space-evenly false
+    (label :class "stat-value" :text value)
+    (label :class "stat-label" :text label)))
+
+(defwindow learn
+  :monitor "eDP-1"
+  :geometry (geometry :x "360px" :y "40px" :width "440px" :anchor "top left")
+  :stacking "overlay"   ; über den Fenstern, damit per Super+Z immer sichtbar
+  :exclusive false
+  :focusable "ondemand"
+  (box :class "panel" :orientation "v" :space-evenly false :spacing 14
+    (box :class "hero ${learn.running ? 'on' : ''}" :orientation "v" :space-evenly false :spacing 6
+      (label :class "hero-topic" :text {learn.topic == "" ? "Lege unten ein Thema an" : learn.topic})
+      (label :class "hero-time" :text {learn.running ? learn.elapsed : "0:00:00"})
+      (box :halign "center" :space-evenly false :spacing 8
+        (button :class "btn go" :visible {!learn.running && learn.topic != ""}
+          :onclick "~/.config/eww/scripts/learn.py start '${learn.topic}'" "▶  Start")
+        (button :class "btn stop" :visible {learn.running}
+          :onclick "~/.config/eww/scripts/learn.py stop" "■  Stop")
+        (button :class "btn ghost" :visible {learn.running} :tooltip "Laufende Session nicht zählen"
+          :onclick "~/.config/eww/scripts/learn.py discard" "✕  Verwerfen")))
+    (box :class "stats"
+      (stat :label "Heute" :value {learn.today})
+      (stat :label "Woche" :value {learn.week})
+      (stat :label "Gesamt" :value {learn.total})
+      (stat :label "Streak" :value "🔥 ${learn.streak}"))
+    (box :class "chart" :spacing 6
+      (for b in {learn.bars}
+        (box :orientation "v" :space-evenly false :spacing 4 :tooltip {b.h}
+          (progress :class "bar ${b.today ? 'today' : ''}" :orientation "v" :flipped true
+            :halign "center" :value {b.pct})
+          (label :class "bar-label" :text {b.d}))))
+    (box :class "heat" :orientation "v" :space-evenly false :spacing 8
+      (box :space-evenly false
+        (label :class "section" :hexpand true :xalign 0 :text "Letzte 26 Wochen · alle Themen")
+        (box :class "legend" :space-evenly false :spacing 3
+          (label :class "muted small" :text "weniger ")
+          (box :class "cell l0") (box :class "cell l1") (box :class "cell l2") (box :class "cell l3") (box :class "cell l4")
+          (label :class "muted small" :text " mehr")))
+      (box :halign "center" :space-evenly false :spacing 3
+        (for w in {learn.heat}
+          (box :orientation "v" :space-evenly false :spacing 3
+            (for c in {w}
+              (box :class "cell l${c.l}" :tooltip {c.t}))))))
+    (box :class "topics" :orientation "v" :space-evenly false :spacing 4
+      (for t in {learn.topics}
+        (box :class "topic ${t.active ? 'active' : ''}" :space-evenly false
+          (button :class "topic-btn" :hexpand true :tooltip "Start / Stop"
+            :onclick "~/.config/eww/scripts/learn.py toggle '${t.name}'"
+            (box :space-evenly false
+              (label :xalign 0 :hexpand true :text "${t.active ? '● ' : ''}${t.name}")
+              (label :class "muted" :text "${t.today} heute · ${t.total}")))
+          (button :class "x" :tooltip "Archivieren (Stunden bleiben erhalten)"
+            :onclick "~/.config/eww/scripts/learn.py archive '${t.name}'" "✕"))))
+    (box :class "new" :space-evenly false :spacing 8
+        (label :class "muted" :text "+")
+        (input :hexpand true :value new_topic
+          :onchange "eww update new_topic='{}'"
+          :onaccept "~/.config/eww/scripts/learn.py add '{}' && eww update new_topic=''"))
+    (box :class "footer" :space-evenly false
+      (label :class "muted" :hexpand true :xalign 0
+        :text "Alle Themen · heute ${learn.all_today} · 🔥 ${learn.all_streak} Tage")
+      (button :class "btn ghost small" :visible {learn.has_last} :tooltip "Letzte gespeicherte Session löschen"
+        :onclick "~/.config/eww/scripts/learn.py undo" "↶ Letzte Session"))))

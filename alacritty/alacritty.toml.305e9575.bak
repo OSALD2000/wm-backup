@@ -1,0 +1,7 @@
+import = [
+    "~/.config/alacritty/themes/themes/autumn.toml"
+]
+
+[font]
+size=9
+

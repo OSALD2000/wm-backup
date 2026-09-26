@@ -1,0 +1,28 @@
+# Alacritty — Sway-Session (Nord).
+#
+# i3 benutzt weiter ~/.config/alacritty/alacritty.toml mit dem autumn-Theme.
+# Ausgewaehlt wird diese Datei nicht in den Sway-Bindings, sondern im Wrapper
+# ~/.local/bin/alacritty — sonst haetten Terminals aus rofi, nautilus oder
+# einer .desktop-Datei weiter autumn getragen.
+#
+# Erzeugt aus alacritty.toml, nur der Theme-Import ist getauscht. Aendert sich
+# dort Font oder Keybinding, muss es hier mit: Alacritty kennt kein Include
+# ausserhalb von `import`, also gibt es keinen gemeinsamen Teil.
+
+[general]
+import = [
+    "~/.config/alacritty/themes/themes/nord.toml"
+]
+
+[font]
+size=9
+
+
+[[keyboard.bindings]]
+key = "Return"
+mods = "Shift"
+chars = "\u001B\r"
+
+[[keyboard.bindings]]
+key = "Back"
+chars = "\u0008"
