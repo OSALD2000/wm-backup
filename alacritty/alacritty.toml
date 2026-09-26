@@ -1,6 +1,6 @@
 [general]
 import = [
-    "~/.config/alacritty/themes/themes/autumn.toml"
+    "~/.config/alacritty/hl2.toml"   # HL2; vorher themes/themes/autumn.toml
 ]
 
 [font]

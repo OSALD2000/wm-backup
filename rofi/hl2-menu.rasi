@@ -1,0 +1,111 @@
+/* HL2 MENU — App-Menue + Power-Menue der Sway-Session im Stil des
+ * Half-Life-2-Hauptmenues (2004): Bildschirm abgedunkelt, linksbuendige
+ * Liste im unteren linken Bereich, keine Kaesten, markierte Zeile heller.
+ *
+ * Menue-Text wie im Original hellgrau/weiss, Akzent im HUD-Gelb #FFDC00
+ * (ClientScheme BrightFg), damit es zu waybar und eww passt.
+ *
+ * Vorgaenger: spotlight-warm.rasi — Zurueck = @theme in config-nord.rasi.
+ * rofi-rasi erlaubt keine Unterstriche in Variablennamen.
+ * Testen mit: rofi -theme <datei> -dump-theme 2>&1 | grep -i failed
+ */
+
+* {
+    font:   "Verdana Bold 13";
+
+    ink:        #C8C8C8;   /* Menuepunkt normal */
+    inkhi:      #FFFFFF;   /* Menuepunkt markiert */
+    dim:        #7A7A7A;
+    hud:        #FFDC00;
+
+    background-color:   transparent;
+    text-color:         @ink;
+    margin:     0;
+    padding:    0;
+    spacing:    0;
+}
+
+/* ganzer Bildschirm abgedunkelt, wie das Menue ueber der Spielszene */
+window {
+    fullscreen:         true;
+    background-color:   #000000E0;   /* darunter stoert der Text dahinter */
+    children:           [ mainbox ];
+}
+
+/* Prozent-Padding schiebt die Liste nach unten links und begrenzt die Breite */
+mainbox {
+    padding:    26% 55% 0 7%;
+    spacing:    18px;
+    children:   [ textbox-title, inputbar, message, listview ];
+}
+
+textbox-title {
+    expand:     false;
+    str:        "λ  HALF-LIFE²";
+    font:       "Verdana Bold 34";
+    text-color: @inkhi;
+    padding:    0 0 14px 0;
+}
+
+/* ── Suchzeile: schlicht, gelbe Unterstreichung ────────────────────────────*/
+inputbar {
+    padding:        6px 0;
+    spacing:        10px;
+    border:         0 0 2px;
+    border-color:   #FFDC0066;
+    children:       [ textbox-arrow, entry ];
+}
+textbox-arrow {
+    expand:         false;
+    str:            ">";
+    text-color:     @hud;
+}
+entry {
+    text-color:         @inkhi;
+    placeholder:        "Suchen";
+    placeholder-color:  @dim;
+    cursor:             text;
+}
+
+/* ── Liste ─────────────────────────────────────────────────────────────────*/
+listview {
+    lines:          8;
+    expand:         false;   /* sonst fuellt die Liste im Vollbild alles */
+    fixed-height:   true;
+    scrollbar:      false;
+    spacing:        2px;
+}
+
+element {
+    padding:            6px 12px;
+    spacing:            12px;
+    border:             0 0 0 3px;
+    border-color:       transparent;
+    cursor:             pointer;
+}
+/* markiert: heller + gelbe Kante links — wie das Einruecken im HL2-Menue */
+element selected normal,
+element selected active {
+    background-color:   #FFFFFF0F;
+    border-color:       @hud;
+    text-color:         @inkhi;
+}
+element normal active,
+element alternate active { text-color: @hud; }
+
+element-icon {
+    size:               22px;
+    vertical-align:     0.5;
+}
+element-text {
+    text-color:         inherit;
+    vertical-align:     0.5;
+    highlight:          bold #FFDC00;
+}
+
+message {
+    padding:        4px 0;
+}
+textbox {
+    text-color:     @dim;
+}

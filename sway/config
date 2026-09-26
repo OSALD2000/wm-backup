@@ -7,7 +7,7 @@
 
 # Diese Schrift traegt die Tab-Titel im tabbed/stacked-Layout
 # ($mod+w / $mod+s). 9 -> 8, damit die App-Namen dort kleiner sind.
-font pango:JetBrains Mono, Iosevka Nerd Font 8
+font pango:Iosevka Nerd Font 8
 
 # ── Input ─────────────────────────────────────────────────────────────────────
 # Kommt unter X11 aus /etc/default/keyboard, das liest Sway nicht. Ohne diesen
@@ -37,10 +37,11 @@ exec_always --no-startup-id ~/.config/sway/scripts/screens.py
 # --transfer-sleep-lock in i3 gemacht hat.
 # Kein -i/--scaling hier: das steht in ~/.config/swaylock/config und gilt damit
 # auch fuer den Ruf aus dem Power-Menue.
+# lock.sh: hyprlock im HL2-Look, swaylock als Fallback.
 # learn.py stop: Lern-Timer anhalten (bei Idle ohne die 10 Leerlauf-Minuten)
 exec --no-startup-id swayidle -w \
-    timeout 600 '/home/osa/.config/eww/scripts/learn.py stop --idle 600; swaylock -f' \
-    before-sleep '/home/osa/.config/eww/scripts/learn.py stop; swaylock -f'
+    timeout 600 '/home/osa/.config/eww/scripts/learn.py stop --idle 600; ~/.config/sway/scripts/lock.sh' \
+    before-sleep '/home/osa/.config/eww/scripts/learn.py stop; ~/.config/sway/scripts/lock.sh'
 # nm-applet ist auf diesem System nicht installiert — die Zeile war schon in
 # der i3-Config ein No-op. Wieder haben wollen:
 #   sudo apt install network-manager-gnome
@@ -98,13 +99,23 @@ set $warm_ink     #E8E1CF
 set $warm_dim     #8A8069
 set $warm_brick   #C4553D
 
-set $black        $warm_ground
-set $dark         $warm_card
-set $border_act   $warm
-set $border_inact $warm_line
-set $text         $warm_ink
-set $text_dim     $warm_dim
-set $urgent       $warm_brick
+# HL2-HUD (2004) — Rahmen zurueckhaltend: aktives Fenster in gedimmtem Gelb
+# (FgColor 255 220 0 @ 39% auf dunklem Grund), rot = DamagedBg 180 0 0.
+# Die warm_*-Werte darueber sind der Vorgaenger.
+set $hl2_bright   #FFDC00
+set $hl2_edge     #74660D
+set $hl2_dim      #8C7A1E
+set $hl2_line     #2A2719
+set $hl2_ground   #141310
+set $hl2_dmg      #B40000
+
+set $black        $hl2_ground
+set $dark         $hl2_line
+set $border_act   $hl2_edge
+set $border_inact $hl2_line
+set $text         $hl2_bright
+set $text_dim     $hl2_dim
+set $urgent       $hl2_dmg
 
 # ── Wallpaper ─────────────────────────────────────────────────────────────────
 # native Direktive statt feh; kein separater swaybg-exec noetig
@@ -274,7 +285,7 @@ bindsym $mod+Shift+F12 move container to workspace number $ws12
 # Sway kennt kein "restart" — reload reicht, der Compositor bleibt stehen.
 bindsym $mod+Shift+c reload
 bindsym $mod+Shift+e exec "swaynag -t warning -m 'Exit sway?' -B 'Yes, exit' '~/.config/eww/scripts/learn.py stop; swaymsg exit'"
-bindsym $mod+Shift+x exec "~/.config/eww/scripts/learn.py stop; swaylock"
+bindsym $mod+Shift+x exec "~/.config/eww/scripts/learn.py stop; ~/.config/sway/scripts/lock.sh"
 
 # ── App Shortcuts ─────────────────────────────────────────────────────────────
 bindsym $mod+Shift+f exec nautilus
@@ -334,6 +345,6 @@ mode "[ RESIZE ]" {
 # Wenn du den in i3 auch weghaben willst: die order-Zeile in
 # ~/.config/i3status/config loeschen.
 
-# eww: Desktop-Widget + Lern-Timer auf dem Laptop-Bildschirm (eDP-1), Super+Z klappt das Panel auf/zu
-exec --no-startup-id eww open desk
+# eww: HL2-HUD (HEALTH/SUIT unten links, AMMO = Lern-Timer unten rechts) auf dem Laptop (eDP-1), Super+Z klappt das Lern-Panel auf/zu
+exec --no-startup-id eww open-many hud-left hud-right
 bindsym $mod+z exec --no-startup-id eww open --toggle learn

@@ -39,4 +39,5 @@ configuration {
     }
 }
 
-@theme "/home/osa/.config/rofi/spotlight-warm.rasi"
+/* HL2-Hauptmenue-Stil; vorher spotlight-warm.rasi */
+@theme "/home/osa/.config/rofi/hl2-menu.rasi"
