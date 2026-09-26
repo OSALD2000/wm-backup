@@ -67,8 +67,9 @@ $S sync-back             # live -> Repo (beim Bauen eines Themes)
 `switch` kopiert per rsync **ohne --delete**: Dateien, die der Ziel-Tag nicht
 kennt, bleiben liegen und stoeren nicht. Bei ungesicherten Live-Aenderungen
 bricht es ab (`-f` ueberschreibt). Neu geladen wird mit `swaymsg reload`, das
-waybar, swaync und screens.py ueber `exec_always` neu startet. eww wird
-beendet und mit dem `eww open…`-Befehl aus der neuen sway-Config neu geoeffnet.
+waybar, swaync und screens.py ueber `exec_always` neu startet. eww
+und swayidle (traegt den Lock-Befehl) werden beendet und mit ihren `exec`-Zeilen
+aus der neuen sway-Config neu gestartet.
 Firefox und Chrome brauchen einen Neustart.
 
 Skills: `theme-erstellen` (neues Theme bauen und taggen), `theme-switch`
