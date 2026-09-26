@@ -7,5 +7,6 @@
 # als swaylock -f) erst beim Entsperren zurueckkehrt. Das sleep gibt der Sperre
 # Zeit zu stehen, bevor before-sleep den Rechner schlafen legt.
 pgrep -x hyprlock >/dev/null && exit 0
+date +%s%N > "${XDG_RUNTIME_DIR:-/tmp}/hl2-lock-start"  # Startpunkt fuer den Ladebalken
 ( hyprlock || swaylock -f ) &
 sleep 1
