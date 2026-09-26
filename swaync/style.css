@@ -1,45 +1,34 @@
-/* swaync — warm, passend zur waybar-Leiste (#A89B77).
+/* swaync — HL2-HUD (2004), passend zu waybar und eww.
  * Sway-Session only; i3 behaelt dunst mit seinem unveraenderten dunstrc.
  *
- * Zwei Flaechen: das Popup (einzelne Benachrichtigung, rechts oben) und das
- * Control-Center (die Glocke in der Bar).
+ * Popups = HL2-Pickup-Meldungen: schmale, halbtransparente Kaesten rechts,
+ * gelbe Schrift. Farben aus hl2/resource/ClientScheme.res:
+ *   BrightFg #FFDC00 · FgColor 255 220 0 100 · DamagedFg rot
+ * Kaesten warm aufgehellt statt schwarz, damit sie auf dunklem Grund stehen.
  *
- * KONTRASTE gegen den Grund #1C1A15 — gerechnet, nicht geschaetzt:
- *   #E8E1CF warmweiss      13.33:1   Primaertext
- *   #C4B78F tan hell        8.71:1   Titel, Akzent
- *   #D8A24A bernstein       7.61:1   DND aktiv
- *   #A89B77 tan (Leiste)    6.31:1   normale Urgency
- *   #8A8069 gedaempft       4.45:1   Zeitstempel, Sekundaertext
- *   #C4553D ziegelrot       3.90:1   kritisch (Rand + Titel)
- *   #6B6250                 2.89:1   ZU WENIG, nicht benutzen
- * Kartenflaeche #343026 sitzt 1.32:1 ueber dem Grund — sichtbar abgesetzt,
- * ohne als eigener Kasten zu schreien.
- *
- * Urgency-Kodierung sitzt in der 3px-Kante links, nicht in der Flaeche:
- *   low       #8A8069 gedaempft
- *   normal    #A89B77 tan
- *   critical  #C4553D ziegelrot, bleibt stehen, Titel farbig
+ * Urgency-Kodierung sitzt in der 3px-Kante links:
+ *   low       gedimmtes Gelb
+ *   normal    #FFDC00
+ *   critical  rot, bleibt stehen, Titel rot
+ * Variablennamen (tan, brick, ...) sind vom Vorgaenger-Theme uebrig — die
+ * Rollen sind gleich geblieben, nur die Werte sind HL2.
  */
 
-@define-color ground   #1C1A15;
-@define-color ink      #E8E1CF;
-@define-color dim      #8A8069;
-@define-color tan      #A89B77;
-@define-color tanhi    #C4B78F;
-@define-color amber    #D8A24A;
-@define-color brick    #C4553D;
+@define-color ground   #000000;                   /* Text auf gelber Fuellung */
+@define-color ink      rgba(255, 220, 0, 0.85);   /* Fliesstext */
+@define-color dim      rgba(255, 220, 0, 0.55);   /* Zeit, Sekundaeres */
+@define-color tan      #FFDC00;                   /* BrightFg, Akzent */
+@define-color tanhi    #FFDC00;
+@define-color amber    #FFDC00;                   /* DND aktiv */
+@define-color brick    #FF3030;                   /* kritisch */
 
-/* mehr Transparenz als vorher (war voll deckend):
- * Panel 82%, Karten 88% — genug, dass der Hintergrund durchkommt, ohne dass
- * der Text darum kaempft. */
-@define-color panel    rgba(28, 26, 21, 0.82);
-@define-color card     rgba(52, 48, 38, 0.88);
-@define-color cardhi   rgba(66, 61, 48, 0.94);
-@define-color line     rgba(168, 155, 119, 0.20);
+@define-color panel    rgba(0, 0, 0, 0.90);   /* darunter liegen Fenster, Text muss sich durchsetzen */
+@define-color card     rgba(40, 36, 24, 0.94);
+@define-color cardhi   rgba(60, 54, 34, 0.96);
+@define-color line     rgba(255, 220, 0, 0.14);
 
 * {
-  font-family: "JetBrains Mono", "Iosevka Nerd Font", monospace;
-  /* kleiner als vorher: 13 -> 11 */
+  font-family: "Verdana", "Iosevka Nerd Font", sans-serif;
   font-size: 11px;
 }
 
@@ -52,7 +41,7 @@
   background: @card;
   border: 1px solid @line;
   border-left: 3px solid @tan;
-  border-radius: 9px;
+  border-radius: 10px;
   margin: 4px 7px;
   padding: 0;
 }
@@ -101,7 +90,7 @@
 
 /* Aktions-Buttons (z. B. "Antworten" aus Teams) */
 .notification-action {
-  background: rgba(168, 155, 119, 0.14);
+  background: rgba(255, 220, 0, 0.14);
   color: @ink;
   border: 1px solid @line;
   border-radius: 7px;
@@ -116,7 +105,7 @@
 /* Fortschrittsleiste — das ist dein volume_script.sh (dunstify -h int:value:) */
 progressbar,
 .notification progressbar {
-  background: rgba(168, 155, 119, 0.22);
+  background: rgba(255, 220, 0, 0.22);
   border: none;
   border-radius: 3px;
   min-height: 5px;
@@ -165,7 +154,7 @@ progress,
   border-bottom: 1px solid @line;
 }
 .widget-dnd > switch {
-  background: rgba(168, 155, 119, 0.22);
+  background: rgba(255, 220, 0, 0.22);
   border: none;
   border-radius: 12px;
   min-height: 20px;
@@ -186,7 +175,7 @@ progress,
   border-bottom: 1px solid @line;
 }
 .widget-buttons-grid > flowbox > flowboxchild > button {
-  background: rgba(168, 155, 119, 0.12);
+  background: rgba(255, 220, 0, 0.12);
   color: @ink;
   border: 1px solid @line;
   border-radius: 8px;
@@ -202,7 +191,7 @@ progress,
 
 /* ── Medienwiedergabe (mpris) ──────────────────────────────────────────────*/
 .widget-mpris {
-  background: rgba(52, 48, 38, 0.72);
+  background: rgba(40, 36, 24, 0.72);
   border-bottom: 1px solid @line;
   padding: 6px;
 }
@@ -234,7 +223,7 @@ progress,
 
 scrollbar { background: transparent; }
 scrollbar slider {
-  background: rgba(168, 155, 119, 0.28);
+  background: rgba(255, 220, 0, 0.28);
   border-radius: 3px;
   min-width: 5px;
 }

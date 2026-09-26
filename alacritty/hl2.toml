@@ -1,0 +1,35 @@
+# HL2-HUD (2004), zurueckhaltend: Text neutral hellgrau auf fast Schwarz,
+# nur Cursor und Auswahl im HUD-Gelb #FFDC00 (ClientScheme BrightFg).
+# Vorgaenger: themes/themes/autumn.toml — Zurueck = import in alacritty.toml.
+
+[colors.primary]
+foreground = "#D4D0C4"
+background = "#141310"
+
+[colors.cursor]
+text = "#000000"
+cursor = "#FFDC00"
+
+[colors.selection]
+text = "#000000"
+background = "#FFDC00"
+
+[colors.normal]
+black = "#1E1C16"
+red = "#FF3030"
+green = "#9CB85A"
+yellow = "#FFDC00"
+blue = "#7A9CC0"
+magenta = "#C08AB0"
+cyan = "#6FB3AE"
+white = "#C8C4B8"
+
+[colors.bright]
+black = "#5A5446"
+red = "#FF6A5A"
+green = "#B4D070"
+yellow = "#FFE84D"
+blue = "#98B8DA"
+magenta = "#D8A6C8"
+cyan = "#8ED0CA"
+white = "#F0ECE0"

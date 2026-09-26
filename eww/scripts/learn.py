@@ -142,6 +142,7 @@ def stats(d, now):
         "streak": streak(fd, today),
         "all_today": fmt(all_days.get(today, 0)),
         "all_streak": streak(all_days, today),
+        "suit": min(100, round(100 * all_days.get(today, 0) / (STREAK_MIN * 60))),  # HUD: Tagesziel in %
         "bars": [{"d": WEEKDAYS[x.weekday()], "pct": round(100 * fd.get(x, 0) / top),
                   "h": fmt(fd.get(x, 0)), "today": x == today} for x in last7],
         "topics": [{"name": t, "today": fmt(by_topic[t].get(today, 0)), "total": fmt(sum(by_topic[t].values())),
@@ -233,6 +234,10 @@ def selftest():
     assert [level(x) for x in (0, 60, 1800, 3600, 7200)] == [0, 1, 2, 3, 4]
     heat = stats(d, ts(2026, 9, 21, 12))["heat"]
     assert len(heat) == HEAT_WEEKS and heat[-2][6]["l"] == 3 and heat[-1][0]["l"] == 0 and heat[-1][1]["l"] == "future", heat[-1]
+    d["sessions"] = [{"topic": "A", "start": ts(2026, 9, 21, 9), "end": ts(2026, 9, 21, 9, 15)}]
+    assert stats(d, ts(2026, 9, 21, 12))["suit"] == 50  # 15 von 30 Minuten
+    d["sessions"][0]["end"] = ts(2026, 9, 21, 10)
+    assert stats(d, ts(2026, 9, 21, 12))["suit"] == 100  # gedeckelt
     print("selftest ok")
 
 

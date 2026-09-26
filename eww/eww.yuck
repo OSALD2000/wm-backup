@@ -1,22 +1,38 @@
-(defpoll time :interval "1s" "date +%H:%M:%S")
 (deflisten learn
-  :initial `{"running":false,"topic":"","elapsed":"","today":"0m","week":"0m","total":"0m","streak":0,"all_today":"0m","all_streak":0,"bars":[],"heat":[],"topics":[],"has_last":false}`
+  :initial `{"running":false,"topic":"","elapsed":"","today":"0m","week":"0m","total":"0m","streak":0,"all_today":"0m","all_streak":0,"bars":[],"heat":[],"topics":[],"has_last":false,"suit":0}`
   "~/.config/eww/scripts/learn.py watch")
 (defvar new_topic "")
 
-(defwindow desk
+; HL2-HUD: Ecken unten auf dem Laptop, unter den Fenstern -> sichtbar auf leerem Workspace
+(defwidget hud [label value ?small ?warn]
+  (box :class "hud ${warn == 'true' ? 'warn' : ''}" :space-evenly false :spacing 14
+    (label :class "hud-label" :valign "end" :text label)
+    (label :class "hud-num" :text value)
+    (label :class "hud-small" :valign "end" :visible {small != ""} :text small)))
+
+(defwindow hud-left
   :monitor "eDP-1"
-  :geometry (geometry :x "40px" :y "40px" :width "300px" :anchor "top left")
-  :stacking "bottom"   ; unter den Fenstern, über dem Hintergrundbild
+  :geometry (geometry :x "32px" :y "32px" :anchor "bottom left")
+  :stacking "bottom"
   :exclusive false
   :focusable false
-  (box :class "desk" :orientation "v" :space-evenly false
-    (label :class "clock" :text time)
-    (label :text "CPU: ${round(EWW_CPU.avg, 0)}%")
-    (label :text "RAM: ${round(EWW_RAM.used_mem_perc, 0)}%")
-    (label :class "live" :visible {learn.running} :text "● ${learn.topic}  ${learn.elapsed}")
-    (button :onclick "alacritty &" "Terminal öffnen")
-    (button :onclick "eww open --toggle learn" "⏱ Lernen")))
+  (box :space-evenly false :spacing 12
+    (hud :label "HEALTH" :value {EWW_BATTERY.BAT0.capacity} :warn {EWW_BATTERY.BAT0.capacity < 20})
+    (hud :label "SUIT" :value {learn.suit})))
+
+(defwindow hud-right
+  :monitor "eDP-1"
+  :geometry (geometry :x "32px" :y "32px" :anchor "bottom right")
+  :stacking "bottom"
+  :exclusive false
+  :focusable false
+  (button :class "hud-btn" :tooltip "Lern-Panel (Super+Z)" :onclick "eww open --toggle learn"
+    (box :class "hud ammo ${learn.running ? 'on' : ''}" :space-evenly false :spacing 14
+      (box :orientation "v" :space-evenly false :valign "end"
+        (label :class "hud-label" :xalign 0 :text "🔥 ${learn.all_streak}")
+        (label :class "hud-label" :xalign 0 :text {learn.topic == "" ? "AMMO" : learn.topic}))
+      (label :class "hud-num" :text {learn.running ? learn.elapsed : "--"})
+      (label :class "hud-small" :valign "end" :text {learn.all_today}))))
 
 (defwidget stat [label value]
   (box :class "stat" :orientation "v" :space-evenly false
@@ -25,7 +41,7 @@
 
 (defwindow learn
   :monitor "eDP-1"
-  :geometry (geometry :x "360px" :y "40px" :width "440px" :anchor "top left")
+  :geometry (geometry :x "32px" :y "110px" :width "440px" :anchor "bottom right")  ; direkt ueber AMMO
   :stacking "overlay"   ; über den Fenstern, damit per Super+Z immer sichtbar
   :exclusive false
   :focusable "ondemand"

@@ -51,7 +51,7 @@
 
   // ── links ──────────────────────────────────────────────────────────────────
   "custom/launcher": {
-    "format": "\uf00a",
+    "format": "\u03bb",  // das HL-Lambda statt Raster-Icon
     "tooltip": false,
     "on-click": "rofi -config ~/.config/rofi/config-nord.rasi -modi drun,run -show drun"
   },
@@ -112,10 +112,10 @@
       "mode": "month",
       "weeks-pos": "left",
       "format": {
-        "months": "<span color='#ECEFF4'><b>{}</b></span>",
-        "weeks": "<span color='#4C566A'>{}</span>",
-        "weekdays": "<span color='#81A1C1'><b>{}</b></span>",
-        "today": "<span color='#88C0D0'><b>{}</b></span>"
+        "months": "<span color='#FFDC00'><b>{}</b></span>",
+        "weeks": "<span color='#8C7A1E'>{}</span>",
+        "weekdays": "<span color='#C8AD2A'><b>{}</b></span>",
+        "today": "<span color='#FF5A3C'><b>{}</b></span>"
       }
     },
     "actions": {
@@ -270,13 +270,13 @@
     "tooltip": false,
     "format": "{icon}",
     "format-icons": {
-      "notification": "<span foreground='#6E2620'>\uf0f3</span>",
+      "notification": "<span foreground='#FF5A3C'>\uf0f3</span>",
       "none": "\uf0f3",
-      "dnd-notification": "<span foreground='#6E2620'>\uf1f6</span>",
+      "dnd-notification": "<span foreground='#FF5A3C'>\uf1f6</span>",
       "dnd-none": "\uf1f6",
-      "inhibited-notification": "<span foreground='#6E2620'>\uf0f3</span>",
+      "inhibited-notification": "<span foreground='#FF5A3C'>\uf0f3</span>",
       "inhibited-none": "\uf0f3",
-      "dnd-inhibited-notification": "<span foreground='#6E2620'>\uf1f6</span>",
+      "dnd-inhibited-notification": "<span foreground='#FF5A3C'>\uf1f6</span>",
       "dnd-inhibited-none": "\uf1f6"
     },
     "return-type": "json",
