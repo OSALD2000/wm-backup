@@ -4,7 +4,7 @@
 # ponytail: kein Bestaetigungsdialog vor Neustart/Aus. Wer das will, haengt
 # ein zweites rofi -dmenu mit Ja/Nein davor.
 #
-# -theme-str schaltet die Suchzeile ab; der Titel "λ HALF-LIFE²" bleibt.
+# -theme-str schaltet die Suchzeile ab; der Titel "λ OSA" bleibt.
 set -e
 
 # HL2-Hauptmenue: Grossbuchstaben, keine Icons, RESUME = Abbrechen.
