@@ -41,7 +41,7 @@ mainbox {
 
 textbox-title {
     expand:     false;
-    str:        "λ  HALF-LIFE²";
+    str:        "λ  OSA";
     font:       "Verdana Bold 34";
     text-color: @inkhi;
     padding:    0 0 14px 0;
