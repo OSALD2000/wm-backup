@@ -95,17 +95,23 @@ switch)
         rsync -rlc ${dry:+-n} --out-format="  $(fmt "$src" "$dst")" "$TMP/new/$src" "$dst" | grep -v '/$' || true
     done
     [ -n "$dry" ] && { echo "(Probelauf, nichts geaendert)"; exit 0; }
-    echo "$tag" > "$STATE" || { mkdir -p "$(dirname "$STATE")" && echo "$tag" > "$STATE"; }
+    mkdir -p "$(dirname "$STATE")"; echo "$tag" > "$STATE"
 
     # Neu laden. swaymsg reload startet waybar, swaync und screens.py ueber
-    # exec_always neu. eww-Fenster sind nur exec -> selbst oeffnen, und zwar
-    # die, die die neue sway-Config nennt (HL2: hud-left hud-right).
+    # exec_always neu. swayidle (Lock-Befehl!) und eww-Fenster sind nur exec
+    # -> selbst neu starten, mit dem Befehl aus der neuen sway-Config.
     if [ -n "${SWAYSOCK:-}" ]; then
         swaymsg reload >/dev/null
+        # exec-Zeile zu $1 aus der sway-Config, \-Fortsetzungen zusammengefuegt
+        execline() {
+            sed -e ':a' -e '/\\$/{N;s/\\\n//;ba' -e '}' "$HOME/.config/sway/config" |
+                sed -n "s/^exec \(--no-startup-id \)\{0,1\}\($1.*\)$/\2/p" | head -1
+        }
+        pkill -x swayidle || true
+        cmd=$(execline swayidle); [ -n "$cmd" ] && setsid sh -c "$cmd" >/dev/null 2>&1 &
         if command -v eww >/dev/null; then
             eww kill >/dev/null 2>&1 || true
-            cmd=$(sed -n 's/^exec .*\(eww open.*\)$/\1/p' "$HOME/.config/sway/config" | head -1)
-            [ -n "$cmd" ] && setsid sh -c "$cmd" >/dev/null 2>&1 &
+            cmd=$(execline 'eww open'); [ -n "$cmd" ] && setsid sh -c "$cmd" >/dev/null 2>&1 &
         fi
     else
         echo "Keine Sway-Session: Neuladen uebersprungen (Super+Shift+C spaeter)."

@@ -30,7 +30,8 @@ S=.claude/skills/theme-switch/scripts/theme.sh
    Nicht selbst entscheiden: `-f` loescht die Aenderungen unwiderruflich.
 
 4. **Wechseln.** `$S switch <tag>`. Das Skript kopiert die Dateien, schreibt
-   den Stand nach `~/.local/state/wm-theme`, ruft `swaymsg reload` auf und
+   den Stand nach `~/.local/state/wm-theme`, ruft `swaymsg reload` auf, startet
+   swayidle mit dem Lock-Befehl des neuen Themes neu und
    oeffnet die eww-Fenster, die die neue sway-Config nennt.
 
 5. **Ergebnis melden.** Welcher Tag jetzt live ist, und dass Firefox/Chrome
