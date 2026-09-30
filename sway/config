@@ -182,6 +182,9 @@ bindsym $mod+Right  focus right
 # Monitors). Nicht `focus next`: das springt am Ende auf den Nachbarmonitor.
 bindsym $mod+q      exec ~/.config/eww/scripts/sidebar.py next
 bindsym $mod+Ctrl+q exec ~/.config/eww/scripts/sidebar.py prev
+# Fensterliste links an/aus. Nicht Super+Shift_R: das faellt bei jedem
+# Super+Shift+N mit.
+bindsym $mod+b      exec ~/.config/eww/scripts/sidebar.py toggle
 
 bindsym $mod+Shift+$left  move left
 bindsym $mod+Shift+$down  move down

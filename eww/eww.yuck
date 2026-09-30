@@ -111,18 +111,17 @@
 ; Sidebar beginnt darunter. Auf "fg" gewinnt, wer zuerst startet.
 (defwindow sidebar [screen height]
   :monitor screen
-  :geometry (geometry :width "120px" :height height :anchor "center left")
+  :geometry (geometry :width "96px" :height height :anchor "center left")
   :stacking "bottom"
   :exclusive true
   :focusable false
-  (box :class "sidebar" :orientation "v" :space-evenly false :spacing 4
+  (box :class "sidebar" :orientation "v" :space-evenly false :spacing 4 :valign "center"
     (for w in {wins?.[screen] ?: []}
       (button :class "win ${w.focused ? 'active' : ''}" :tooltip {w.title}
               :onclick "swaymsg '[con_id=${w.id}] focus'"
               :onmiddleclick "swaymsg '[con_id=${w.id}] kill'"
-        (box :space-evenly false :spacing 6
-          (image :visible {w.path == ""} :icon {w.icon} :icon-size "menu")
-          (image :visible {w.path != ""} :path {w.path} :image-width 16 :image-height 16)
+        (box :space-evenly false :spacing 5
+          (image :path {w.icon} :image-width 16 :image-height 16)
           (box :orientation "v" :space-evenly false :valign "center"
-            (label :class "win-app" :xalign 0 :limit-width 11 :text {w.name})
-            (label :class "win-title" :xalign 0 :limit-width 11 :text {w.title})))))))
+            (label :class "win-app" :xalign 0 :limit-width 9 :text {w.name})
+            (label :class "win-title" :xalign 0 :limit-width 9 :text {w.title})))))))
