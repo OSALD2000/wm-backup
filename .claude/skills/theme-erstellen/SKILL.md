@@ -41,6 +41,11 @@ S=.claude/skills/theme-switch/scripts/theme.sh
   `git tag -l '<Name>-v*'`. Pruefen, dass der Tag noch nicht existiert.
 
 ### 3. Design festlegen
+Die **Bedienung ist fest** (Abschnitt "Standard-Bedienung" in `CLAUDE.md`:
+Workspaces u/i/o mit 1-10, Super+q/b/Shift+z, Fensterliste links, Hilfe-Panel,
+unsichtbare Tab-Zeile). Ein Theme aendert nur den Look. Soll davon etwas
+anders werden, erst mit dem User klaeren und danach `CLAUDE.md` nachziehen.
+
 Mit dem User klaeren, bevor Dateien angefasst werden:
 - Palette: Hintergrund, Text, Akzent, gedimmter Akzent, Linie, Alarm. Als
   Variablen oben in jede Datei, wie die bestehenden `$hl2_*` in der
@@ -74,8 +79,12 @@ Konventionen aus den bisherigen Themes, die sich bewaehrt haben:
   `lock.sh`, `learn.py`), nicht umbenennen.
 - `learn.py stop` vor Lock/Exit/Idle und die eww-Datenquelle `learn` erhalten:
   der Lern-Timer ist Funktion, nicht Deko.
-- Oeffnet das Theme andere eww-Fenster, die Zeile `exec … eww open…` in der
-  sway-Config anpassen. `theme-switch` liest genau diese Zeile.
+- eww startet nur ueber `exec_always … sidebar.py watch`; der Watcher oeffnet
+  `hud-left hud-right` in `watch()`. Braucht das Theme andere Dauer-Fenster,
+  dort eintragen, keine zweite `eww open`-Zeile (zwei Starts = zwei Daemons).
+- `sidebar`, `info` und die waybar-Workspace-Icons mit umfaerben
+  (`eww.scss`, `waybar/style.css`). Aendern sich Binds oder Assigns, das
+  Hilfe-Panel `info` in `eww.yuck` mitziehen.
 - Neue Komponente (neuer Ordner, neues Ziel ausserhalb von `~/.config`)?
   In `map()` in `theme.sh` und in die Tabelle in `CLAUDE.md` eintragen,
   sonst deployt `switch` sie nicht.
@@ -84,7 +93,8 @@ Konventionen aus den bisherigen Themes, die sich bewaehrt haben:
 1. `$S sync-back`, dann `git status`: Muell (Backups, Caches) wieder
    entfernen und in `EXCL` in `theme.sh` aufnehmen, falls er wiederkommt.
 2. `CLAUDE.md` → Theme-Tabelle um eine Zeile ergaenzen (Tag + Look in einem Satz).
-3. Letzter Commit, dann `git tag <Name>-v<N>` (lightweight, wie die bestehenden).
+3. Letzter Commit, dann `git tag -a <Name>-v<N> -m "<Name>-v<N>: <Look in einem Satz>"`
+   (ab `HL2-v2` annotiert; `theme.sh list` zeigt die Nachricht).
 4. `echo <Name>-v<N> > ~/.local/state/wm-theme`, damit `theme.sh current`
    stimmt.
 5. `$S status` → muss "sauber" sein.
