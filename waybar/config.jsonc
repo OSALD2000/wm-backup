@@ -2,8 +2,8 @@
 //
 // Form: GNOME-artig. Links Launcher + Workspaces + Fenstertitel, mittig die
 // Uhr mit Kalender, rechts der Status-Cluster mit echten Klick-Menues.
-// Die Taskbar unten ist ein eww-Fenster (eww/scripts/taskbar.py), nicht waybar:
-// wlr/taskbar verliert Fenster hinter Tabs und auf unsichtbaren Workspaces.
+// Die Fensterliste ist ein eww-Fenster links (eww/scripts/sidebar.py), nicht
+// wlr/taskbar: das verliert Fenster hinter Tabs.
 //
 // ALLE Icons stehen als \uXXXX-Escape, nicht als Zeichen. Nerd-Font-Glyphen
 // liegen in der Private Use Area (U+E000–U+F8FF) und gehen beim Kopieren durch

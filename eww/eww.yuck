@@ -100,22 +100,25 @@
       (button :class "btn ghost small" :visible {learn.has_last} :tooltip "Letzte gespeicherte Session löschen"
         :onclick "~/.config/eww/scripts/learn.py undo" "↶ Letzte Session"))))
 
-; Taskbar unten, eine pro Monitor (taskbar.py open setzt screen = Output-Name).
-; Alle Fenster des Monitors, auch hinter Tabs; Klick fokussiert, Mittelklick schliesst.
-(deflisten tasks :initial "{}" "~/.config/eww/scripts/taskbar.py watch")
+; Fensterliste links, eine pro Monitor (sidebar.py open setzt screen = Output-Name).
+; Fenster des sichtbaren Workspaces; Klick fokussiert, Mittelklick schliesst.
+; Super+q / Super+Ctrl+q laufen durch dieselbe Liste (sidebar.py next/prev).
+(deflisten wins :initial "{}" "~/.config/eww/scripts/sidebar.py watch")
 
-(defwindow taskbar [screen]
+(defwindow sidebar [screen height]
   :monitor screen
-  :geometry (geometry :width "100%" :height "26px" :anchor "bottom center")
+  :geometry (geometry :width "220px" :height height :anchor "center left")
   :stacking "fg"
   :exclusive true
   :focusable false
-  (box :class "taskbar" :space-evenly false :spacing 4
-    (for w in {tasks?.[screen] ?: []}
-      (button :class "task ${w.focused ? 'active' : ''}" :tooltip {w.title}
+  (box :class "sidebar" :orientation "v" :space-evenly false :spacing 6
+    (for w in {wins?.[screen] ?: []}
+      (button :class "win ${w.focused ? 'active' : ''}" :tooltip {w.title}
               :onclick "swaymsg '[con_id=${w.id}] focus'"
               :onmiddleclick "swaymsg '[con_id=${w.id}] kill'"
-        (box :space-evenly false :spacing 6
-          (image :visible {w.path == ""} :icon {w.icon} :icon-size "menu")
-          (image :visible {w.path != ""} :path {w.path} :image-width 16 :image-height 16)
-          (label :limit-width 28 :text {w.title}))))))
+        (box :space-evenly false :spacing 10
+          (image :visible {w.path == ""} :icon {w.icon} :icon-size "large-toolbar")
+          (image :visible {w.path != ""} :path {w.path} :image-width 24 :image-height 24)
+          (box :orientation "v" :space-evenly false :valign "center"
+            (label :class "win-app" :xalign 0 :limit-width 22 :text {w.name})
+            (label :class "win-title" :xalign 0 :limit-width 22 :text {w.title})))))))
