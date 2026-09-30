@@ -101,6 +101,9 @@ switch)
     # exec_always neu. swayidle (Lock-Befehl!) und eww-Fenster sind nur exec
     # -> selbst neu starten, mit dem Befehl aus der neuen sway-Config.
     if [ -n "${SWAYSOCK:-}" ]; then
+        # eww vor dem Reload beenden: neuere Themes oeffnen ihre eww-Fenster per
+        # exec_always (taskbar.py open), aeltere per exec -> unten.
+        command -v eww >/dev/null && { eww kill >/dev/null 2>&1 || true; }
         swaymsg reload >/dev/null
         # exec-Zeile zu $1 aus der sway-Config, \-Fortsetzungen zusammengefuegt
         execline() {
@@ -110,7 +113,6 @@ switch)
         pkill -x swayidle || true
         cmd=$(execline swayidle); [ -n "$cmd" ] && setsid sh -c "$cmd" >/dev/null 2>&1 &
         if command -v eww >/dev/null; then
-            eww kill >/dev/null 2>&1 || true
             cmd=$(execline 'eww open'); [ -n "$cmd" ] && setsid sh -c "$cmd" >/dev/null 2>&1 &
         fi
     else

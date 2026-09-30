@@ -76,3 +76,11 @@ tooltip { background: rgba(0, 0, 0, 0.85); color: $bright; border: 1px solid $fg
 .x:hover { color: $crit; }
 .new { background: $box_hi; border-radius: 8px; padding: 7px 10px; border: 1px solid $fg; }
 .new entry { color: $bright; caret-color: $bright; }
+
+// ── Taskbar unten (taskbar.py) — wie die Workspace-Kaesten in waybar ─
+.taskbar { background: rgba(22, 20, 13, 0.88); border-top: 1px solid $edge; padding: 0 4px;
+           font-family: "Iosevka Nerd Font", monospace; font-size: 11px; font-weight: bold; }
+.task { color: rgba(255, 220, 0, 0.60); background: $box; border: 1px solid $edge;
+        border-radius: 4px; padding: 0 6px; margin: 3px 0; }
+.task:hover { background: rgba(255, 220, 0, 0.08); color: $bright; }
+.task.active { color: $bright; background: rgba(255, 220, 0, 0.16); border-color: rgba(255, 220, 0, 0.50); }
