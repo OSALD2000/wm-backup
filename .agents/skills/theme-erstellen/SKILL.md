@@ -5,7 +5,7 @@ description: Legt fuer Osas Sway-Desktop ein neues Theme an (oder eine neue Vers
 
 # Neues Theme erstellen
 
-Lies zuerst `CLAUDE.md` im Repo-Root: dort steht, welche Datei wofuer da ist
+Lies zuerst `AGENTS.md` im Repo-Root: dort steht, welche Datei wofuer da ist
 und wohin sie deployt wird. Das Werkzeug:
 
 ```sh
@@ -41,10 +41,10 @@ S=.claude/skills/theme-switch/scripts/theme.sh
   `git tag -l '<Name>-v*'`. Pruefen, dass der Tag noch nicht existiert.
 
 ### 3. Design festlegen
-Die **Bedienung ist fest** (Abschnitt "Standard-Bedienung" in `CLAUDE.md`:
+Die **Bedienung ist fest** (Abschnitt "Standard-Bedienung" in `AGENTS.md`:
 Workspaces u/i/o mit 1-10, Super+q/b/Shift+z, Fensterliste links, Hilfe-Panel,
 unsichtbare Tab-Zeile). Ein Theme aendert nur den Look. Soll davon etwas
-anders werden, erst mit dem User klaeren und danach `CLAUDE.md` nachziehen.
+anders werden, erst mit dem User klaeren und danach `AGENTS.md` nachziehen.
 
 Mit dem User klaeren, bevor Dateien angefasst werden:
 - Palette: Hintergrund, Text, Akzent, gedimmter Akzent, Linie, Alarm. Als
@@ -86,13 +86,13 @@ Konventionen aus den bisherigen Themes, die sich bewaehrt haben:
   (`eww.scss`, `waybar/style.css`). Aendern sich Binds oder Assigns, das
   Hilfe-Panel `info` in `eww.yuck` mitziehen.
 - Neue Komponente (neuer Ordner, neues Ziel ausserhalb von `~/.config`)?
-  In `map()` in `theme.sh` und in die Tabelle in `CLAUDE.md` eintragen,
+  In `map()` in `theme.sh` und in die Tabelle in `AGENTS.md` eintragen,
   sonst deployt `switch` sie nicht.
 
 ### 5. Abschluss
 1. `$S sync-back`, dann `git status`: Muell (Backups, Caches) wieder
    entfernen und in `EXCL` in `theme.sh` aufnehmen, falls er wiederkommt.
-2. `CLAUDE.md` → Theme-Tabelle um eine Zeile ergaenzen (Tag + Look in einem Satz).
+2. `AGENTS.md` → Theme-Tabelle um eine Zeile ergaenzen (Tag + Look in einem Satz).
 3. Letzter Commit, dann `git tag -a <Name>-v<N> -m "<Name>-v<N>: <Look in einem Satz>"`
    (ab `HL2-v2` annotiert; `theme.sh list` zeigt die Nachricht).
 4. `echo <Name>-v<N> > ~/.local/state/wm-theme`, damit `theme.sh current`
