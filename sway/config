@@ -170,7 +170,9 @@ bindsym $mod+Left   focus left
 bindsym $mod+Down   focus down
 bindsym $mod+Up     focus up
 bindsym $mod+Right  focus right
-bindsym $mod+q      focus up
+# q schaltet zyklisch durch die Tabs, egal ob tabbed, stacking oder split
+bindsym $mod+q      focus next
+bindsym $mod+Ctrl+q focus prev
 
 bindsym $mod+Shift+$left  move left
 bindsym $mod+Shift+$down  move down
@@ -184,6 +186,8 @@ bindsym $mod+Shift+Right  move right
 bindsym $mod+h          split h
 bindsym $mod+v          split v
 bindsym $mod+f          fullscreen toggle
+# Neue Workspaces starten tabbed: alle Titel in einer Zeile statt einer je Fenster
+workspace_layout tabbed
 bindsym $mod+s          layout stacking
 bindsym $mod+w          layout tabbed
 bindsym $mod+e          layout toggle split
@@ -195,36 +199,28 @@ bindsym $mod+Shift+minus move scratchpad
 bindsym $mod+minus       scratchpad show
 
 # ── Workspaces ────────────────────────────────────────────────────────────────
-set $ws1  "1 : Home"
-set $ws2  "2 : Chrome"
-set $ws3  "3 : Chrome"
-set $ws4  "4 : IDE"
-set $ws5  "5 : Intellij"
-set $ws6  "6 : VsCode"
-set $ws7  "7 : KeePassXC"
-set $ws8  "8 : Todos"
-set $ws9  "9 : Teams"
-set $ws10 "10 : youtube"
-set $ws11 "11 : Trading"
-set $ws12 "12 : Trading"
+# Jeder Monitor hat eigene 1-10, gleiches Raster ueberall:
+#   1 Terminal  2 Browser  3 Code  4 Code 2  5 Trading  6 frei
+#   7 Tools     8 Todos    9 Chat  10 Medien
+# Kuerzel nach Position, nicht nach Anschluss: u = links, i = mitte, o = Laptop.
+# Name "<nr>:<kuerzel><N>": u = 11-20, i = 21-30, o = 31-40. Die Nummer haelt die
+# Sortierung richtig, ws.sh rechnet daraus den Monitor zurueck.
 
 # Jede Regel zweimal: class/instance greift bei XWayland-Fenstern, app_id bei
-# nativen Wayland-Fenstern (dort ist class immer null). Welchen Weg eine App
-# nimmt, entscheidet sie selbst und kann sich mit dem naechsten Update aendern
-# — beide Varianten anzugeben ist billiger als es nachzujagen.
+# nativen Wayland-Fenstern (dort ist class immer null).
 # Nachpruefen mit: swaymsg -t get_tree | grep -E '"(app_id|class|instance)"'
-assign [class="jetbrains-idea"]                          $ws5
-assign [app_id="jetbrains-idea"]                         $ws5
-assign [class="Code"]                                    $ws6
-assign [app_id="code"]                                   $ws6
-assign [class="KeePassXC"]                               $ws7
-assign [app_id="org.keepassxc.KeePassXC"]                $ws7
-assign [instance="crx_pkakhoojapanfmkoegaeonmdcmmcjfll"] $ws8
-assign [app_id="chrome-pkakhoojapanfmkoegaeonmdcmmcjfll-Profile_1"] $ws8
-assign [instance="crx_cifhbcnohmdccbgoicgdjpfamggdegmo"] $ws9
-assign [app_id="chrome-cifhbcnohmdccbgoicgdjpfamggdegmo-Profile_1"] $ws9
-assign [instance="crx_agimnkijcaahngcdmfeangaknmldooml"] $ws10
-assign [app_id="chrome-agimnkijcaahngcdmfeangaknmldooml-Profile_1"] $ws10
+assign [class="jetbrains-idea"]                                      24:i4
+assign [app_id="jetbrains-idea"]                                     24:i4
+assign [class="Code"]                                                23:i3
+assign [app_id="code"]                                               23:i3
+assign [class="KeePassXC"]                                           37:o7
+assign [app_id="org.keepassxc.KeePassXC"]                            37:o7
+assign [instance="crx_pkakhoojapanfmkoegaeonmdcmmcjfll"]             38:o8
+assign [app_id="chrome-pkakhoojapanfmkoegaeonmdcmmcjfll-Profile_1"]  38:o8
+assign [instance="crx_cifhbcnohmdccbgoicgdjpfamggdegmo"]             39:o9
+assign [app_id="chrome-cifhbcnohmdccbgoicgdjpfamggdegmo-Profile_1"]  39:o9
+assign [instance="crx_agimnkijcaahngcdmfeangaknmldooml"]             40:o10
+assign [app_id="chrome-agimnkijcaahngcdmfeangaknmldooml-Profile_1"]  40:o10
 
 # ── Workspace → Output ────────────────────────────────────────────────────────
 # Fallback-Listen: Sway nimmt den ersten *aktiven* Output der Liste und wertet
@@ -241,45 +237,160 @@ set $mon_m DP-7 DP-8 DP-9 HDMI-A-1 eDP-1
 # zusaetzlich Teams und YouTube abbekommen.
 set $mon_r eDP-1 HDMI-A-1 DP-9 DP-8 DP-7
 
-# links: Home + Browser
-workspace $ws1  output $mon_l
-workspace $ws2  output $mon_l
-workspace $ws3  output $mon_l
-# mitte: Code
-workspace $ws4  output $mon_m
-workspace $ws5  output $mon_m
-workspace $ws6  output $mon_m
-# Laptop rechts: Nebenkram
-workspace $ws7  output $mon_r
-workspace $ws8  output $mon_r
-workspace $ws9  output $mon_r
-workspace $ws10 output $mon_r
+# u: links
+workspace 11:u1 output $mon_l
+workspace 12:u2 output $mon_l
+workspace 13:u3 output $mon_l
+workspace 14:u4 output $mon_l
+workspace 15:u5 output $mon_l
+workspace 16:u6 output $mon_l
+workspace 17:u7 output $mon_l
+workspace 18:u8 output $mon_l
+workspace 19:u9 output $mon_l
+workspace 20:u10 output $mon_l
 
-bindsym $mod+1 workspace number $ws1
-bindsym $mod+2 workspace number $ws2
-bindsym $mod+3 workspace number $ws3
-bindsym $mod+4 workspace number $ws4
-bindsym $mod+5 workspace number $ws5
-bindsym $mod+6 workspace number $ws6
-bindsym $mod+7 workspace number $ws7
-bindsym $mod+8 workspace number $ws8
-bindsym $mod+9 workspace number $ws9
-bindsym $mod+0 workspace number $ws10
-bindsym $mod+F11 workspace number $ws11
-bindsym $mod+F12 workspace number $ws12
+# i: mitte
+workspace 21:i1 output $mon_m
+workspace 22:i2 output $mon_m
+workspace 23:i3 output $mon_m
+workspace 24:i4 output $mon_m
+workspace 25:i5 output $mon_m
+workspace 26:i6 output $mon_m
+workspace 27:i7 output $mon_m
+workspace 28:i8 output $mon_m
+workspace 29:i9 output $mon_m
+workspace 30:i10 output $mon_m
 
-bindsym $mod+Shift+1 move container to workspace number $ws1
-bindsym $mod+Shift+2 move container to workspace number $ws2
-bindsym $mod+Shift+3 move container to workspace number $ws3
-bindsym $mod+Shift+4 move container to workspace number $ws4
-bindsym $mod+Shift+5 move container to workspace number $ws5
-bindsym $mod+Shift+6 move container to workspace number $ws6
-bindsym $mod+Shift+7 move container to workspace number $ws7
-bindsym $mod+Shift+8 move container to workspace number $ws8
-bindsym $mod+Shift+9 move container to workspace number $ws9
-bindsym $mod+Shift+0 move container to workspace number $ws10
-bindsym $mod+Shift+F11 move container to workspace number $ws11
-bindsym $mod+Shift+F12 move container to workspace number $ws12
+# o: Laptop rechts
+workspace 31:o1 output $mon_r
+workspace 32:o2 output $mon_r
+workspace 33:o3 output $mon_r
+workspace 34:o4 output $mon_r
+workspace 35:o5 output $mon_r
+workspace 36:o6 output $mon_r
+workspace 37:o7 output $mon_r
+workspace 38:o8 output $mon_r
+workspace 39:o9 output $mon_r
+workspace 40:o10 output $mon_r
+
+# Super+N / Super+Shift+N: Workspace N des Monitors, auf dem man gerade ist.
+bindsym $mod+1 exec ~/.config/sway/scripts/ws.sh go 1
+bindsym $mod+2 exec ~/.config/sway/scripts/ws.sh go 2
+bindsym $mod+3 exec ~/.config/sway/scripts/ws.sh go 3
+bindsym $mod+4 exec ~/.config/sway/scripts/ws.sh go 4
+bindsym $mod+5 exec ~/.config/sway/scripts/ws.sh go 5
+bindsym $mod+6 exec ~/.config/sway/scripts/ws.sh go 6
+bindsym $mod+7 exec ~/.config/sway/scripts/ws.sh go 7
+bindsym $mod+8 exec ~/.config/sway/scripts/ws.sh go 8
+bindsym $mod+9 exec ~/.config/sway/scripts/ws.sh go 9
+bindsym $mod+0 exec ~/.config/sway/scripts/ws.sh go 10
+bindsym $mod+Shift+1 exec ~/.config/sway/scripts/ws.sh move 1
+bindsym $mod+Shift+2 exec ~/.config/sway/scripts/ws.sh move 2
+bindsym $mod+Shift+3 exec ~/.config/sway/scripts/ws.sh move 3
+bindsym $mod+Shift+4 exec ~/.config/sway/scripts/ws.sh move 4
+bindsym $mod+Shift+5 exec ~/.config/sway/scripts/ws.sh move 5
+bindsym $mod+Shift+6 exec ~/.config/sway/scripts/ws.sh move 6
+bindsym $mod+Shift+7 exec ~/.config/sway/scripts/ws.sh move 7
+bindsym $mod+Shift+8 exec ~/.config/sway/scripts/ws.sh move 8
+bindsym $mod+Shift+9 exec ~/.config/sway/scripts/ws.sh move 9
+bindsym $mod+Shift+0 exec ~/.config/sway/scripts/ws.sh move 10
+
+# Super+u/i/o, dann Super+N (Super gedrueckt halten): Workspace N auf dem
+# Monitor. Mit Ctrl dasselbe, aber das Fenster wandert mit hin. waybar zeigt
+# den offenen Mode im sway/mode-Modul an; Escape bricht ab.
+
+bindsym $mod+u mode "λ u"
+mode "λ u" {
+    bindsym $mod+1 workspace 11:u1, mode default
+    bindsym $mod+2 workspace 12:u2, mode default
+    bindsym $mod+3 workspace 13:u3, mode default
+    bindsym $mod+4 workspace 14:u4, mode default
+    bindsym $mod+5 workspace 15:u5, mode default
+    bindsym $mod+6 workspace 16:u6, mode default
+    bindsym $mod+7 workspace 17:u7, mode default
+    bindsym $mod+8 workspace 18:u8, mode default
+    bindsym $mod+9 workspace 19:u9, mode default
+    bindsym $mod+0 workspace 20:u10, mode default
+    bindsym Escape mode default
+    bindsym $mod+Escape mode default
+}
+bindsym $mod+Ctrl+u mode "λ u →"
+mode "λ u →" {
+    bindsym $mod+Ctrl+1 move container to workspace 11:u1, mode default
+    bindsym $mod+Ctrl+2 move container to workspace 12:u2, mode default
+    bindsym $mod+Ctrl+3 move container to workspace 13:u3, mode default
+    bindsym $mod+Ctrl+4 move container to workspace 14:u4, mode default
+    bindsym $mod+Ctrl+5 move container to workspace 15:u5, mode default
+    bindsym $mod+Ctrl+6 move container to workspace 16:u6, mode default
+    bindsym $mod+Ctrl+7 move container to workspace 17:u7, mode default
+    bindsym $mod+Ctrl+8 move container to workspace 18:u8, mode default
+    bindsym $mod+Ctrl+9 move container to workspace 19:u9, mode default
+    bindsym $mod+Ctrl+0 move container to workspace 20:u10, mode default
+    bindsym Escape mode default
+    bindsym $mod+Ctrl+Escape mode default
+}
+
+bindsym $mod+i mode "λ i"
+mode "λ i" {
+    bindsym $mod+1 workspace 21:i1, mode default
+    bindsym $mod+2 workspace 22:i2, mode default
+    bindsym $mod+3 workspace 23:i3, mode default
+    bindsym $mod+4 workspace 24:i4, mode default
+    bindsym $mod+5 workspace 25:i5, mode default
+    bindsym $mod+6 workspace 26:i6, mode default
+    bindsym $mod+7 workspace 27:i7, mode default
+    bindsym $mod+8 workspace 28:i8, mode default
+    bindsym $mod+9 workspace 29:i9, mode default
+    bindsym $mod+0 workspace 30:i10, mode default
+    bindsym Escape mode default
+    bindsym $mod+Escape mode default
+}
+bindsym $mod+Ctrl+i mode "λ i →"
+mode "λ i →" {
+    bindsym $mod+Ctrl+1 move container to workspace 21:i1, mode default
+    bindsym $mod+Ctrl+2 move container to workspace 22:i2, mode default
+    bindsym $mod+Ctrl+3 move container to workspace 23:i3, mode default
+    bindsym $mod+Ctrl+4 move container to workspace 24:i4, mode default
+    bindsym $mod+Ctrl+5 move container to workspace 25:i5, mode default
+    bindsym $mod+Ctrl+6 move container to workspace 26:i6, mode default
+    bindsym $mod+Ctrl+7 move container to workspace 27:i7, mode default
+    bindsym $mod+Ctrl+8 move container to workspace 28:i8, mode default
+    bindsym $mod+Ctrl+9 move container to workspace 29:i9, mode default
+    bindsym $mod+Ctrl+0 move container to workspace 30:i10, mode default
+    bindsym Escape mode default
+    bindsym $mod+Ctrl+Escape mode default
+}
+
+bindsym $mod+o mode "λ o"
+mode "λ o" {
+    bindsym $mod+1 workspace 31:o1, mode default
+    bindsym $mod+2 workspace 32:o2, mode default
+    bindsym $mod+3 workspace 33:o3, mode default
+    bindsym $mod+4 workspace 34:o4, mode default
+    bindsym $mod+5 workspace 35:o5, mode default
+    bindsym $mod+6 workspace 36:o6, mode default
+    bindsym $mod+7 workspace 37:o7, mode default
+    bindsym $mod+8 workspace 38:o8, mode default
+    bindsym $mod+9 workspace 39:o9, mode default
+    bindsym $mod+0 workspace 40:o10, mode default
+    bindsym Escape mode default
+    bindsym $mod+Escape mode default
+}
+bindsym $mod+Ctrl+o mode "λ o →"
+mode "λ o →" {
+    bindsym $mod+Ctrl+1 move container to workspace 31:o1, mode default
+    bindsym $mod+Ctrl+2 move container to workspace 32:o2, mode default
+    bindsym $mod+Ctrl+3 move container to workspace 33:o3, mode default
+    bindsym $mod+Ctrl+4 move container to workspace 34:o4, mode default
+    bindsym $mod+Ctrl+5 move container to workspace 35:o5, mode default
+    bindsym $mod+Ctrl+6 move container to workspace 36:o6, mode default
+    bindsym $mod+Ctrl+7 move container to workspace 37:o7, mode default
+    bindsym $mod+Ctrl+8 move container to workspace 38:o8, mode default
+    bindsym $mod+Ctrl+9 move container to workspace 39:o9, mode default
+    bindsym $mod+Ctrl+0 move container to workspace 40:o10, mode default
+    bindsym Escape mode default
+    bindsym $mod+Ctrl+Escape mode default
+}
 
 # ── Session ───────────────────────────────────────────────────────────────────
 # Sway kennt kein "restart" — reload reicht, der Compositor bleibt stehen.
