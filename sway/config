@@ -457,5 +457,8 @@ mode "[ RESIZE ]" {
 # ~/.config/i3status/config loeschen.
 
 # eww: HL2-HUD (HEALTH/SUIT unten links, AMMO = Lern-Timer unten rechts) auf dem Laptop (eDP-1), Super+Z klappt das Lern-Panel auf/zu
-exec --no-startup-id eww open-many hud-left hud-right
+# + Taskbar unten, eine pro Monitor. Alles in einem eww-Aufruf (taskbar.py open),
+# exec_always, damit Super+Shift+C nach dem Anstecken eines Monitors auch dort
+# eine oeffnet.
+exec_always --no-startup-id ~/.config/eww/scripts/taskbar.py open
 bindsym $mod+z exec --no-startup-id eww open --toggle learn

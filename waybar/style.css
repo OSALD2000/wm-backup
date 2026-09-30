@@ -215,25 +215,3 @@ window#waybar.empty #window { padding: 0; }
   color: @on_alert;
 }
 
-/* ── untere Bar: Taskbar ────────────────────────────────────────────────────*/
-window#waybar.bottom {
-  border-bottom: none;
-  border-top: 1px solid @edge;
-}
-#taskbar { margin: 0 4px; }
-#taskbar button {
-  color: @ink_dim;
-  background: @box;
-  border: 1px solid @edge;
-  border-radius: 4px;
-  padding: 0 6px;
-  margin: 3px 2px;
-}
-#taskbar button image { margin-right: 4px; }
-#taskbar button:hover { background: @hover; color: @ink; }
-#taskbar button.active {
-  color: @ink;
-  background: @fill;
-  border-color: rgba(255, 220, 0, 0.50);
-}
-#taskbar button.urgent { background: @alert; color: @on_alert; }
