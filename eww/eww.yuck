@@ -26,13 +26,16 @@
   :stacking "bottom"
   :exclusive false
   :focusable false
+  (box :space-evenly false :spacing 12
+  (button :class "hud-btn" :tooltip "Hilfe: Monitore und Shortcuts (Super+Shift+Z)" :onclick "eww open --toggle info"
+    (box :class "hud info-btn" (label :class "hud-num" :text "?")))
   (button :class "hud-btn" :tooltip "Lern-Panel (Super+Z)" :onclick "eww open --toggle learn"
     (box :class "hud ammo ${learn.running ? 'on' : ''}" :space-evenly false :spacing 14
       (box :orientation "v" :space-evenly false :valign "end"
         (label :class "hud-label" :xalign 0 :text "🔥 ${learn.all_streak}")
         (label :class "hud-label" :xalign 0 :text {learn.topic == "" ? "AMMO" : learn.topic}))
       (label :class "hud-num" :text {learn.running ? learn.elapsed : "--"})
-      (label :class "hud-small" :valign "end" :text {learn.all_today}))))
+      (label :class "hud-small" :valign "end" :text {learn.all_today})))))
 
 (defwidget stat [label value]
   (box :class "stat" :orientation "v" :space-evenly false
@@ -124,3 +127,109 @@
         (box :orientation "v" :space-evenly false :spacing 2
           (image :path {w.icon} :image-width 16 :image-height 16)
           (label :class "win-app" :limit-width 8 :text {w.name}))))))
+
+; Hilfe (Super+Shift+z oder ? neben AMMO): Workspace-Matrix und Shortcuts.
+; Statisch — bei neuen Binds oder assigns in sway/config hier nachziehen.
+(defwidget ws-cell [ws app]
+  (box :class "mx-cell ${app == '' ? '' : 'set'}" :orientation "v" :space-evenly false
+    (label :class "mx-ws" :text ws)
+    (label :class "mx-app" :visible {app != ""} :text app)))
+
+(defwidget key [k d]
+  (box :space-evenly false :spacing 10
+    (label :class "key" :xalign 0 :text k)
+    (label :class "key-d" :xalign 0 :text d)))
+
+(defwindow info
+  :monitor "eDP-1"
+  :geometry (geometry :anchor "center")
+  :stacking "overlay"
+  :exclusive false
+  :focusable false
+  (eventbox :onclick "eww close info"  ; Klick irgendwo aufs Panel schliesst
+  (box :class "panel info" :space-evenly false :spacing 28
+    (box :orientation "v" :space-evenly false :spacing 4
+      (label :class "section" :xalign 0 :text "MONITORE  ·  gleiches Raster auf jedem Schirm")
+      (box :class "mx-row" :space-evenly false
+        (label :class "mx-nr" :text "")
+        (label :class "mx-area" :text "")
+        (label :class "mx-head" :text "U  links")
+        (label :class "mx-head" :text "I  Mitte")
+        (label :class "mx-head" :text "O  Laptop"))
+      (box :class "mx-row" :space-evenly false
+        (label :class "mx-nr" :text "1")
+        (label :class "mx-area" :xalign 0 :text "  Terminal")
+        (ws-cell :ws "u1" :app "") (ws-cell :ws "i1" :app "") (ws-cell :ws "o1" :app ""))
+      (box :class "mx-row" :space-evenly false
+        (label :class "mx-nr" :text "2")
+        (label :class "mx-area" :xalign 0 :text "  Browser")
+        (ws-cell :ws "u2" :app "") (ws-cell :ws "i2" :app "") (ws-cell :ws "o2" :app ""))
+      (box :class "mx-row" :space-evenly false
+        (label :class "mx-nr" :text "3")
+        (label :class "mx-area" :xalign 0 :text "  Code")
+        (ws-cell :ws "u3" :app "") (ws-cell :ws "i3" :app "VS Code") (ws-cell :ws "o3" :app ""))
+      (box :class "mx-row" :space-evenly false
+        (label :class "mx-nr" :text "4")
+        (label :class "mx-area" :xalign 0 :text "  Code 2")
+        (ws-cell :ws "u4" :app "") (ws-cell :ws "i4" :app "IntelliJ") (ws-cell :ws "o4" :app ""))
+      (box :class "mx-row" :space-evenly false
+        (label :class "mx-nr" :text "5")
+        (label :class "mx-area" :xalign 0 :text "  Trading")
+        (ws-cell :ws "u5" :app "") (ws-cell :ws "i5" :app "") (ws-cell :ws "o5" :app ""))
+      (box :class "mx-row" :space-evenly false
+        (label :class "mx-nr" :text "6")
+        (label :class "mx-area" :xalign 0 :text "  frei")
+        (ws-cell :ws "u6" :app "") (ws-cell :ws "i6" :app "") (ws-cell :ws "o6" :app ""))
+      (box :class "mx-row" :space-evenly false
+        (label :class "mx-nr" :text "7")
+        (label :class "mx-area" :xalign 0 :text "  Tools")
+        (ws-cell :ws "u7" :app "") (ws-cell :ws "i7" :app "") (ws-cell :ws "o7" :app "KeePassXC"))
+      (box :class "mx-row" :space-evenly false
+        (label :class "mx-nr" :text "8")
+        (label :class "mx-area" :xalign 0 :text "  Todos")
+        (ws-cell :ws "u8" :app "") (ws-cell :ws "i8" :app "") (ws-cell :ws "o8" :app "To Do"))
+      (box :class "mx-row" :space-evenly false
+        (label :class "mx-nr" :text "9")
+        (label :class "mx-area" :xalign 0 :text "  Chat")
+        (ws-cell :ws "u9" :app "") (ws-cell :ws "i9" :app "") (ws-cell :ws "o9" :app "Teams"))
+      (box :class "mx-row" :space-evenly false
+        (label :class "mx-nr" :text "0")
+        (label :class "mx-area" :xalign 0 :text "  Medien")
+        (ws-cell :ws "u10" :app "") (ws-cell :ws "i10" :app "") (ws-cell :ws "o10" :app "YouTube"))
+      (label :class "muted small" :xalign 0 :text "Gelb = App landet dort automatisch (assign). Klick schliesst."))
+    (box :orientation "v" :space-evenly false :spacing 3
+      (label :class "section" :xalign 0 :text "WORKSPACES")
+        (key :k "Super+1…0" :d "Workspace N auf diesem Monitor")
+        (key :k "Super+Shift+1…0" :d "Fenster dorthin schieben")
+        (key :k "Super+u/i/o, Super+N" :d "Workspace N links / Mitte / Laptop")
+        (key :k "Super+Ctrl+u/i/o, Super+Ctrl+N" :d "Fenster dorthin schieben")
+        (key :k "Esc" :d "u/i/o-Modus abbrechen")
+      (label :class "section" :xalign 0 :text "FENSTER")
+        (key :k "Super+q / Super+Ctrl+q" :d "naechstes / voriges (Liste links)")
+        (key :k "Super+b" :d "Liste links an/aus")
+        (key :k "Super+j k l ö" :d "Fokus, mit Shift verschieben")
+        (key :k "Super+w / e" :d "Tabs / Split umschalten")
+        (key :k "Super+h / v" :d "teilen waagrecht / senkrecht")
+        (key :k "Super+f" :d "Vollbild")
+        (key :k "Super+Shift+Space" :d "schwebend")
+        (key :k "Super+r" :d "Groesse aendern")
+        (key :k "Super+Shift+q" :d "schliessen")
+        (key :k "Super+Shift+- / Super+-" :d "Scratchpad rein / zeigen")
+      (label :class "section" :xalign 0 :text "APPS")
+        (key :k "Super+Return" :d "Terminal")
+        (key :k "Super+d" :d "Launcher")
+        (key :k "Super+Tab" :d "alle Fenster suchen")
+        (key :k "Super+x" :d "KeePassXC")
+        (key :k "Super+t / Super+Shift+t" :d "To Do / Teams")
+        (key :k "Super+Shift+m w h o" :d "Outlook, WhatsApp, Whiteboard, Office")
+        (key :k "Super+Shift+f p v" :d "Dateien, Kalender, Zwischenablage")
+      (label :class "section" :xalign 0 :text "SYSTEM")
+        (key :k "Super+z" :d "Lern-Timer")
+        (key :k "Super+Shift+z" :d "diese Hilfe")
+        (key :k "Super+n / Super+Shift+n" :d "Benachrichtigungen / Nicht stoeren")
+        (key :k "Super+Shift+x" :d "sperren")
+        (key :k "Super+Shift+e" :d "abmelden")
+        (key :k "Super+Shift+c" :d "Sway neu laden")
+        (key :k "Super+Shift+s / Super+Ctrl+s" :d "Monitore anordnen / ohne Laptop")
+        (key :k "Print, Ctrl+Print" :d "Screenshot, in Zwischenablage")
+        (key :k "Shift+Print" :d "Bereich in Zwischenablage")))))

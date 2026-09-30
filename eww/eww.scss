@@ -85,3 +85,18 @@ tooltip { background: rgba(0, 0, 0, 0.85); color: $bright; border: 1px solid $fg
 .win-app   { color: rgba(255, 220, 0, 0.70); font-size: 7px; }
 .win.active { background: rgba(255, 220, 0, 0.16); border-color: rgba(255, 220, 0, 0.50); }
 .win.active .win-app { color: $bright; }
+
+// ── Hilfe (info) ─────────────────────────────────────────────────
+.info { font-family: "Iosevka Nerd Font", monospace; font-size: 11px; background: rgba(20, 19, 16, 0.96); }
+.info-btn .hud-num { min-width: 20px; }
+.mx-row  { margin: 1px 0; }
+.mx-nr   { min-width: 18px; min-height: 34px; color: $label; font-weight: bold; }
+.mx-area { min-width: 88px; color: $label; }
+.mx-head { min-width: 84px; margin: 0 2px; color: $bright; font-weight: bold; }
+.mx-cell { min-width: 84px; min-height: 30px; margin: 0 2px; padding: 3px 0; background: $box_hi; border: 1px solid $edge; border-radius: 4px; }
+.mx-cell.set { border-color: rgba(255, 220, 0, 0.50); background: rgba(255, 220, 0, 0.12); }
+.mx-ws   { color: $label; font-size: 10px; }
+.mx-app  { color: $bright; font-weight: bold; }
+.key     { min-width: 200px; color: $bright; font-weight: bold; }
+.key-d   { color: $label; }
+.info .section { margin-top: 8px; }
