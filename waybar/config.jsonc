@@ -2,7 +2,7 @@
 //
 // Form: GNOME-artig. Links Launcher + Workspaces + Fenstertitel, mittig die
 // Uhr mit Kalender, rechts der Status-Cluster mit echten Klick-Menues.
-// Kein Fenster-Button-Streifen — die 12 assign-Workspaces leisten das schon.
+// Unten eine zweite Bar mit der Taskbar (Fenster dieses Monitors).
 //
 // ALLE Icons stehen als \uXXXX-Escape, nicht als Zeichen. Nerd-Font-Glyphen
 // liegen in der Private Use Area (U+E000–U+F8FF) und gehen beim Kopieren durch
@@ -16,7 +16,7 @@
 // ein dreifaches Tray ist haesslicher als ein fehlendes gefaehrlich ist.
 // Upgrade-Pfad wenn es stoert: zwei Bar-Objekte in diesem Array, das zweite
 // mit "output": ["!DP-7", "*"] und ohne tray/custom-notification.
-{
+[{
   "layer": "top",
   "position": "top",
   // Durchgehend von links nach rechts, kein Rand, keine Inseln.
@@ -26,6 +26,7 @@
 
   "modules-left": [
     "custom/launcher",
+    "custom/monitor",
     "sway/workspaces",
     "sway/mode",
     "sway/scratchpad",
@@ -56,27 +57,53 @@
     "on-click": "rofi -config ~/.config/rofi/config-nord.rasi -modi drun,run -show drun"
   },
 
+  // Kuerzel dieses Monitors (U/I/O), abgelesen am ersten Workspace auf dem
+  // Output. waybar setzt WAYBAR_OUTPUT_NAME pro Bar.
+  "custom/monitor": {
+    "exec": "swaymsg -t get_workspaces | jq -r --arg o \"$WAYBAR_OUTPUT_NAME\" '[.[] | select(.output == $o) | .name | split(\":\")[1][0:1] | ascii_upcase] | .[0:1] | join(\"\")'",
+    "interval": 5,
+    "tooltip": false
+  },
+
   "sway/workspaces": {
     "disable-scroll": true,
     "all-outputs": false,
-    // Die Workspace-Namen sind "1 : Home", "9 : Teams" usw. In der Bar reicht
-    // die Zahl. Wichtig: {icon}, nicht {name} — mit {name} waere die
-    // format-icons-Tabelle unten wirkungslos und es stuende "1 : Home" in der
-    // Leiste.
+    // Namen "11:u1" … "40:o10" (siehe sway/config). Jede Nummer hat auf jedem
+    // Monitor dieselbe Bedeutung, die Bar zeigt das Bereichs-Icon:
+    // 1 Terminal, 2 Browser, 3 Code, 4 Code 2, 5 Trading, 6 frei, 7 Tools,
+    // 8 Todos, 9 Chat, 10 Medien. Wichtig: {icon}, nicht {name}.
     "format": "{icon}",
     "format-icons": {
-      "1 : Home": "1",
-      "2 : Chrome": "2",
-      "3 : Chrome": "3",
-      "4 : IDE": "4",
-      "5 : Intellij": "5",
-      "6 : VsCode": "6",
-      "7 : KeePassXC": "7",
-      "8 : Todos": "8",
-      "9 : Teams": "9",
-      "10 : youtube": "10",
-      "11 : Trading": "11",
-      "12 : Trading": "12"
+      "11:u1": "\uf120",
+      "12:u2": "\uf0ac",
+      "13:u3": "\uf121",
+      "14:u4": "\uf1c9",
+      "15:u5": "\uf201",
+      "16:u6": "\uf111",
+      "17:u7": "\uf084",
+      "18:u8": "\uf00c",
+      "19:u9": "\uf086",
+      "20:u10": "\uf04b",
+      "21:i1": "\uf120",
+      "22:i2": "\uf0ac",
+      "23:i3": "\uf121",
+      "24:i4": "\uf1c9",
+      "25:i5": "\uf201",
+      "26:i6": "\uf111",
+      "27:i7": "\uf084",
+      "28:i8": "\uf00c",
+      "29:i9": "\uf086",
+      "30:i10": "\uf04b",
+      "31:o1": "\uf120",
+      "32:o2": "\uf0ac",
+      "33:o3": "\uf121",
+      "34:o4": "\uf1c9",
+      "35:o5": "\uf201",
+      "36:o6": "\uf111",
+      "37:o7": "\uf084",
+      "38:o8": "\uf00c",
+      "39:o9": "\uf086",
+      "40:o10": "\uf04b"
     }
   },
 
@@ -292,4 +319,29 @@
     "tooltip": false,
     "on-click": "~/.config/sway/scripts/powermenu.sh"
   }
-}
+},
+
+// ── unten: Taskbar ────────────────────────────────────────────────────────────
+// Alle Fenster dieses Monitors (auch auf anderen Workspaces), Klick springt hin.
+// wlr/taskbar kann nicht nach Workspace filtern.
+{
+  "layer": "top",
+  "position": "bottom",
+  "height": 24,
+  "spacing": 0,
+  "modules-left": ["wlr/taskbar"],
+  "wlr/taskbar": {
+    "all-outputs": false,
+    "format": "{icon} {title}",
+    "icon-size": 14,
+    "max-length": 28,
+    "tooltip-format": "{title}",
+    "on-click": "activate",
+    "on-click-middle": "close",
+    "rewrite": {
+      "(.*) — Mozilla Firefox": "$1",
+      "(.*) - Google Chrome": "$1",
+      "(.*) - Visual Studio Code": "$1"
+    }
+  }
+}]
