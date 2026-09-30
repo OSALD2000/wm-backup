@@ -1,12 +1,15 @@
 #!/usr/bin/python3
 """Fensterliste links (eww-Fenster "sidebar"), eine pro Monitor.
 
-Zeigt die Fenster des sichtbaren Workspaces dieses Monitors, in Baum-Reihenfolge.
+Zeigt die Fenster des sichtbaren Workspaces dieses Monitors, in Baum-Reihenfolge,
+erst ab MIN_WINDOWS Fenstern (sonst ist das eww-Fenster zu und gibt den Platz frei).
 Super+q / Super+Ctrl+q laufen mit next/prev genau durch diese Liste im Kreis und
 verlassen den Monitor nie (sways `focus next` springt am Ende raus).
 
-Aufruf: sidebar.py watch       JSON {output: [fenster, ...]} bei jeder Aenderung
-        sidebar.py open        HUD + je Output eine Sidebar oeffnen
+Aufruf: sidebar.py watch       eww neu starten (HUD oeffnen), dann bei jeder
+                               Aenderung `eww update wins=...` und Sidebars
+                               oeffnen/schliessen. Laeuft per exec_always, ein
+                               neuer Start beendet den alten (PIDFILE).
         sidebar.py next|prev   naechstes/vorheriges Fenster der Liste fokussieren
         sidebar.py selftest
 """
@@ -16,6 +19,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 
 APP_DIRS = [os.path.expanduser("~/.local/share/applications"),
             "/usr/share/applications",
@@ -23,6 +27,8 @@ APP_DIRS = [os.path.expanduser("~/.local/share/applications"),
             "/var/lib/flatpak/exports/share/applications"]
 FALLBACK = "application-x-executable"  # Icon fuer Apps ohne .desktop-Eintrag
 WAYBAR_HEIGHT = 30  # = "height" in waybar/config.jsonc
+MIN_WINDOWS = 2     # darunter keine Sidebar
+PIDFILE = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "eww-sidebar.pid")
 
 
 def swaymsg(*args):
@@ -96,34 +102,54 @@ def cycle(delta):
         subprocess.run(["swaymsg", f"[con_id={wid}] focus"], capture_output=True)
 
 
+def eww(*args):
+    # DEVNULL statt capture_output: startet eww dabei den Daemon, erbt der die
+    # Pipe, und capture wartet ewig
+    subprocess.run(["eww", *args], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def kill_previous():
+    """exec_always startet bei jedem Reload einen neuen Watcher -> alten beenden.
+    Per PID-Datei statt pkill -f: das traefe auch die sh -c-Zeile von sway."""
+    try:
+        with open(PIDFILE) as f:
+            os.kill(int(f.read()), 15)
+    except (OSError, ValueError):
+        pass
+    with open(PIDFILE, "w") as f:
+        f.write(str(os.getpid()))
+
+
 def watch():
+    kill_previous()
+    # Alle eww-Prozesse weg, nicht nur `eww kill`: ein Daemon, der seinen Socket
+    # verloren hat (zwei gleichzeitige Starts), zeigt seine Fenster weiter an
+    # und ist per eww nicht mehr erreichbar -> doppelte Sidebar.
+    subprocess.run(["pkill", "-x", "eww"])
+    time.sleep(0.3)
+    eww("open-many", "hud-left", "hud-right")
     apps = desktop_apps()  # ponytail: nur beim Start; neu installierte Apps nach Super+Shift+C
-    events = subprocess.Popen(["swaymsg", "-m", "-t", "subscribe", '["window","workspace"]'],
+    events = subprocess.Popen(["swaymsg", "-m", "-t", "subscribe", '["window","workspace","output"]'],
                               stdout=subprocess.PIPE, text=True)
-    last = None
+    last, shown = None, set()
     while True:
-        cur = json.dumps(visible_windows(swaymsg("-t", "get_tree"), apps))
+        wins = visible_windows(swaymsg("-t", "get_tree"), apps)
+        cur = json.dumps(wins)
         if cur != last:
-            print(cur, flush=True)
+            eww("update", "wins=" + cur)
             last = cur
+        want = {o for o, w in wins.items() if len(w) >= MIN_WINDOWS}
+        if want != shown:
+            heights = {o["name"]: o["rect"]["height"] for o in swaymsg("-t", "get_outputs")}
+            for o in shown - want:
+                eww("close", "sidebar-" + o)
+            for o in want - shown:
+                # "100%" wuerde unter die waybar reichen
+                eww("open", "sidebar", "--id", "sidebar-" + o, "--arg", "screen=" + o,
+                    "--arg", f"height={heights.get(o, 1080) - WAYBAR_HEIGHT}px")
+            shown = want
         if not events.stdout.readline():
             return
-
-
-def open_bars():
-    """Alle eww-Fenster in EINEM Aufruf: mehrere eww-Aufrufe gleichzeitig starten
-    sonst je einen eigenen Daemon, und nur einer gewinnt."""
-    # ponytail: nur bei Start/Reload, nach Hotplug Super+Shift+C
-    cmd = ["eww", "open-many", "hud-left", "hud-right"]
-    for o in swaymsg("-t", "get_outputs"):
-        if o["active"]:
-            wid = "sidebar-" + o["name"]
-            # "100%" wuerde unter die waybar reichen und sie verdecken
-            h = o["rect"]["height"] - WAYBAR_HEIGHT
-            cmd += [f"sidebar:{wid}", "--arg", f"{wid}:screen={o['name']}",
-                    "--arg", f"{wid}:height={h}px"]
-    # DEVNULL statt capture_output: der eww-Daemon erbt die Pipe, capture wartet sonst ewig
-    subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def selftest():
@@ -157,5 +183,5 @@ def selftest():
 
 
 if __name__ == "__main__":
-    {"watch": watch, "open": open_bars, "next": lambda: cycle(1), "prev": lambda: cycle(-1),
+    {"watch": watch, "next": lambda: cycle(1), "prev": lambda: cycle(-1),
      "selftest": selftest}[sys.argv[1]]()

@@ -8,9 +8,10 @@
 # Diese Schrift traegt nur die Tab-Titel im tabbed/stacked-Layout. Die Titel
 # stehen links in der eww-Fensterliste und oben in waybar (sway/window), die
 # Tab-Zeile ist deshalb auf einen Streifen geschrumpft: winzige Schrift, leerer
-# Titel. Sway kann sie bei tabbed nicht ganz abschalten.
+# Titel. Sway kann sie bei tabbed nicht ganz abschalten, ~3px bleiben.
 font pango:Iosevka Nerd Font 1
 titlebar_padding 1
+titlebar_border_thickness 0
 for_window [all] title_format " "
 
 # ── Input ─────────────────────────────────────────────────────────────────────
@@ -197,7 +198,8 @@ bindsym $mod+f          fullscreen toggle
 # Neue Workspaces starten tabbed: ein Fenster gross, die Liste links zeigt die
 # anderen. Die Tab-Zeile selbst ist unsichtbar (siehe font/title_format oben).
 workspace_layout tabbed
-bindsym $mod+s          layout stacking
+# kein $mod+s (stacking): das zeichnet eine Titelzeile je Fenster, die
+# Fensterliste links ersetzt es
 bindsym $mod+w          layout tabbed
 bindsym $mod+e          layout toggle split
 bindsym $mod+Shift+space floating toggle
@@ -466,8 +468,8 @@ mode "[ RESIZE ]" {
 # ~/.config/i3status/config loeschen.
 
 # eww: HL2-HUD (HEALTH/SUIT unten links, AMMO = Lern-Timer unten rechts) auf dem Laptop (eDP-1), Super+Z klappt das Lern-Panel auf/zu
-# + Fensterliste links, eine pro Monitor. Alles in einem eww-Aufruf
-# (sidebar.py open), exec_always, damit Super+Shift+C nach dem Anstecken eines
-# Monitors auch dort eine oeffnet.
-exec_always --no-startup-id ~/.config/eww/scripts/sidebar.py open
+# + Fensterliste links, eine pro Monitor. sidebar.py watch startet eww neu,
+# oeffnet das HUD und haelt die Sidebars aktuell (auch bei Hotplug). exec_always:
+# jeder Reload ersetzt den alten Watcher.
+exec_always --no-startup-id ~/.config/eww/scripts/sidebar.py watch
 bindsym $mod+z exec --no-startup-id eww open --toggle learn
