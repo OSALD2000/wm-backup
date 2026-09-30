@@ -11,12 +11,14 @@ Aufruf: sidebar.py watch       eww neu starten (HUD oeffnen), dann bei jeder
                                oeffnen/schliessen. Laeuft per exec_always, ein
                                neuer Start beendet den alten (PIDFILE).
         sidebar.py next|prev   naechstes/vorheriges Fenster der Liste fokussieren
+        sidebar.py toggle      Sidebar an/aus (Super+b)
         sidebar.py selftest
 """
 import configparser
 import glob
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -26,9 +28,18 @@ APP_DIRS = [os.path.expanduser("~/.local/share/applications"),
             "/var/lib/snapd/desktop/applications",
             "/var/lib/flatpak/exports/share/applications"]
 FALLBACK = "application-x-executable"  # Icon fuer Apps ohne .desktop-Eintrag
+# Icons selbst als Datei suchen und in eww fest auf 16px skalieren: per
+# Icon-Name nimmt GTK die Groesse, die das Theme gerade hat -> ungleich gross.
+# Reihenfolge = Vorrang; die Themes nur fuer den FALLBACK.
+ICON_DIRS = [os.path.expanduser("~/.local/share/icons"), "/usr/share/icons/hicolor",
+             "/usr/share/pixmaps", "/var/lib/snapd/desktop/icons",
+             "/var/lib/flatpak/exports/share/icons", "/usr/share/icons/Yaru",
+             "/usr/share/icons/Adwaita", "/usr/share/icons/HighContrast"]
 WAYBAR_HEIGHT = 30  # = "height" in waybar/config.jsonc
 MIN_WINDOWS = 2     # darunter keine Sidebar
-PIDFILE = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "eww-sidebar.pid")
+RUN = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
+PIDFILE = os.path.join(RUN, "eww-sidebar.pid")
+OFF = os.path.join(RUN, "eww-sidebar.off")  # existiert = Sidebar per Super+b aus
 
 
 def swaymsg(*args):
@@ -55,8 +66,32 @@ def desktop_apps():
     return apps
 
 
-def visible_windows(tree, apps):
-    """-> {output: [{id, name, title, focused, icon, path}]}: nur der sichtbare
+def icon_index():
+    """-> {Icon-Name: bester Pfad}. Je Name gewinnt das erste ICON_DIRS-Verzeichnis,
+    darin SVG vor der groessten PNG (Pfade wie .../128x128/apps/x.png)."""
+    best = {}
+    for prio, d in enumerate(ICON_DIRS):
+        for root, _, files in os.walk(d):
+            m = re.search(r"/(\d+)x\d+", root)
+            for f in files:
+                stem, ext = os.path.splitext(f)
+                if ext not in (".svg", ".png"):
+                    continue
+                score = (-prio, ext == ".svg", int(m.group(1)) if m else 0)
+                if stem not in best or score > best[stem][0]:
+                    best[stem] = (score, os.path.join(root, f))
+    return {k: v[1] for k, v in best.items()}
+
+
+def resolve(icon, index):
+    """Icon-Name oder absoluter Pfad (Snaps) -> Pfad; unbekannt -> FALLBACK-Pfad."""
+    if icon.startswith("/"):
+        return icon
+    return index.get(icon) or index.get(FALLBACK, "")
+
+
+def visible_windows(tree, apps, index=None):
+    """-> {output: [{id, name, title, focused, icon}]}: nur der sichtbare
     Workspace je Output (current_workspace), Floating-Fenster hinten dran."""
     out = {}
 
@@ -64,10 +99,9 @@ def visible_windows(tree, apps):
         if node.get("pid") and node.get("type") in ("con", "floating_con"):
             app = node.get("app_id") or (node.get("window_properties") or {}).get("class") or "?"
             icon, name = apps.get(app.lower(), (FALLBACK, ""))
-            is_path = icon.startswith("/")  # Snaps: absoluter Pfad -> :path statt :icon
             acc.append({"id": node["id"], "name": name or app, "title": node.get("name") or app,
                         "focused": node.get("focused", False),
-                        "icon": "" if is_path else icon, "path": icon if is_path else ""})
+                        "icon": resolve(icon, index or {})})
         for child in node.get("nodes", []) + node.get("floating_nodes", []):
             collect(child, acc)
 
@@ -120,6 +154,15 @@ def kill_previous():
         f.write(str(os.getpid()))
 
 
+def toggle():
+    """Super+b: Sidebar an/aus. Der Tick weckt den Watcher, der das OFF-File liest."""
+    if os.path.exists(OFF):
+        os.remove(OFF)
+    else:
+        open(OFF, "w").close()
+    subprocess.run(["swaymsg", "-t", "send_tick", "sidebar"], capture_output=True)
+
+
 def watch():
     kill_previous()
     # Alle eww-Prozesse weg, nicht nur `eww kill`: ein Daemon, der seinen Socket
@@ -128,17 +171,17 @@ def watch():
     subprocess.run(["pkill", "-x", "eww"])
     time.sleep(0.3)
     eww("open-many", "hud-left", "hud-right")
-    apps = desktop_apps()  # ponytail: nur beim Start; neu installierte Apps nach Super+Shift+C
-    events = subprocess.Popen(["swaymsg", "-m", "-t", "subscribe", '["window","workspace","output"]'],
+    apps, index = desktop_apps(), icon_index()  # ponytail: nur beim Start; neue Apps nach Super+Shift+C
+    events = subprocess.Popen(["swaymsg", "-m", "-t", "subscribe", '["window","workspace","output","tick"]'],
                               stdout=subprocess.PIPE, text=True)
     last, shown = None, set()
     while True:
-        wins = visible_windows(swaymsg("-t", "get_tree"), apps)
+        wins = visible_windows(swaymsg("-t", "get_tree"), apps, index)
         cur = json.dumps(wins)
         if cur != last:
             eww("update", "wins=" + cur)
             last = cur
-        want = {o for o, w in wins.items() if len(w) >= MIN_WINDOWS}
+        want = set() if os.path.exists(OFF) else {o for o, w in wins.items() if len(w) >= MIN_WINDOWS}
         if want != shown:
             heights = {o["name"]: o["rect"]["height"] for o in swaymsg("-t", "get_outputs")}
             for o in shown - want:
@@ -167,14 +210,16 @@ def selftest():
             {"type": "workspace", "name": "31:o1", "nodes": []}]}]}
     apps = {"code": ("vscode", "Visual Studio Code"), "jetbrains-idea": ("idea", "IntelliJ"),
             "snap": ("/snap/x.png", "")}
-    w = visible_windows(tree, apps)
+    index = {"vscode": "/i/vscode.svg", "idea": "/i/idea.png", FALLBACK: "/i/fb.svg"}
+    w = visible_windows(tree, apps, index)
     assert list(w) == ["DP-7", "eDP-1"] and w["eDP-1"] == [], w
     a, b, c = w["DP-7"]
     assert [x["id"] for x in w["DP-7"]] == [1, 2, 3]  # 5 liegt auf unsichtbarem WS
-    assert (a["icon"], a["name"]) == ("vscode", "Visual Studio Code")
+    assert (a["icon"], a["name"]) == ("/i/vscode.svg", "Visual Studio Code")
     assert (b["name"], b["focused"]) == ("IntelliJ", True)
-    assert (c["icon"], c["path"], c["name"]) == ("", "/snap/x.png", "snap")
-    assert visible_windows(tree, {})["DP-7"][0]["icon"] == FALLBACK
+    assert (c["icon"], c["name"]) == ("/snap/x.png", "snap")
+    assert visible_windows(tree, {}, index)["DP-7"][0]["icon"] == "/i/fb.svg"
+    assert resolve("gibtsnicht", {}) == ""
     assert focused_output(tree) == "DP-7"
     assert step(w["DP-7"], 1) == 3 and step(w["DP-7"], -1) == 1
     assert step(w["DP-7"][:2], 1) == 1  # im Kreis
@@ -184,4 +229,5 @@ def selftest():
 
 if __name__ == "__main__":
     {"watch": watch, "next": lambda: cycle(1), "prev": lambda: cycle(-1),
+     "toggle": toggle,
      "selftest": selftest}[sys.argv[1]]()
