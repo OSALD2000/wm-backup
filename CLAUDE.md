@@ -11,12 +11,12 @@ Sprache in Commits und Kommentaren: Deutsch, Umlaute als ae/oe/ue.
 
 | Repo-Pfad | Live-Pfad | Was |
 |---|---|---|
-| `sway/config` | `~/.config/sway/config` | Compositor, Keybinds, Farben (`set $hl2_*` …), Autostart |
-| `sway/scripts/` | `~/.config/sway/scripts/` | `lock.sh` (hyprlock, sonst swaylock), `powermenu.sh` (rofi -dmenu), `screens.py` (Monitore anordnen, Laptop rechts), `ipv6.sh` |
+| `sway/config` | `~/.config/sway/config` | Compositor, Keybinds, Workspaces, Farben (`set $hl2_*` …), Autostart |
+| `sway/scripts/` | `~/.config/sway/scripts/` | `lock.sh` (hyprlock, sonst swaylock), `powermenu.sh` (rofi -dmenu), `screens.py` (Monitore anordnen, Laptop rechts), `ws.sh` (Super+N = Workspace N des aktuellen Monitors), `ipv6.sh` |
 | `hypr/` | `~/.config/hypr/` | **nur hyprlock** (Sperrbildschirm) + `loading.sh` (Ladebalken). Hyprland selbst wird nicht benutzt |
-| `waybar/` | `~/.config/waybar/` | obere Leiste (`config.jsonc`, `style.css`) |
+| `waybar/` | `~/.config/waybar/` | obere Leiste (`config.jsonc`, `style.css`): Monitor-Badge U/I/O + Workspace-Icons |
 | `rofi/` | `~/.config/rofi/` | Launcher. Sway ruft `rofi -config ~/.config/rofi/config-nord.rasi` auf; der Name "nord" ist historisch, das aktive Theme steht per `@theme` darin (HL2: `hl2-menu.rasi`). `config.rasi` gehoert zu i3 |
-| `eww/` | `~/.config/eww/` | Desktop-Widgets. HL2: `hud-left`/`hud-right` + Lern-Panel `learn` (Super+Z). `scripts/learn.py` = Lern-Timer, Daten in `~/.local/share/learn-timer/` |
+| `eww/` | `~/.config/eww/` | Desktop-Widgets. HL2: `hud-left`/`hud-right` + Lern-Panel `learn` (Super+Z), Hilfe `info` (Super+Shift+Z), Fensterliste `sidebar` je Monitor. `scripts/learn.py` = Lern-Timer, Daten in `~/.local/share/learn-timer/`; `scripts/sidebar.py` = Watcher fuer die Fensterliste + Super+q/b |
 | `swaync/` | `~/.config/swaync/` | Benachrichtigungen + Panel hinter der Glocke |
 | `swaylock/` | `~/.config/swaylock/` | Fallback-Sperre |
 | `alacritty/` | `~/.config/alacritty/` | Terminal. `alacritty.toml` importiert die Farbdatei (`hl2.toml`, `nord.toml`), `lambda.txt` = Begruessung |
@@ -45,13 +45,51 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 |---|---|
 | `FirstSetup-v1` | warme Tan-Palette (`#A89B77` auf `#1C1A15`), eww-Fenster `desk`, rofi `spotlight-warm.rasi`, swaylock direkt |
 | `HL2-v1` | Half-Life-2-HUD (2004): HUD-Gelb `#FFDC00` auf `#141310`, eww `hud-left`/`hud-right`, hyprlock "SUIT LOCKED" mit Ladebalken, rofi als HL2-Hauptmenue, λ ueberall |
+| `HL2-v2` | wie v1, Hintergrund einheitlich `#141310`. Letzter Stand mit 12 globalen Workspaces |
+| `HL2-v3` | Zwischenstand: 10 Workspaces je Monitor (u/i/o), tabbed, waybar-Taskbar unten (verworfen) |
+| `HL2-v4` | **Standard-Bedienung** (siehe unten): Fensterliste links, Tab-Zeile unsichtbar, Super+q/b, Hilfe-Panel |
+
+Welcher Tag gerade live ist: `theme.sh current` (steht in
+`~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
+
+## Standard-Bedienung (gilt fuer jedes neue Theme)
+
+Seit `HL2-v4` ist die Bedienung fest, ein neues Theme aendert nur den **Look**
+(Farben, Schrift, Formen), nicht Tasten, Workspace-Schema oder Fensterliste.
+Wer davon abweicht, fragt vorher.
+
+- **Workspaces:** jeder Monitor hat eigene 1-10, gleiches Raster ueberall:
+  1 Terminal, 2 Browser, 3 Code, 4 Code 2, 5 Trading, 6 frei, 7 Tools,
+  8 Todos, 9 Chat, 10 Medien. Name `<nr>:<kuerzel><N>`: `u` = links (11-20),
+  `i` = Mitte (21-30), `o` = Laptop (31-40). Kuerzel nach **Position** ueber
+  die Fallback-Listen `$mon_l/$mon_m/$mon_r`, nicht nach Anschlussname.
+  Die Nummer haelt die Sortierung, `ws.sh` rechnet daraus den Monitor zurueck.
+- **Tasten:** `Super+N` / `Super+Shift+N` = Workspace N des aktuellen Monitors
+  (hin / Fenster schieben). `Super+u/i/o` dann `Super+N` = Workspace N auf dem
+  Monitor, mit Ctrl schieben (Sway-Modes, Escape bricht ab).
+  `Super+q` / `Super+Ctrl+q` = naechstes / voriges Fenster der Liste links,
+  bleibt auf dem Monitor. `Super+b` = Liste an/aus. `Super+Shift+z` = Hilfe.
+- **Assigns:** VS Code `23:i3`, IntelliJ `24:i4`, KeePassXC `37:o7`, To Do
+  `38:o8`, Teams `39:o9`, YouTube `40:o10`.
+- **Fenster:** `workspace_layout tabbed`, Tab-Zeile per Schrift 1 + leerem
+  `title_format` + Titelbar-Farben = Hintergrund auf ~3px geschrumpft (ganz weg
+  geht in Sway nicht). Kein `Super+s` (stacking). Rahmen nur ueber `child_border`.
+- **Fensterliste links** (eww `sidebar`, 58px): Icon + App-Name je Fenster des
+  sichtbaren Workspaces, erst ab 2 Fenstern, Klick fokussiert, Mittelklick
+  schliesst. Ebene `bottom`, damit waybar (Ebene top) immer volle Breite hat.
+- **Hilfe-Panel** (eww `info`, `?` neben AMMO): Matrix Monitor x Nummer +
+  alle Shortcuts. **Statisch**: bei neuen Binds oder Assigns mitziehen.
+- **waybar oben:** Badge U/I/O (`custom/monitor`) + Bereichs-Icon je Workspace.
+
+Ein neues Theme uebernimmt `ws.sh`, `sidebar.py`, die Workspace-/Bind-Bloecke
+der sway-Config und die eww-Fenster `sidebar`/`info` und passt nur deren
+Farben in `eww.scss` / `style.css` an.
+
+## Aeltere Themes
 
 Noch aelter und ohne Tag: eine Nord-Palette aus der i3-Zeit. Reste davon sind
 `set $nord*` in der sway-Config, `alacritty/nord.toml` und der Dateiname
 `config-nord.rasi`.
-
-Welcher Tag gerade live ist: `theme.sh current` (steht in
-`~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Werkzeug
 
@@ -67,9 +105,10 @@ $S sync-back             # live -> Repo (beim Bauen eines Themes)
 `switch` kopiert per rsync **ohne --delete**: Dateien, die der Ziel-Tag nicht
 kennt, bleiben liegen und stoeren nicht. Bei ungesicherten Live-Aenderungen
 bricht es ab (`-f` ueberschreibt). Neu geladen wird mit `swaymsg reload`, das
-waybar, swaync und screens.py ueber `exec_always` neu startet. eww
-und swayidle (traegt den Lock-Befehl) werden beendet und mit ihren `exec`-Zeilen
-aus der neuen sway-Config neu gestartet.
+waybar, swaync, screens.py und `sidebar.py watch` (startet eww) ueber
+`exec_always` neu startet. eww wird vor dem Reload beendet; aeltere Tags, die
+eww per `exec … eww open` starten, bekommen diese Zeile danach nachgereicht.
+swayidle (traegt den Lock-Befehl) wird mit seiner `exec`-Zeile neu gestartet.
 Firefox und Chrome brauchen einen Neustart.
 
 Skills: `theme-erstellen` (neues Theme bauen und taggen), `theme-switch`
@@ -89,5 +128,16 @@ Skills: `theme-erstellen` (neues Theme bauen und taggen), `theme-switch`
 - `learn.py stop` steht vor jedem Lock/Exit/Idle, damit der Lern-Timer nicht
   weiterzaehlt. Beim Aendern von Keybinds erhalten.
 - Mod-Taste ist Super; Richtungen `j k l ö` (i3-Stil), Caps = Escape, Layout `de`.
+- `workspace_layout tabbed` gilt nur fuer **neu angelegte** Workspaces. Alte
+  (oder nach `Super+h/v/e`) oeffnen Apps wieder nebeneinander: `Super+w`.
+- eww nie mehrfach gleichzeitig starten: zwei Starts = zwei Daemons, einer
+  verliert den Socket und zeigt seine Fenster weiter an (doppelte Sidebar),
+  `eww kill` erreicht ihn nicht. Deshalb startet nur `sidebar.py watch` eww,
+  vorher `pkill -x eww`. Der Watcher ersetzt sich per PID-Datei
+  (`$XDG_RUNTIME_DIR/eww-sidebar.pid`), nicht per `pkill -f` (das traefe die
+  `sh -c`-Zeile von sway selbst).
+- Aus Python eww/Daemons starten: `stdout=DEVNULL`, nie `capture_output` —
+  der Daemon erbt die Pipe und der Aufruf haengt fuer immer.
+- waybar `wlr/taskbar` taugt unter Sway nicht: Fenster hinter Tabs fehlen.
 - Nach Aenderungen an sway: `swaymsg reload` (Super+Shift+C). Syntax pruefen
   mit `sway -C -c ~/.config/sway/config`.
