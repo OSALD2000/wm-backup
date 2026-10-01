@@ -16,7 +16,7 @@ Sprache in Commits und Kommentaren: Deutsch, Umlaute als ae/oe/ue.
 | `hypr/` | `~/.config/hypr/` | **nur hyprlock** (Sperrbildschirm) + `loading.sh` (Ladebalken). Hyprland selbst wird nicht benutzt |
 | `waybar/` | `~/.config/waybar/` | obere Leiste (`config.jsonc`, `style.css`): Monitor-Badge U/I/O + Workspace-Icons |
 | `rofi/` | `~/.config/rofi/` | Launcher. Sway ruft `rofi -config ~/.config/rofi/config-nord.rasi` auf; der Name "nord" ist historisch, das aktive Theme steht per `@theme` darin (HL2: `hl2-menu.rasi`). `config.rasi` gehoert zu i3 |
-| `eww/` | `~/.config/eww/` | Desktop-Widgets. HL2: `hud-left`/`hud-right` + Lern-Panel `learn` (Super+Z), Hilfe `info` (Super+Shift+Z), Fensterliste `sidebar` je Monitor. `scripts/learn.py` = Lern-Timer, Daten in `~/.local/share/learn-timer/`; `scripts/sidebar.py` = Watcher fuer die Fensterliste + Super+q/b |
+| `eww/` | `~/.config/eww/` | Desktop-Widgets. HL2: `hud-left`/`hud-right` + Lern-Panel `learn` (Super+Z), Hilfe `info` (Super+Shift+Z), Fensterliste `sidebar` je Monitor. `scripts/learn.py` = Lern-Timer, Daten in `~/.local/share/learn-timer/`; `scripts/sidebar.py` = Watcher fuer die Fensterliste + Super+q/b + Vorschau-Raster Super+Tab |
 | `swaync/` | `~/.config/swaync/` | Benachrichtigungen + Panel hinter der Glocke |
 | `swaylock/` | `~/.config/swaylock/` | Fallback-Sperre |
 | `alacritty/` | `~/.config/alacritty/` | Terminal. `alacritty.toml` importiert die Farbdatei (`hl2.toml`, `nord.toml`), `lambda.txt` = Begruessung |
@@ -69,6 +69,8 @@ Wer davon abweicht, fragt vorher.
   Monitor, mit Ctrl schieben (Sway-Modes, Escape bricht ab).
   `Super+q` / `Super+Ctrl+q` = naechstes / voriges Fenster der Liste links,
   bleibt auf dem Monitor. `Super+b` = Liste an/aus. `Super+Shift+z` = Hilfe.
+  `Super+Tab` = alle Fenster aller Monitore als Vorschau-Raster (rofi; Bild =
+  letzter sichtbarer Stand, sway kann verdeckte Fenster nicht abfotografieren).
 - **Assigns:** VS Code `23:i3`, IntelliJ `24:i4`, KeePassXC `37:o7`, To Do
   `38:o8`, Teams `39:o9`, YouTube `40:o10`.
 - **Fenster:** `workspace_layout tabbed`, Tab-Zeile per Schrift 1 + leerem
