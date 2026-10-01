@@ -49,15 +49,16 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v3` | Zwischenstand: 10 Workspaces je Monitor (u/i/o), tabbed, waybar-Taskbar unten (verworfen) |
 | `HL2-v4` | **Standard-Bedienung** (siehe unten): Fensterliste links, Tab-Zeile unsichtbar, Super+q/b, Hilfe-Panel |
 | `HL2-v5` | wie v4 + Vorschau-Raster (Super+Tab), Benachrichtigungen als HL2-Pickups, Zwischenablage im HL2-Menue (Super+Shift+V), Konsole als Scratchpad-Terminal (Super+^) |
-| `HL2-v6` | wie v5, Konsole auf Super+Shift+Tab. **Aktueller Standard** fuer neue Themes |
+| `HL2-v6` | wie v5, Konsole auf Super+Shift+Tab |
+| `HL2-v7` | wie v6, waybar: Nummer vor jedem Workspace-Icon, aktueller Workspace auch auf Monitoren ohne Fokus hervorgehoben. **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5`/`HL2-v6` (Vorschau,
-Zwischenablage, Konsole, Pickup-Popups). Alles in dieser Liste gilt fuer
+Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v7` (Vorschau,
+Zwischenablage, Konsole, Pickup-Popups, Workspace-Nummern in waybar). Alles in dieser Liste gilt fuer
 **jedes** neue Theme, nicht nur fuer HL2: es aendert nur den **Look**
 (Farben, Schrift, Formen), nicht Tasten, Workspace-Schema, Fensterliste oder
 die Bausteine unten. Basis fuer ein neues Theme ist immer der neueste Standard-Tag.
@@ -101,7 +102,11 @@ Wer davon abweicht, fragt vorher.
   schliesst. Ebene `bottom`, damit waybar (Ebene top) immer volle Breite hat.
 - **Hilfe-Panel** (eww `info`, `?` neben AMMO): Matrix Monitor x Nummer +
   alle Shortcuts. **Statisch**: bei neuen Binds oder Assigns mitziehen.
-- **waybar oben:** Badge U/I/O (`custom/monitor`) + Bereichs-Icon je Workspace.
+- **waybar oben:** Badge U/I/O (`custom/monitor`) + je Workspace `<Taste> <Icon>`
+  (`1` … `9`, `0` fuer 10, wie Super+N; steht in `format-icons`). Der sichtbare
+  Workspace jedes Monitors ist gleich hervorgehoben wie der fokussierte
+  (`button.visible, button.focused` in `style.css`), damit jede Bar zeigt, was
+  auf ihrem Monitor gerade offen ist.
 
 Ein neues Theme uebernimmt `ws.sh`, `sidebar.py`, `clip.sh`, die
 Workspace-/Bind-Bloecke und die `scratch-term`-Regel der sway-Config, die

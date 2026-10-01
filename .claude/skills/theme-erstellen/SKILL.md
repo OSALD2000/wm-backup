@@ -32,7 +32,7 @@ S=.claude/skills/theme-switch/scripts/theme.sh
   oder erst verworfen werden sollen.
 - `git status` im Repo sauber, `master` aktuell (`git pull`).
 - Basis festlegen: der neueste Standard-Tag (in der Theme-Tabelle als
-  "Aktueller Standard" markiert, derzeit `HL2-v6`), sonst fehlen dem neuen
+  "Aktueller Standard" markiert, derzeit `HL2-v7`), sonst fehlen dem neuen
   Theme Bausteine der Standard-Bedienung. Will der User bewusst auf einem
   aelteren Tag aufbauen (z. B. FirstSetup), erst mit `theme-switch` dorthin
   wechseln und die Bausteine danach nachruesten. Der neue Commit landet trotzdem linear auf
@@ -46,7 +46,8 @@ S=.claude/skills/theme-switch/scripts/theme.sh
 Die **Bedienung ist fest** (Abschnitt "Standard-Bedienung" in `CLAUDE.md`:
 Workspaces u/i/o mit 1-10, Super+q/b/Shift+z, Fensterliste links, Hilfe-Panel,
 unsichtbare Tab-Zeile, Vorschau Super+Tab, Konsole Super+Shift+Tab,
-Zwischenablage Super+Shift+V, Pickup-Popups unten rechts). Das gilt fuer jedes
+Zwischenablage Super+Shift+V, Pickup-Popups unten rechts,
+waybar mit Nummer vor dem Icon und hervorgehobenem Workspace auf jedem Monitor). Das gilt fuer jedes
 Theme, nicht nur HL2. Ein Theme aendert nur den Look. Soll davon etwas
 anders werden, erst mit dem User klaeren und danach `CLAUDE.md` nachziehen.
 Kommt ein neuer Baustein dazu, in `CLAUDE.md`/`AGENTS.md` unter
