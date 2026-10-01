@@ -211,6 +211,10 @@ bindsym $mod+a          focus parent
 
 bindsym $mod+Shift+minus move scratchpad
 bindsym $mod+minus       scratchpad show
+# Scratchpad-Terminal wie die HL2-Konsole (^ = Taste links neben 1): ein
+# eigenes Alacritty mit app_id scratch-term, beim ersten Druck gestartet,
+# danach nur ein-/ausgeblendet. swaymsg schlaegt fehl, solange es keins gibt.
+bindsym $mod+asciicircum exec swaymsg '[app_id="scratch-term"] scratchpad show' || alacritty --class scratch-term
 
 # ── Workspaces ────────────────────────────────────────────────────────────────
 # Jeder Monitor hat eigene 1-10, gleiches Raster ueberall:
@@ -417,7 +421,7 @@ bindsym $mod+Shift+f exec nautilus
 bindsym $mod+Shift+i exec "/usr/share/code/bin/code /home/osa/.config/sway"
 bindsym $mod+x       exec --no-startup-id keepassxc
 bindsym $mod+Shift+p exec --no-startup-id alacritty -e calcurse
-bindsym $mod+Shift+v exec --no-startup-id "copyq toggle"
+bindsym $mod+Shift+v exec --no-startup-id ~/.config/sway/scripts/clip.sh
 bindsym $mod+Tab     exec ~/.config/eww/scripts/sidebar.py overview
 # Notification-Center auch per Tastatur, nicht nur ueber die Glocke
 bindsym $mod+n       exec --no-startup-id swaync-client -t -sw
@@ -433,6 +437,8 @@ bindsym $mod+Shift+s exec --no-startup-id ~/.config/sway/scripts/screens.py
 bindsym $mod+Ctrl+s  exec --no-startup-id ~/.config/sway/scripts/screens.py --no-laptop
 
 # ── Floating Rules ────────────────────────────────────────────────────────────
+# scratchpad show erst nach move scratchpad, resize danach: show setzt die Groesse
+for_window [app_id="scratch-term"] move scratchpad, scratchpad show, resize set 70 ppt 55 ppt, move position center
 for_window [class="copyq"]                floating enable, resize set 320 480, move position 0 0
 for_window [app_id="copyq"]               floating enable, resize set 320 480, move position 0 0
 for_window [class="Pavucontrol"]          floating enable
