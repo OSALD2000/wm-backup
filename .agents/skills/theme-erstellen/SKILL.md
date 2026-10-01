@@ -82,9 +82,14 @@ Konventionen aus den bisherigen Themes, die sich bewaehrt haben:
 - eww startet nur ueber `exec_always … sidebar.py watch`; der Watcher oeffnet
   `hud-left hud-right` in `watch()`. Braucht das Theme andere Dauer-Fenster,
   dort eintragen, keine zweite `eww open`-Zeile (zwei Starts = zwei Daemons).
-- `sidebar`, `info` und die waybar-Workspace-Icons mit umfaerben
-  (`eww.scss`, `waybar/style.css`). Aendern sich Binds oder Assigns, das
-  Hilfe-Panel `info` in `eww.yuck` mitziehen.
+- Die Bausteine der Standard-Bedienung mit umfaerben, nicht weglassen:
+  `sidebar`, `info`, die waybar-Workspace-Icons, die swaync-Popups (Pickups
+  unten rechts, Block `.floating-notifications` in `swaync/style.css`), das
+  Zwischenablage-Menue `clip.sh`, das Vorschau-Raster (`sidebar.py overview`)
+  und die Konsole `scratch-term`. Nach dem Umbau alle einmal ausprobieren:
+  `notify-send`, Super+Shift+V, Super+Tab, Super+^.
+- Aendern sich Binds oder Assigns, das Hilfe-Panel `info` in `eww.yuck`
+  mitziehen.
 - Neue Komponente (neuer Ordner, neues Ziel ausserhalb von `~/.config`)?
   In `map()` in `theme.sh` und in die Tabelle in `AGENTS.md` eintragen,
   sonst deployt `switch` sie nicht.
