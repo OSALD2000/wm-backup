@@ -218,7 +218,7 @@
       (label :class "section" :xalign 0 :text "APPS")
         (key :k "Super+Return" :d "Terminal")
         (key :k "Super+d" :d "Launcher")
-        (key :k "Super+Tab" :d "alle Fenster suchen")
+        (key :k "Super+Tab" :d "alle Fenster als Vorschau")
         (key :k "Super+x" :d "KeePassXC")
         (key :k "Super+t / Super+Shift+t" :d "To Do / Teams")
         (key :k "Super+Shift+m w h o" :d "Outlook, WhatsApp, Whiteboard, Office")

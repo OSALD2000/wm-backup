@@ -418,7 +418,7 @@ bindsym $mod+Shift+i exec "/usr/share/code/bin/code /home/osa/.config/sway"
 bindsym $mod+x       exec --no-startup-id keepassxc
 bindsym $mod+Shift+p exec --no-startup-id alacritty -e calcurse
 bindsym $mod+Shift+v exec --no-startup-id "copyq toggle"
-bindsym $mod+Tab     exec --no-startup-id rofi -config ~/.config/rofi/config-nord.rasi -show window
+bindsym $mod+Tab     exec ~/.config/eww/scripts/sidebar.py overview
 # Notification-Center auch per Tastatur, nicht nur ueber die Glocke
 bindsym $mod+n       exec --no-startup-id swaync-client -t -sw
 bindsym $mod+Shift+n exec --no-startup-id swaync-client -d -sw
