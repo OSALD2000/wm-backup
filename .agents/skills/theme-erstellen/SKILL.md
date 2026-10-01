@@ -31,9 +31,11 @@ S=.claude/skills/theme-switch/scripts/theme.sh
   Aenderungen: den User fragen, ob sie Teil des neuen Themes sind (dann weiter)
   oder erst verworfen werden sollen.
 - `git status` im Repo sauber, `master` aktuell (`git pull`).
-- Basis festlegen: Normalerweise ist das der deployte Stand. Will der User auf
-  einem anderen Tag aufbauen (z. B. FirstSetup statt HL2), erst mit
-  `theme-switch` dorthin wechseln. Der neue Commit landet trotzdem linear auf
+- Basis festlegen: der neueste Standard-Tag (in der Theme-Tabelle als
+  "Aktueller Standard" markiert, derzeit `HL2-v6`), sonst fehlen dem neuen
+  Theme Bausteine der Standard-Bedienung. Will der User bewusst auf einem
+  aelteren Tag aufbauen (z. B. FirstSetup), erst mit `theme-switch` dorthin
+  wechseln und die Bausteine danach nachruesten. Der neue Commit landet trotzdem linear auf
   `master`, weil sync-back den ganzen Live-Stand uebernimmt.
 
 ### 2. Name und Version
@@ -43,8 +45,13 @@ S=.claude/skills/theme-switch/scripts/theme.sh
 ### 3. Design festlegen
 Die **Bedienung ist fest** (Abschnitt "Standard-Bedienung" in `AGENTS.md`:
 Workspaces u/i/o mit 1-10, Super+q/b/Shift+z, Fensterliste links, Hilfe-Panel,
-unsichtbare Tab-Zeile). Ein Theme aendert nur den Look. Soll davon etwas
+unsichtbare Tab-Zeile, Vorschau Super+Tab, Konsole Super+Shift+Tab,
+Zwischenablage Super+Shift+V, Pickup-Popups unten rechts). Das gilt fuer jedes
+Theme, nicht nur HL2. Ein Theme aendert nur den Look. Soll davon etwas
 anders werden, erst mit dem User klaeren und danach `AGENTS.md` nachziehen.
+Kommt ein neuer Baustein dazu, in `CLAUDE.md`/`AGENTS.md` unter
+"Standard-Bedienung" eintragen und den neuen Tag in der Tabelle als
+"Aktueller Standard" markieren (Markierung beim alten entfernen).
 
 Mit dem User klaeren, bevor Dateien angefasst werden:
 - Palette: Hintergrund, Text, Akzent, gedimmter Akzent, Linie, Alarm. Als
