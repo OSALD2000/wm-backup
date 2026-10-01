@@ -211,10 +211,10 @@ bindsym $mod+a          focus parent
 
 bindsym $mod+Shift+minus move scratchpad
 bindsym $mod+minus       scratchpad show
-# Scratchpad-Terminal wie die HL2-Konsole (^ = Taste links neben 1): ein
+# Scratchpad-Terminal wie die HL2-Konsole (Super+Shift+Tab): ein
 # eigenes Alacritty mit app_id scratch-term, beim ersten Druck gestartet,
 # danach nur ein-/ausgeblendet. swaymsg schlaegt fehl, solange es keins gibt.
-bindsym $mod+asciicircum exec swaymsg '[app_id="scratch-term"] scratchpad show' || alacritty --class scratch-term
+bindsym $mod+Shift+Tab exec swaymsg '[app_id="scratch-term"] scratchpad show' || alacritty --class scratch-term
 
 # ── Workspaces ────────────────────────────────────────────────────────────────
 # Jeder Monitor hat eigene 1-10, gleiches Raster ueberall:

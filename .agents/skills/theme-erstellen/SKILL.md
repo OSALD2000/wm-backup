@@ -87,7 +87,7 @@ Konventionen aus den bisherigen Themes, die sich bewaehrt haben:
   unten rechts, Block `.floating-notifications` in `swaync/style.css`), das
   Zwischenablage-Menue `clip.sh`, das Vorschau-Raster (`sidebar.py overview`)
   und die Konsole `scratch-term`. Nach dem Umbau alle einmal ausprobieren:
-  `notify-send`, Super+Shift+V, Super+Tab, Super+^.
+  `notify-send`, Super+Shift+V, Super+Tab, Super+Shift+Tab.
 - Aendern sich Binds oder Assigns, das Hilfe-Panel `info` in `eww.yuck`
   mitziehen.
 - Neue Komponente (neuer Ordner, neues Ziel ausserhalb von `~/.config`)?
