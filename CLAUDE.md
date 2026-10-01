@@ -14,7 +14,7 @@ Sprache in Commits und Kommentaren: Deutsch, Umlaute als ae/oe/ue.
 | `sway/config` | `~/.config/sway/config` | Compositor, Keybinds, Workspaces, Farben (`set $hl2_*` …), Autostart |
 | `sway/scripts/` | `~/.config/sway/scripts/` | `lock.sh` (hyprlock, sonst swaylock), `powermenu.sh` (rofi -dmenu), `clip.sh` (Zwischenablage, rofi ueber copyq), `screens.py` (Monitore anordnen, Laptop rechts), `ws.sh` (Super+N = Workspace N des aktuellen Monitors), `ipv6.sh` |
 | `hypr/` | `~/.config/hypr/` | **nur hyprlock** (Sperrbildschirm) + `loading.sh` (Ladebalken). Hyprland selbst wird nicht benutzt |
-| `waybar/` | `~/.config/waybar/` | obere Leiste (`config.jsonc`, `style.css`): Monitor-Badge U/I/O + Workspace-Icons |
+| `waybar/` | `~/.config/waybar/` | obere Leiste (`config.jsonc`, `style.css`): Monitor-Badge U/I/O + Workspaces als `<Taste> <Icon>`, sichtbarer Workspace je Monitor hervorgehoben |
 | `rofi/` | `~/.config/rofi/` | Launcher. Sway ruft `rofi -config ~/.config/rofi/config-nord.rasi` auf; der Name "nord" ist historisch, das aktive Theme steht per `@theme` darin (HL2: `hl2-menu.rasi`). `config.rasi` gehoert zu i3 |
 | `eww/` | `~/.config/eww/` | Desktop-Widgets. HL2: `hud-left`/`hud-right` + Lern-Panel `learn` (Super+Z), Hilfe `info` (Super+Shift+Z), Fensterliste `sidebar` je Monitor. `scripts/learn.py` = Lern-Timer, Daten in `~/.local/share/learn-timer/`; `scripts/sidebar.py` = Watcher fuer die Fensterliste + Super+q/b + Vorschau-Raster Super+Tab |
 | `swaync/` | `~/.config/swaync/` | Benachrichtigungen (Popups als Pickups unten rechts) + Panel hinter der Glocke |
@@ -109,12 +109,19 @@ Wer davon abweicht, fragt vorher.
   auf ihrem Monitor gerade offen ist.
 
 Ein neues Theme uebernimmt `ws.sh`, `sidebar.py`, `clip.sh`, die
+`format-icons` der waybar (Nummer vor dem Icon), die
 Workspace-/Bind-Bloecke und die `scratch-term`-Regel der sway-Config, die
 eww-Fenster `sidebar`/`info` und Lage/Timeout der swaync-Popups
 (`swaync/config.json`) und passt nur Farben und Schrift an: `eww.scss`,
 waybar `style.css`, den Popup-Block in `swaync/style.css` und die
 `-theme-str`-Teile in `clip.sh` / `sidebar.py overview` (die rofi-Theme-Datei
-liefert den Rest).
+liefert den Rest). In `style.css` muss `button.visible` dieselbe
+Hervorhebung bekommen wie `button.focused`.
+
+**Allgemeine Aenderungen** (Bedienung, Bausteine, Verhalten, nicht nur Farben)
+gelten ab dann fuer jedes Theme: hier unter Standard-Bedienung eintragen, im
+Skill `theme-erstellen` die Liste der Bausteine nachziehen, neuen Tag anlegen
+und ihn in der Tabelle als "Aktueller Standard" markieren.
 
 ## Aeltere Themes
 

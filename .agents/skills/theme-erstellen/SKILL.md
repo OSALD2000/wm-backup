@@ -91,7 +91,8 @@ Konventionen aus den bisherigen Themes, die sich bewaehrt haben:
   `hud-left hud-right` in `watch()`. Braucht das Theme andere Dauer-Fenster,
   dort eintragen, keine zweite `eww open`-Zeile (zwei Starts = zwei Daemons).
 - Die Bausteine der Standard-Bedienung mit umfaerben, nicht weglassen:
-  `sidebar`, `info`, die waybar-Workspace-Icons, die swaync-Popups (Pickups
+  `sidebar`, `info`, die waybar-Workspaces (Nummer + Icon, `button.visible`
+  wie `button.focused`), die swaync-Popups (Pickups
   unten rechts, Block `.floating-notifications` in `swaync/style.css`), das
   Zwischenablage-Menue `clip.sh`, das Vorschau-Raster (`sidebar.py overview`)
   und die Konsole `scratch-term`. Nach dem Umbau alle einmal ausprobieren:
