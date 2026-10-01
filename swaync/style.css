@@ -228,3 +228,30 @@ scrollbar slider {
   min-width: 5px;
 }
 scrollbar slider:hover { background: @tan; }
+
+/* ── Popups = HL2-Pickup-Liste (HL2-v5) ────────────────────────────────────
+ * Wie "+ SMG AMMO" im Spiel: unten rechts ueber dem AMMO-Kasten (eww
+ * hud-right), schmal, gleicher Kasten wie das HUD ($box/$edge in eww.scss),
+ * Titel gross in HUD-Gelb mit Glow, verschwindet nach 5s (config.json).
+ * Nur .floating-notifications, das Panel hinter der Glocke bleibt wie oben.
+ * margin-bottom = Hoehe AMMO-Kasten + 32px Abstand von eww. */
+.floating-notifications { margin: 0 24px 140px 0; }
+.floating-notifications .notification {
+  background: rgba(40, 36, 24, 0.55);
+  border: 1px solid rgba(255, 220, 0, 0.14);
+  border-left: 3px solid @tan;
+  border-radius: 10px;
+  margin: 3px 0;
+}
+.floating-notifications .notification.low      { border-left-color: @dim; }
+.floating-notifications .notification.critical { border-left-color: @brick;
+                                                 background: rgba(180, 0, 0, 0.55); }
+.floating-notifications .summary {
+  font-size: 14px;
+  color: @tan;
+  text-shadow: 0 0 6px rgba(255, 220, 0, 0.55);
+}
+.floating-notifications .notification.critical .summary { color: #FFFFFF;
+  text-shadow: 0 0 6px rgba(255, 0, 0, 0.6); }
+.floating-notifications .body { color: @dim; }
+.floating-notifications .time { opacity: 0; }   /* Pickups haben keine Uhrzeit */
