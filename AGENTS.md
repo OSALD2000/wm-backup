@@ -48,15 +48,19 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v2` | wie v1, Hintergrund einheitlich `#141310`. Letzter Stand mit 12 globalen Workspaces |
 | `HL2-v3` | Zwischenstand: 10 Workspaces je Monitor (u/i/o), tabbed, waybar-Taskbar unten (verworfen) |
 | `HL2-v4` | **Standard-Bedienung** (siehe unten): Fensterliste links, Tab-Zeile unsichtbar, Super+q/b, Hilfe-Panel |
-| `HL2-v5` | wie v4 + Vorschau-Raster (Super+Tab), Benachrichtigungen als HL2-Pickups, Zwischenablage im HL2-Menue (Super+Shift+V), Konsole als Scratchpad-Terminal (Super+Shift+Tab) |
+| `HL2-v5` | wie v4 + Vorschau-Raster (Super+Tab), Benachrichtigungen als HL2-Pickups, Zwischenablage im HL2-Menue (Super+Shift+V), Konsole als Scratchpad-Terminal (Super+^) |
+| `HL2-v6` | wie v5, Konsole auf Super+Shift+Tab. **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest (ergaenzt in `HL2-v5`), ein neues Theme aendert nur den **Look**
-(Farben, Schrift, Formen), nicht Tasten, Workspace-Schema oder Fensterliste.
+Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5`/`HL2-v6` (Vorschau,
+Zwischenablage, Konsole, Pickup-Popups). Alles in dieser Liste gilt fuer
+**jedes** neue Theme, nicht nur fuer HL2: es aendert nur den **Look**
+(Farben, Schrift, Formen), nicht Tasten, Workspace-Schema, Fensterliste oder
+die Bausteine unten. Basis fuer ein neues Theme ist immer der neueste Standard-Tag.
 Wer davon abweicht, fragt vorher.
 
 - **Workspaces:** jeder Monitor hat eigene 1-10, gleiches Raster ueberall:
