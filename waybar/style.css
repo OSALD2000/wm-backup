@@ -85,7 +85,9 @@ tooltip label { padding: 5px 7px; }
   margin: 4px 2px;
 }
 #workspaces button:hover { background: @hover; color: @ink; }
-#workspaces button.visible { color: @ink; }
+/* sichtbarer Workspace auf Monitoren ohne Fokus = gleich hervorgehoben wie der
+ * fokussierte: jede Bar zeigt ihren aktuellen Workspace, egal wo der Fokus ist */
+#workspaces button.visible,
 #workspaces button.focused {
   color: @ink;
   background: @fill;
