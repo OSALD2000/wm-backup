@@ -48,7 +48,7 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v2` | wie v1, Hintergrund einheitlich `#141310`. Letzter Stand mit 12 globalen Workspaces |
 | `HL2-v3` | Zwischenstand: 10 Workspaces je Monitor (u/i/o), tabbed, waybar-Taskbar unten (verworfen) |
 | `HL2-v4` | **Standard-Bedienung** (siehe unten): Fensterliste links, Tab-Zeile unsichtbar, Super+q/b, Hilfe-Panel |
-| `HL2-v5` | wie v4 + Vorschau-Raster (Super+Tab), Benachrichtigungen als HL2-Pickups, Zwischenablage im HL2-Menue (Super+Shift+V), Konsole als Scratchpad-Terminal (Super+^) |
+| `HL2-v5` | wie v4 + Vorschau-Raster (Super+Tab), Benachrichtigungen als HL2-Pickups, Zwischenablage im HL2-Menue (Super+Shift+V), Konsole als Scratchpad-Terminal (Super+Shift+Tab) |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
@@ -76,7 +76,7 @@ Wer davon abweicht, fragt vorher.
   (laeuft per `exec_always`), rofi zeigt den Verlauf im Menue-Stil des Themes,
   Enter = `copyq select`, also wieder in die Zwischenablage. Kein eigenes
   copyq-Fenster.
-- **Konsole** (`Super+^`, Taste links neben 1): Alacritty mit app_id
+- **Konsole** (`Super+Shift+Tab`): Alacritty mit app_id
   `scratch-term` im Scratchpad, schwebend 70x55 % mittig. Erster Druck
   startet es, danach ein/aus (`for_window`-Regel + Bind in der sway-Config).
 - **Benachrichtigungen** (swaync): Popups im Stil der Pickup-Meldungen des
