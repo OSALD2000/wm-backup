@@ -12,12 +12,12 @@ Sprache in Commits und Kommentaren: Deutsch, Umlaute als ae/oe/ue.
 | Repo-Pfad | Live-Pfad | Was |
 |---|---|---|
 | `sway/config` | `~/.config/sway/config` | Compositor, Keybinds, Workspaces, Farben (`set $hl2_*` …), Autostart |
-| `sway/scripts/` | `~/.config/sway/scripts/` | `lock.sh` (hyprlock, sonst swaylock), `powermenu.sh` (rofi -dmenu), `screens.py` (Monitore anordnen, Laptop rechts), `ws.sh` (Super+N = Workspace N des aktuellen Monitors), `ipv6.sh` |
+| `sway/scripts/` | `~/.config/sway/scripts/` | `lock.sh` (hyprlock, sonst swaylock), `powermenu.sh` (rofi -dmenu), `clip.sh` (Zwischenablage, rofi ueber copyq), `screens.py` (Monitore anordnen, Laptop rechts), `ws.sh` (Super+N = Workspace N des aktuellen Monitors), `ipv6.sh` |
 | `hypr/` | `~/.config/hypr/` | **nur hyprlock** (Sperrbildschirm) + `loading.sh` (Ladebalken). Hyprland selbst wird nicht benutzt |
 | `waybar/` | `~/.config/waybar/` | obere Leiste (`config.jsonc`, `style.css`): Monitor-Badge U/I/O + Workspace-Icons |
 | `rofi/` | `~/.config/rofi/` | Launcher. Sway ruft `rofi -config ~/.config/rofi/config-nord.rasi` auf; der Name "nord" ist historisch, das aktive Theme steht per `@theme` darin (HL2: `hl2-menu.rasi`). `config.rasi` gehoert zu i3 |
 | `eww/` | `~/.config/eww/` | Desktop-Widgets. HL2: `hud-left`/`hud-right` + Lern-Panel `learn` (Super+Z), Hilfe `info` (Super+Shift+Z), Fensterliste `sidebar` je Monitor. `scripts/learn.py` = Lern-Timer, Daten in `~/.local/share/learn-timer/`; `scripts/sidebar.py` = Watcher fuer die Fensterliste + Super+q/b + Vorschau-Raster Super+Tab |
-| `swaync/` | `~/.config/swaync/` | Benachrichtigungen + Panel hinter der Glocke |
+| `swaync/` | `~/.config/swaync/` | Benachrichtigungen (Popups als Pickups unten rechts) + Panel hinter der Glocke |
 | `swaylock/` | `~/.config/swaylock/` | Fallback-Sperre |
 | `alacritty/` | `~/.config/alacritty/` | Terminal. `alacritty.toml` importiert die Farbdatei (`hl2.toml`, `nord.toml`), `lambda.txt` = Begruessung |
 | `wallpaper.jpg` | `~/Private/wallpaper.jpg` | von `output * bg` in der sway-Config benutzt |
@@ -48,13 +48,14 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v2` | wie v1, Hintergrund einheitlich `#141310`. Letzter Stand mit 12 globalen Workspaces |
 | `HL2-v3` | Zwischenstand: 10 Workspaces je Monitor (u/i/o), tabbed, waybar-Taskbar unten (verworfen) |
 | `HL2-v4` | **Standard-Bedienung** (siehe unten): Fensterliste links, Tab-Zeile unsichtbar, Super+q/b, Hilfe-Panel |
+| `HL2-v5` | wie v4 + Vorschau-Raster (Super+Tab), Benachrichtigungen als HL2-Pickups, Zwischenablage im HL2-Menue (Super+Shift+V), Konsole als Scratchpad-Terminal (Super+^) |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest, ein neues Theme aendert nur den **Look**
+Seit `HL2-v4` ist die Bedienung fest (ergaenzt in `HL2-v5`), ein neues Theme aendert nur den **Look**
 (Farben, Schrift, Formen), nicht Tasten, Workspace-Schema oder Fensterliste.
 Wer davon abweicht, fragt vorher.
 
@@ -71,6 +72,21 @@ Wer davon abweicht, fragt vorher.
   bleibt auf dem Monitor. `Super+b` = Liste an/aus. `Super+Shift+z` = Hilfe.
   `Super+Tab` = alle Fenster aller Monitore als Vorschau-Raster (rofi; Bild =
   letzter sichtbarer Stand, sway kann verdeckte Fenster nicht abfotografieren).
+- **Zwischenablage** (`Super+Shift+V`, `sway/scripts/clip.sh`): copyq speichert
+  (laeuft per `exec_always`), rofi zeigt den Verlauf im Menue-Stil des Themes,
+  Enter = `copyq select`, also wieder in die Zwischenablage. Kein eigenes
+  copyq-Fenster.
+- **Konsole** (`Super+^`, Taste links neben 1): Alacritty mit app_id
+  `scratch-term` im Scratchpad, schwebend 70x55 % mittig. Erster Druck
+  startet es, danach ein/aus (`for_window`-Regel + Bind in der sway-Config).
+- **Benachrichtigungen** (swaync): Popups im Stil der Pickup-Meldungen des
+  Themes, unten rechts ueber dem rechten HUD-Kasten (`positionY bottom`,
+  `.floating-notifications` mit `margin-bottom` = HUD-Hoehe), 5 s, schmal.
+  Das Panel hinter der Glocke (`Super+n`) ist davon getrennt gestylt.
+- **Vorschau-Raster** (`Super+Tab`, `sidebar.py overview`): alle Fenster aller
+  Monitore als Kacheln (rofi, 5 je Reihe), Beschriftung `<Kuerzel> <Bereich>`
+  + App. Bilder macht der Watcher in `snap()`, solange ein Fenster sichtbar ist
+  (`$XDG_RUNTIME_DIR/win-shots`, nicht bei Sperre).
 - **Assigns:** VS Code `23:i3`, IntelliJ `24:i4`, KeePassXC `37:o7`, To Do
   `38:o8`, Teams `39:o9`, YouTube `40:o10`.
 - **Fenster:** `workspace_layout tabbed`, Tab-Zeile per Schrift 1 + leerem
@@ -83,9 +99,13 @@ Wer davon abweicht, fragt vorher.
   alle Shortcuts. **Statisch**: bei neuen Binds oder Assigns mitziehen.
 - **waybar oben:** Badge U/I/O (`custom/monitor`) + Bereichs-Icon je Workspace.
 
-Ein neues Theme uebernimmt `ws.sh`, `sidebar.py`, die Workspace-/Bind-Bloecke
-der sway-Config und die eww-Fenster `sidebar`/`info` und passt nur deren
-Farben in `eww.scss` / `style.css` an.
+Ein neues Theme uebernimmt `ws.sh`, `sidebar.py`, `clip.sh`, die
+Workspace-/Bind-Bloecke und die `scratch-term`-Regel der sway-Config, die
+eww-Fenster `sidebar`/`info` und Lage/Timeout der swaync-Popups
+(`swaync/config.json`) und passt nur Farben und Schrift an: `eww.scss`,
+waybar `style.css`, den Popup-Block in `swaync/style.css` und die
+`-theme-str`-Teile in `clip.sh` / `sidebar.py overview` (die rofi-Theme-Datei
+liefert den Rest).
 
 ## Aeltere Themes
 
