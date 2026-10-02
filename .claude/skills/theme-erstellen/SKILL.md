@@ -32,7 +32,7 @@ S=.claude/skills/theme-switch/scripts/theme.sh
   oder erst verworfen werden sollen.
 - `git status` im Repo sauber, `master` aktuell (`git pull`).
 - Basis festlegen: der neueste Standard-Tag (in der Theme-Tabelle als
-  "Aktueller Standard" markiert, derzeit `HL2-v7`), sonst fehlen dem neuen
+  "Aktueller Standard" markiert, derzeit `HL2-v8`), sonst fehlen dem neuen
   Theme Bausteine der Standard-Bedienung. Will der User bewusst auf einem
   aelteren Tag aufbauen (z. B. FirstSetup), erst mit `theme-switch` dorthin
   wechseln und die Bausteine danach nachruesten. Der neue Commit landet trotzdem linear auf
