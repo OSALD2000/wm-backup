@@ -237,7 +237,7 @@ scrollbar slider:hover { background: @tan; }
  * margin-bottom = Hoehe AMMO-Kasten + 32px Abstand von eww. */
 .floating-notifications { margin: 0 24px 140px 0; }
 .floating-notifications .notification {
-  background: rgba(40, 36, 24, 0.55);
+  background: rgba(20, 18, 12, 0.82);
   border: 1px solid rgba(255, 220, 0, 0.14);
   border-left: 3px solid @tan;
   border-radius: 10px;
@@ -245,7 +245,7 @@ scrollbar slider:hover { background: @tan; }
 }
 .floating-notifications .notification.low      { border-left-color: @dim; }
 .floating-notifications .notification.critical { border-left-color: @brick;
-                                                 background: rgba(180, 0, 0, 0.55); }
+                                                 background: rgba(120, 0, 0, 0.80); }
 .floating-notifications .summary {
   font-size: 14px;
   color: @tan;
