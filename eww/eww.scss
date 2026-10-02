@@ -100,3 +100,30 @@ tooltip { background: rgba(0, 0, 0, 0.85); color: $bright; border: 1px solid $fg
 .key     { min-width: 200px; color: $bright; font-weight: bold; }
 .key-d   { color: $label; }
 .info .section { margin-top: 8px; }
+
+// ── Vorschau-Raster (overview, Super+Tab) ────────────────────────
+.ov { background: rgba(20, 19, 16, 0.97); padding: 40px 60px; }
+.ov-title { color: $bright; font-size: 20px; font-weight: bold; text-shadow: $glow; letter-spacing: 4px; }
+.ov-tile { background: $box_hi; border: 1px solid $edge; border-radius: 6px; padding: 8px; min-width: 260px; }
+.ov-tile:hover, .ov-tile:focus { background: rgba(255, 220, 0, 0.12); border-color: $bright; }
+.ov-img { min-height: 150px; }
+.ov-label { color: $bright; font-weight: bold; font-size: 12px; }
+.ov-app { color: $label; font-size: 11px; }
+.ov-btns { margin: 6px; }
+.ov-x { background: rgba(0, 0, 0, 0.75); color: $label; border: 1px solid $edge; border-radius: 4px;
+        min-width: 22px; min-height: 22px; font-size: 12px; font-weight: bold; }
+.ov-x:hover, .ov-x:focus { background: $dmg_bg; color: #FFFFFF; border-color: $crit; }
+
+// ── Missionen (mission, Super+m) — Missionsziel-Tafel im HUD-Gelb ─
+.mission { font-family: "Iosevka Nerd Font", monospace; background: rgba(20, 19, 16, 0.94); }
+.ms-head { border-bottom: 1px solid $fg; padding-bottom: 8px; }
+.ms-lambda { color: $bright; font-size: 34px; font-weight: bold; text-shadow: $glow; margin-right: 12px; }
+.ms-title { color: $bright; font-size: 16px; font-weight: bold; letter-spacing: 3px; text-shadow: $glow; }
+.ms-item { border-left: 3px solid $bright; background: $box_hi; border-radius: 0 6px 6px 0; }
+.ms-item:hover { background: rgba(255, 220, 0, 0.08); }
+.ms-item.done { border-left-color: $fg; }
+.ms-btn { padding: 7px 10px; }
+.ms-check { color: $bright; font-size: 16px; }
+.ms-nr { color: $label; font-size: 10px; font-weight: bold; letter-spacing: 2px; }
+.ms-text { color: $bright; font-size: 13px; font-weight: bold; }
+.ms-item.done .ms-text, .ms-item.done .ms-check { color: $fg; text-decoration-line: line-through; }

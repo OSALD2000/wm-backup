@@ -128,6 +128,89 @@
           (image :path {w.icon} :image-width 16 :image-height 16)
           (label :class "win-app" :limit-width 8 :text {w.name}))))))
 
+;; Vorschau-Raster (Super+Tab, sidebar.py overview): alle Fenster aller
+; Monitore als Kacheln, Bild = letzter sichtbarer Stand. ov fuellt der Watcher.
+; Klick = fokussieren, X = Fenster schliessen, ⏻ = App beenden. Escape/Super+Tab
+; (sway-Mode "λ fenster") oder Klick daneben schliesst. Tab/Pfeile/Enter gehen auch.
+(defvar ov "[]")
+
+(defwindow overview
+  :monitor "eDP-1"  ; sidebar.py oeffnet es per --screen auf dem fokussierten Monitor
+  :geometry (geometry :width "100%" :height "100%" :anchor "center")
+  :stacking "overlay"
+  :exclusive false
+  :focusable "exclusive"
+  (eventbox :onclick "~/.config/eww/scripts/sidebar.py overview"
+    (box :class "ov" :orientation "v" :space-evenly false :spacing 16
+      (label :class "ov-title" :text "λ  FENSTER")
+      (scroll :vscroll true :hscroll false :vexpand true
+        (box :orientation "v" :space-evenly false :spacing 12 :halign "center"
+          (for row in {ov}
+            (box :space-evenly false :spacing 12
+              (for t in row
+                (overlay
+                  (button :class "ov-tile" :onclick "~/.config/eww/scripts/sidebar.py pick ${t.id}"
+                    (box :orientation "v" :space-evenly false :spacing 6
+                      (box :class "ov-img" (image :path {t.img} :image-width 250 :image-height 150))
+                      (label :class "ov-label" :text {t.label})
+                      (label :class "ov-app" :limit-width 30 :text {t.app})))
+                  (box :class "ov-btns" :halign "end" :valign "start" :space-evenly false :spacing 4
+                    (button :class "ov-x" :tooltip "Fenster schliessen"
+                      :onclick "swaymsg '[con_id=${t.id}] kill'" "✕")
+                    (button :class "ov-x" :tooltip "App beenden (alle ihre Fenster)"
+                      :onclick "~/.config/eww/scripts/sidebar.py quit ${t.pid}" "⏻")))))))))))
+
+; Missionen (Super+m): Todo-Liste im Stil der HL2-Missionsziele. todo.py haelt
+; die Daten in ~/.local/share/missions, deflisten meldet jede Aenderung.
+; Text geht per Heredoc an todo.py: eww setzt {} ungeschuetzt ein, ein ' im
+; Text braeche sonst die Shell-Zeile.
+(deflisten missions
+  :initial `{"open":0,"done":0,"items":[]}`
+  "~/.config/eww/scripts/todo.py watch")
+(defvar new_mission "")
+
+(defwindow mission
+  :monitor "eDP-1"  ; Super+m oeffnet es per --screen auf dem fokussierten Monitor
+  :geometry (geometry :x "24px" :y "48px" :width "460px" :anchor "top right")
+  :stacking "overlay"
+  :exclusive false
+  :focusable "ondemand"
+  (box :class "panel mission" :orientation "v" :space-evenly false :spacing 10
+    (box :class "ms-head" :space-evenly false
+      (label :class "ms-lambda" :text "λ")
+      (box :orientation "v" :space-evenly false :hexpand true
+        (label :class "ms-title" :xalign 0 :text "MISSIONSZIELE")
+        (label :class "muted small" :xalign 0
+          :text "${missions.open} offen · ${missions.done} erfuellt")))
+    (label :class "muted" :visible {arraylength(missions.items) == 0} :xalign 0
+      :text "Keine Ziele. Unten eins eintragen, Enter.")
+    (box :orientation "v" :space-evenly false :spacing 4
+      (for m in {missions.items}
+        (box :class "ms-item ${m.done ? 'done' : ''}" :space-evenly false
+          (button :class "ms-btn" :hexpand true :tooltip {m.done ? "wieder offen" : "erfuellt"}
+            :onclick "~/.config/eww/scripts/todo.py done ${m.id}"
+            (box :space-evenly false :spacing 12
+              (label :class "ms-check" :text {m.done ? "■" : "□"})
+              (box :orientation "v" :space-evenly false
+                (label :class "ms-nr" :xalign 0 :text "ZIEL ${m.nr}${m.done ? '  ·  ERFUELLT' : ''}")
+                (label :class "ms-text" :xalign 0 :wrap true :text {m.text}))))
+          (button :class "x" :tooltip "loeschen" :onclick "~/.config/eww/scripts/todo.py del ${m.id}" "✕"))))
+    (box :class "new" :space-evenly false :spacing 8
+      (label :class "muted" :text "+")
+      (input :hexpand true :value new_mission
+        :onchange "eww update new_mission=\"$(cat <<'λEOF'
+{}
+λEOF
+)\""
+        :onaccept "~/.config/eww/scripts/todo.py add <<'λEOF'
+{}
+λEOF
+eww update new_mission=''"))
+    (box :class "footer" :space-evenly false
+      (label :class "muted small" :hexpand true :xalign 0 :text "Klick = erfuellt · Super+m schliesst")
+      (button :class "btn ghost small" :visible {missions.done > 0}
+        :onclick "~/.config/eww/scripts/todo.py clear" "Erfuellte entfernen"))))
+
 ; Hilfe (Super+Shift+z oder ? neben AMMO): Workspace-Matrix und Shortcuts.
 ; Statisch — bei neuen Binds oder assigns in sway/config hier nachziehen.
 (defwidget ws-cell [ws app]
@@ -219,13 +302,14 @@
         (key :k "Super+Return" :d "Terminal")
         (key :k "Super+Shift+Tab" :d "Konsole (cool-retro-term ein/aus)")
         (key :k "Super+d" :d "Launcher")
-        (key :k "Super+Tab" :d "alle Fenster als Vorschau")
+        (key :k "Super+Tab" :d "alle Fenster als Vorschau (✕ schliesst, ⏻ beendet)")
         (key :k "Super+x" :d "KeePassXC")
         (key :k "Super+t / Super+Shift+t" :d "To Do / Teams")
         (key :k "Super+Shift+m w h o" :d "Outlook, WhatsApp, Whiteboard, Office")
         (key :k "Super+Shift+f p v" :d "Dateien, Kalender, Zwischenablage")
       (label :class "section" :xalign 0 :text "SYSTEM")
         (key :k "Super+z" :d "Lern-Timer")
+        (key :k "Super+m" :d "Missionen (Todo-Liste)")
         (key :k "Super+Shift+z" :d "diese Hilfe")
         (key :k "Super+n / Super+Shift+n" :d "Benachrichtigungen / Nicht stoeren")
         (key :k "Super+Shift+x" :d "sperren")

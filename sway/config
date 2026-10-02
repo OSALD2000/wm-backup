@@ -423,6 +423,12 @@ bindsym $mod+x       exec --no-startup-id keepassxc
 bindsym $mod+Shift+p exec --no-startup-id alacritty -e calcurse
 bindsym $mod+Shift+v exec --no-startup-id ~/.config/sway/scripts/clip.sh
 bindsym $mod+Tab     exec ~/.config/eww/scripts/sidebar.py overview
+# Solange das Vorschau-Raster offen ist (sidebar.py setzt den Mode): Escape oder
+# Super+Tab schliesst es. Andere Tasten gehen ans Raster (Tab, Pfeile, Enter).
+mode "λ fenster" {
+    bindsym Escape   exec ~/.config/eww/scripts/sidebar.py overview
+    bindsym $mod+Tab exec ~/.config/eww/scripts/sidebar.py overview
+}
 # Notification-Center auch per Tastatur, nicht nur ueber die Glocke
 bindsym $mod+n       exec --no-startup-id swaync-client -t -sw
 bindsym $mod+Shift+n exec --no-startup-id swaync-client -d -sw
@@ -483,5 +489,7 @@ mode "[ RESIZE ]" {
 # jeder Reload ersetzt den alten Watcher.
 exec_always --no-startup-id ~/.config/eww/scripts/sidebar.py watch
 bindsym $mod+z exec --no-startup-id eww open --toggle learn
+# Missionen (Todo-Liste, eww mission) auf dem Monitor, auf dem man gerade ist
+bindsym $mod+m exec --no-startup-id sh -c 'eww open --toggle mission --screen "$(swaymsg -t get_outputs | jq -r ".[] | select(.focused).name")"'
 # Hilfe (Workspace-Matrix + Shortcuts) auf dem Monitor, auf dem man gerade ist
 bindsym $mod+Shift+z exec --no-startup-id sh -c 'eww open --toggle info --screen "$(swaymsg -t get_outputs | jq -r ".[] | select(.focused).name")"'
