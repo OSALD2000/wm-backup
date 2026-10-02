@@ -31,6 +31,7 @@
     "sway/workspaces",
     "sway/mode",
     "sway/scratchpad",
+    "custom/wins",
     "sway/window"
   ],
   "modules-center": ["clock"],
@@ -119,6 +120,16 @@
     "show-empty": false,
     "tooltip": true,
     "tooltip-format": "{app}: {title}"
+  },
+
+  // Fenster im sichtbaren Workspace dieses Monitors + Fensterliste links
+  // offen/zu. Schreibt sidebar.py watch, weckt das Modul per Signal (BAR_SIGNAL).
+  "custom/wins": {
+    "exec": "~/.config/eww/scripts/sidebar.py bar",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 9,
+    "on-click": "~/.config/eww/scripts/sidebar.py toggle"
   },
 
   "sway/window": {

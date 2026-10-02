@@ -110,6 +110,9 @@ tooltip label { padding: 5px 7px; }
   border-radius: 4px;
 }
 #scratchpad { color: @ink_dim; padding: 0 8px; }
+#custom-wins { color: @ink_dim; padding: 0 8px; }
+#custom-wins.open { color: @ink; }
+#custom-wins.off  { color: @ink_dim; opacity: 0.6; }
 #window { color: @ink_dim; font-weight: normal; padding: 0 12px; }
 window#waybar.empty #window { padding: 0; }
 

@@ -12,6 +12,8 @@ Aufruf: sidebar.py watch       eww neu starten (HUD oeffnen), dann bei jeder
                                neuer Start beendet den alten (PIDFILE).
         sidebar.py next|prev   naechstes/vorheriges Fenster der Liste fokussieren
         sidebar.py toggle      Sidebar an/aus (Super+b)
+        sidebar.py bar         waybar-Modul custom/wins: Fensterzahl des
+                               sichtbaren Workspaces + ob die Liste offen ist
         sidebar.py overview    alle Fenster aller Monitore als Vorschau-Raster
                                (rofi, Super+Tab), Enter fokussiert
         sidebar.py selftest
@@ -42,6 +44,8 @@ MIN_WINDOWS = 2     # darunter keine Sidebar
 RUN = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
 PIDFILE = os.path.join(RUN, "eww-sidebar.pid")
 OFF = os.path.join(RUN, "eww-sidebar.off")  # existiert = Sidebar per Super+b aus
+BAR = os.path.join(RUN, "eww-sidebar.bar")  # Stand fuer waybar, schreibt der Watcher
+BAR_SIGNAL = 9  # = "signal" von custom/wins in waybar/config.jsonc
 # Vorschaubilder fuer overview. Sway kann nur Monitore abfotografieren, und
 # Fenster hinter Tabs/auf unsichtbaren Workspaces malt es gar nicht -> der
 # Watcher fotografiert jedes Fenster, solange es sichtbar ist; overview zeigt
@@ -235,6 +239,27 @@ def toggle():
     subprocess.run(["swaymsg", "-t", "send_tick", "sidebar"], capture_output=True)
 
 
+def bar_json(state, output):
+    """-> waybar-JSON fuer custom/wins: Fensterzahl + Symbol Liste offen/zu."""
+    n, shown = state.get(output, [0, False])
+    if os.path.exists(OFF):
+        icon, cls, tip = "\uf2d0", "off", "Fensterliste aus (Super+b)"
+    elif shown:
+        icon, cls, tip = "\uf0db", "open", "Fensterliste offen (Super+b)"
+    else:
+        icon, cls, tip = "\uf0db", "idle", f"Fensterliste erst ab {MIN_WINDOWS} Fenstern"
+    return json.dumps({"text": f"\uf2d2 {n}  {icon}", "class": cls, "tooltip": tip})
+
+
+def bar():
+    try:
+        with open(BAR) as f:
+            state = json.load(f)
+    except (OSError, ValueError):
+        state = {}
+    print(bar_json(state, os.environ.get("WAYBAR_OUTPUT_NAME", "")))
+
+
 def watch():
     kill_previous()
     # Alle eww-Prozesse weg, nicht nur `eww kill`: ein Daemon, der seinen Socket
@@ -246,7 +271,7 @@ def watch():
     apps, index = desktop_apps(), icon_index()  # ponytail: nur beim Start; neue Apps nach Super+Shift+C
     events = subprocess.Popen(["swaymsg", "-m", "-t", "subscribe", '["window","workspace","output","tick"]'],
                               stdout=subprocess.PIPE, text=True)
-    last, shown, taken = None, set(), {}
+    last, shown, taken, barstate = None, set(), {}, None
     while True:
         tree = swaymsg("-t", "get_tree")
         snap(tree, taken)
@@ -265,6 +290,13 @@ def watch():
                 eww("open", "sidebar", "--id", "sidebar-" + o, "--arg", "screen=" + o,
                     "--arg", f"height={heights.get(o, 1080) - WAYBAR_HEIGHT}px")
             shown = want
+        st = {o: [len(w), o in shown] for o, w in wins.items()}
+        cur = json.dumps(st) + str(os.path.exists(OFF))  # OFF aendert das Symbol
+        if cur != barstate:
+            with open(BAR, "w") as f:
+                json.dump(st, f)
+            subprocess.run(["pkill", f"-RTMIN+{BAR_SIGNAL}", "-x", "waybar"])
+            barstate = cur
         if not events.stdout.readline():
             return
 
@@ -302,10 +334,12 @@ def selftest():
     assert [i for i, _ in e] == [5, 1, 2, 3], e  # alle Workspaces, Scratchpad nicht
     assert e[0][1] == "I1  TERMINAL\nhidden\0icon\x1f" + FALLBACK, e[0]
     assert e[1][1].startswith("I3  CODE\nVisual Studio Code\0icon\x1f"), e[1]
+    assert json.loads(bar_json({"DP-7": [3, True]}, "DP-7"))["text"].startswith("\uf2d2 3  ")
+    assert json.loads(bar_json({}, "HDMI-1"))["text"].startswith("\uf2d2 0")
     print("ok")
 
 
 if __name__ == "__main__":
     {"watch": watch, "next": lambda: cycle(1), "prev": lambda: cycle(-1),
-     "toggle": toggle, "overview": overview,
+     "toggle": toggle, "overview": overview, "bar": bar,
      "selftest": selftest}[sys.argv[1]]()
