@@ -206,7 +206,7 @@
         (key :k "Esc" :d "u/i/o-Modus abbrechen")
       (label :class "section" :xalign 0 :text "FENSTER")
         (key :k "Super+q / Super+Ctrl+q" :d "naechstes / voriges (Liste links)")
-        (key :k "Super+b" :d "Liste links an/aus")
+        (key :k "Super+b" :d "Liste links an/aus (oder Klick auf Fensterzahl oben)")
         (key :k "Super+j k l ö" :d "Fokus, mit Shift verschieben")
         (key :k "Super+w / e" :d "Tabs / Split umschalten")
         (key :k "Super+h / v" :d "teilen waagrecht / senkrecht")
