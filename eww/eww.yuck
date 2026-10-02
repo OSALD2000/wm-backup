@@ -217,7 +217,7 @@
         (key :k "Super+Shift+- / Super+-" :d "Scratchpad rein / zeigen")
       (label :class "section" :xalign 0 :text "APPS")
         (key :k "Super+Return" :d "Terminal")
-        (key :k "Super+Shift+Tab" :d "Konsole (Terminal ein/aus)")
+        (key :k "Super+Shift+Tab" :d "Konsole (cool-retro-term ein/aus)")
         (key :k "Super+d" :d "Launcher")
         (key :k "Super+Tab" :d "alle Fenster als Vorschau")
         (key :k "Super+x" :d "KeePassXC")
