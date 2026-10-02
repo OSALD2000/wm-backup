@@ -1,6 +1,6 @@
 ---
 name: theme-erstellen
-description: Legt fuer Osas Sway-Desktop ein neues Theme an (oder eine neue Version eines bestehenden) und speichert es als Git-Tag <Theme>-v<N> in wm-backup – vom Entwurf ueber das Umbauen von sway, waybar, rofi, eww, swaync, hyprlock, alacritty und Browser bis zu Commit, Tag und Push. Nutze diesen Skill immer, wenn der User einen neuen Look, ein neues Farbschema oder Design fuer seinen Desktop will, ein bestehendes Theme nachbessern und als neue Version sichern moechte, oder seine aktuellen Live-Aenderungen in ~/.config ins Repo uebernehmen und taggen will – z. B. "neues Theme im Cyberpunk-Stil", "mach HL2 v2", "sichere meinen aktuellen Stand als Theme", "Tag fuer das Theme anlegen".
+description: Legt fuer Osas Sway-Desktop ein neues Theme an (oder eine neue Version eines bestehenden) und speichert es als Git-Tag <Theme>-v<N> in wm-backup – vom Entwurf ueber das Umbauen von sway, waybar, rofi, eww, swaync, hyprlock, alacritty, cool-retro-term (Konsole) und Browser bis zu Commit, Tag und Push. Nutze diesen Skill immer, wenn der User einen neuen Look, ein neues Farbschema oder Design fuer seinen Desktop will, ein bestehendes Theme nachbessern und als neue Version sichern moechte, oder seine aktuellen Live-Aenderungen in ~/.config ins Repo uebernehmen und taggen will – z. B. "neues Theme im Cyberpunk-Stil", "mach HL2 v2", "sichere meinen aktuellen Stand als Theme", "Tag fuer das Theme anlegen".
 ---
 
 # Neues Theme erstellen
@@ -32,7 +32,7 @@ S=.claude/skills/theme-switch/scripts/theme.sh
   oder erst verworfen werden sollen.
 - `git status` im Repo sauber, `master` aktuell (`git pull`).
 - Basis festlegen: der neueste Standard-Tag (in der Theme-Tabelle als
-  "Aktueller Standard" markiert, derzeit `HL2-v7`), sonst fehlen dem neuen
+  "Aktueller Standard" markiert, derzeit `HL2-v11`), sonst fehlen dem neuen
   Theme Bausteine der Standard-Bedienung. Will der User bewusst auf einem
   aelteren Tag aufbauen (z. B. FirstSetup), erst mit `theme-switch` dorthin
   wechseln und die Bausteine danach nachruesten. Der neue Commit landet trotzdem linear auf
@@ -45,12 +45,13 @@ S=.claude/skills/theme-switch/scripts/theme.sh
 ### 3. Design festlegen
 Die **Bedienung ist fest** (Abschnitt "Standard-Bedienung" in `AGENTS.md`:
 Workspaces u/i/o mit 1-10, Super+q/b/Shift+z, Fensterliste links, Hilfe-Panel,
-unsichtbare Tab-Zeile, Vorschau Super+Tab, Konsole Super+Shift+Tab,
+unsichtbare Tab-Zeile, Vorschau Super+Tab, Konsole Super+Shift+Tab (cool-retro-term),
 Zwischenablage Super+Shift+V, Pickup-Popups unten rechts,
-waybar mit Nummer vor dem Icon und hervorgehobenem Workspace auf jedem Monitor). Das gilt fuer jedes
+waybar mit Nummer vor dem Icon und hervorgehobenem Workspace auf jedem Monitor, daneben Fensterzahl + Symbol
+der Fensterliste `custom/wins`). Das gilt fuer jedes
 Theme, nicht nur HL2. Ein Theme aendert nur den Look. Soll davon etwas
 anders werden, erst mit dem User klaeren und danach `AGENTS.md` nachziehen.
-Kommt ein neuer Baustein dazu, in `CLAUDE.md`/`AGENTS.md` unter
+Kommt ein neuer Baustein dazu, in `AGENTS.md`/`CLAUDE.md` unter
 "Standard-Bedienung" eintragen und den neuen Tag in der Tabelle als
 "Aktueller Standard" markieren (Markierung beim alten entfernen).
 
@@ -76,6 +77,7 @@ machen einen spaeteren Fix oder Rueckbau billig.
 | Benachrichtigungen | `~/.config/swaync/style.css` | `swaync-client -rs` |
 | Sperre | `~/.config/hypr/hyprlock.conf` (+ `swaylock/config` als Fallback) | testen mit `~/.config/sway/scripts/lock.sh` |
 | Terminal | `~/.config/alacritty/<theme>.toml`, import in `alacritty.toml` umstellen | neues Fenster |
+| Konsole | `~/.config/cool-retro-term/profile.json`, oder per Rechtsklick -> Settings einstellen, schliessen, `~/.config/sway/scripts/console.py dump` | Konsole schliessen, Super+Shift+Tab |
 | Browser | `~/.config/chrome-hl2-theme/`, Firefox `…/h5d4ltr7.default/chrome/` | Browser-Neustart |
 
 Konventionen aus den bisherigen Themes, die sich bewaehrt haben:
@@ -92,11 +94,13 @@ Konventionen aus den bisherigen Themes, die sich bewaehrt haben:
   dort eintragen, keine zweite `eww open`-Zeile (zwei Starts = zwei Daemons).
 - Die Bausteine der Standard-Bedienung mit umfaerben, nicht weglassen:
   `sidebar`, `info`, die waybar-Workspaces (Nummer + Icon, `button.visible`
-  wie `button.focused`), die swaync-Popups (Pickups
+  wie `button.focused`), `custom/wins` (Klassen `open`/`idle`/`off`), die swaync-Popups (Pickups
   unten rechts, Block `.floating-notifications` in `swaync/style.css`), das
   Zwischenablage-Menue `clip.sh`, das Vorschau-Raster (`sidebar.py overview`)
-  und die Konsole `scratch-term`. Nach dem Umbau alle einmal ausprobieren:
-  `notify-send`, Super+Shift+V, Super+Tab, Super+Shift+Tab.
+  und die Konsole (cool-retro-term, eigenes `profile.json` in den Farben des
+  Themes). Nach dem Umbau alle einmal ausprobieren:
+  `notify-send`, Super+Shift+V, Super+Tab, Super+Shift+Tab, Super+b (Symbol
+  in `custom/wins` wechselt, Zahl stimmt mit den Fenstern ueberein).
 - Aendern sich Binds oder Assigns, das Hilfe-Panel `info` in `eww.yuck`
   mitziehen.
 - Neue Komponente (neuer Ordner, neues Ziel ausserhalb von `~/.config`)?

@@ -12,7 +12,7 @@ Sprache in Commits und Kommentaren: Deutsch, Umlaute als ae/oe/ue.
 | Repo-Pfad | Live-Pfad | Was |
 |---|---|---|
 | `sway/config` | `~/.config/sway/config` | Compositor, Keybinds, Workspaces, Farben (`set $hl2_*` …), Autostart |
-| `sway/scripts/` | `~/.config/sway/scripts/` | `lock.sh` (hyprlock, sonst swaylock), `powermenu.sh` (rofi -dmenu), `clip.sh` (Zwischenablage, rofi ueber copyq), `screens.py` (Monitore anordnen, Laptop rechts), `ws.sh` (Super+N = Workspace N des aktuellen Monitors), `ipv6.sh` |
+| `sway/scripts/` | `~/.config/sway/scripts/` | `lock.sh` (hyprlock, sonst swaylock), `powermenu.sh` (rofi -dmenu), `clip.sh` (Zwischenablage, rofi ueber copyq), `screens.py` (Monitore anordnen, Laptop rechts), `ws.sh` (Super+N = Workspace N des aktuellen Monitors), `console.py` (Konsole Super+Shift+Tab), `ipv6.sh` |
 | `hypr/` | `~/.config/hypr/` | **nur hyprlock** (Sperrbildschirm) + `loading.sh` (Ladebalken). Hyprland selbst wird nicht benutzt |
 | `waybar/` | `~/.config/waybar/` | obere Leiste (`config.jsonc`, `style.css`): Monitor-Badge U/I/O + Workspaces als `<Taste> <Icon>`, sichtbarer Workspace je Monitor hervorgehoben, `custom/wins` = Fensterzahl + Fensterliste offen/zu |
 | `rofi/` | `~/.config/rofi/` | Launcher. Sway ruft `rofi -config ~/.config/rofi/config-nord.rasi` auf; der Name "nord" ist historisch, das aktive Theme steht per `@theme` darin (HL2: `hl2-menu.rasi`). `config.rasi` gehoert zu i3 |
@@ -20,6 +20,7 @@ Sprache in Commits und Kommentaren: Deutsch, Umlaute als ae/oe/ue.
 | `swaync/` | `~/.config/swaync/` | Benachrichtigungen (Popups als Pickups unten rechts) + Panel hinter der Glocke |
 | `swaylock/` | `~/.config/swaylock/` | Fallback-Sperre |
 | `alacritty/` | `~/.config/alacritty/` | Terminal. `alacritty.toml` importiert die Farbdatei (`hl2.toml`, `nord.toml`), `lambda.txt` = Begruessung |
+| `cool-retro-term/` | `~/.config/cool-retro-term/` | Look der Konsole: `profile.json` (Farben, CRT-Effekte, Schrift), traegt `console.py` vor jedem Start ein |
 | `wallpaper.jpg` | `~/Private/wallpaper.jpg` | von `output * bg` in der sway-Config benutzt |
 | `browser/chrome-hl2-theme/` | `~/.config/chrome-hl2-theme/` | entpacktes Chrome-Theme (in Chrome ueber "Entpackte Erweiterung laden") |
 | `browser/firefox/*.css` | `~/snap/firefox/common/.mozilla/firefox/h5d4ltr7.default/chrome/` | Firefox (Snap) userChrome/userContent |
@@ -53,14 +54,15 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v7` | wie v6, waybar: Nummer vor jedem Workspace-Icon, aktueller Workspace auch auf Monitoren ohne Fokus hervorgehoben. |
 | `HL2-v8` | wie v7, Pickup-Popups mit dunklerem, deckenderem Hintergrund (besser lesbar). |
 | `HL2-v9` | wie v8, waybar links: Fensterzahl des sichtbaren Workspaces + Symbol Fensterliste offen/zu (`custom/wins`, Klick = Super+b). |
-| `HL2-v10` | wie v9, Hilfe-Panel nennt den Klick auf die Fensterzahl. **Aktueller Standard** fuer neue Themes |
+| `HL2-v10` | wie v9, Hilfe-Panel nennt den Klick auf die Fensterzahl. |
+| `HL2-v11` | wie v10, Konsole ist cool-retro-term mit HL2-Profil (Gelb auf `#141310`, leichte CRT-Effekte). **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v10` (Vorschau,
+Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v11` (Vorschau,
 Zwischenablage, Konsole, Pickup-Popups, Workspace-Nummern und Fensterzahl in waybar). Alles in dieser Liste gilt fuer
 **jedes** neue Theme, nicht nur fuer HL2: es aendert nur den **Look**
 (Farben, Schrift, Formen), nicht Tasten, Workspace-Schema, Fensterliste oder
@@ -84,9 +86,14 @@ Wer davon abweicht, fragt vorher.
   (laeuft per `exec_always`), rofi zeigt den Verlauf im Menue-Stil des Themes,
   Enter = `copyq select`, also wieder in die Zwischenablage. Kein eigenes
   copyq-Fenster.
-- **Konsole** (`Super+Shift+Tab`): Alacritty mit app_id
-  `scratch-term` im Scratchpad, schwebend 70x55 % mittig. Erster Druck
-  startet es, danach ein/aus (`for_window`-Regel + Bind in der sway-Config).
+- **Konsole** (`Super+Shift+Tab`, `sway/scripts/console.py`): cool-retro-term
+  im Scratchpad, schwebend 70x55 % mittig. Erster Druck startet es, danach
+  ein/aus (`for_window`-Regel auf app_id `cool-retro-term.cool-retro-term` +
+  Bind in der sway-Config). Jedes Theme hat ein eigenes Design in
+  `cool-retro-term/profile.json` (Farben des Themes, CRT-Effekte, Schrift).
+  `console.py` traegt die Datei vor jedem Start als Profil `wm-theme` in die
+  Datenbank von cool-retro-term ein, die Datei gewinnt also immer.
+  Das normale Terminal bleibt Alacritty.
 - **Benachrichtigungen** (swaync): Popups im Stil der Pickup-Meldungen des
   Themes, unten rechts ueber dem rechten HUD-Kasten (`positionY bottom`,
   `.floating-notifications` mit `margin-bottom` = HUD-Hoehe), 5 s, schmal.
@@ -118,19 +125,23 @@ Wer davon abweicht, fragt vorher.
 
 Ein neues Theme uebernimmt `ws.sh`, `sidebar.py`, `clip.sh`, die
 `format-icons` der waybar (Nummer vor dem Icon) und das Modul `custom/wins`, die
-Workspace-/Bind-Bloecke und die `scratch-term`-Regel der sway-Config, die
+Workspace-/Bind-Bloecke und die Konsolen-Regel (`console.py`, `for_window` auf
+cool-retro-term) der sway-Config, die
 eww-Fenster `sidebar`/`info` und Lage/Timeout der swaync-Popups
 (`swaync/config.json`) und passt nur Farben und Schrift an: `eww.scss`,
 waybar `style.css`, den Popup-Block in `swaync/style.css` und die
 `-theme-str`-Teile in `clip.sh` / `sidebar.py overview` (die rofi-Theme-Datei
 liefert den Rest). In `style.css` muss `button.visible` dieselbe
 Hervorhebung bekommen wie `button.focused`; `#custom-wins` mit den Klassen
-`open`/`idle`/`off` umfaerben.
+`open`/`idle`/`off` umfaerben; `cool-retro-term/profile.json` mit den Farben
+des Themes neu einstellen (`fontColor`, `backgroundColor`, Effekte).
 
 **Allgemeine Aenderungen** (Bedienung, Bausteine, Verhalten, nicht nur Farben)
 gelten ab dann fuer jedes Theme: hier unter Standard-Bedienung eintragen, im
 Skill `theme-erstellen` die Liste der Bausteine nachziehen, neuen Tag anlegen
-und ihn in der Tabelle als "Aktueller Standard" markieren.
+und ihn in der Tabelle als "Aktueller Standard" markieren. Immer beide
+Kopien pflegen: `AGENTS.md` = `CLAUDE.md`, `.agents/skills/` = `.claude/skills/`
+(dort steht `AGENTS.md` statt `CLAUDE.md`).
 
 ## Aeltere Themes
 
@@ -156,7 +167,8 @@ waybar, swaync, screens.py und `sidebar.py watch` (startet eww) ueber
 `exec_always` neu startet. eww wird vor dem Reload beendet; aeltere Tags, die
 eww per `exec … eww open` starten, bekommen diese Zeile danach nachgereicht.
 swayidle (traegt den Lock-Befehl) wird mit seiner `exec`-Zeile neu gestartet.
-Firefox und Chrome brauchen einen Neustart.
+Firefox und Chrome brauchen einen Neustart, die Konsole auch (schliessen,
+dann Super+Shift+Tab: erst dann laedt sie das neue `profile.json`).
 
 Skills: `theme-erstellen` (neues Theme bauen und taggen), `theme-switch`
 (zwischen Tags wechseln).
@@ -174,6 +186,11 @@ Skills: `theme-erstellen` (neues Theme bauen und taggen), `theme-switch`
   zurueck.
 - `learn.py stop` steht vor jedem Lock/Exit/Idle, damit der Lern-Timer nicht
   weiterzaehlt. Beim Aendern von Keybinds erhalten.
+- cool-retro-term hat eine feste app_id und kein `--class`: **jedes**
+  cool-retro-term-Fenster landet als Konsole im Scratchpad. Einstellungen per
+  Rechtsklick -> Settings speichert es erst beim Beenden in seine Datenbank;
+  `console.py dump` holt sie danach nach `profile.json`. Nur `--profile`
+  (lang) wirkt, `-p` erkennt die QML-Seite nicht.
 - Mod-Taste ist Super; Richtungen `j k l ö` (i3-Stil), Caps = Escape, Layout `de`.
 - `workspace_layout tabbed` gilt nur fuer **neu angelegte** Workspaces. Alte
   (oder nach `Super+h/v/e`) oeffnen Apps wieder nebeneinander: `Super+w`.
