@@ -32,7 +32,7 @@ S=.claude/skills/theme-switch/scripts/theme.sh
   oder erst verworfen werden sollen.
 - `git status` im Repo sauber, `master` aktuell (`git pull`).
 - Basis festlegen: der neueste Standard-Tag (in der Theme-Tabelle als
-  "Aktueller Standard" markiert, derzeit `HL2-v11`), sonst fehlen dem neuen
+  "Aktueller Standard" markiert, derzeit `HL2-v12`), sonst fehlen dem neuen
   Theme Bausteine der Standard-Bedienung. Will der User bewusst auf einem
   aelteren Tag aufbauen (z. B. FirstSetup), erst mit `theme-switch` dorthin
   wechseln und die Bausteine danach nachruesten. Der neue Commit landet trotzdem linear auf
@@ -45,7 +45,7 @@ S=.claude/skills/theme-switch/scripts/theme.sh
 ### 3. Design festlegen
 Die **Bedienung ist fest** (Abschnitt "Standard-Bedienung" in `CLAUDE.md`:
 Workspaces u/i/o mit 1-10, Super+q/b/Shift+z, Fensterliste links, Hilfe-Panel,
-unsichtbare Tab-Zeile, Vorschau Super+Tab, Konsole Super+Shift+Tab (cool-retro-term),
+unsichtbare Tab-Zeile, Vorschau Super+Tab (eww, ✕/⏻ je Kachel), Missionen Super+m, Konsole Super+Shift+Tab (cool-retro-term),
 Zwischenablage Super+Shift+V, Pickup-Popups unten rechts,
 waybar mit Nummer vor dem Icon und hervorgehobenem Workspace auf jedem Monitor, daneben Fensterzahl + Symbol
 der Fensterliste `custom/wins`). Das gilt fuer jedes
@@ -96,10 +96,11 @@ Konventionen aus den bisherigen Themes, die sich bewaehrt haben:
   `sidebar`, `info`, die waybar-Workspaces (Nummer + Icon, `button.visible`
   wie `button.focused`), `custom/wins` (Klassen `open`/`idle`/`off`), die swaync-Popups (Pickups
   unten rechts, Block `.floating-notifications` in `swaync/style.css`), das
-  Zwischenablage-Menue `clip.sh`, das Vorschau-Raster (`sidebar.py overview`)
-  und die Konsole (cool-retro-term, eigenes `profile.json` in den Farben des
+  Zwischenablage-Menue `clip.sh`, das Vorschau-Raster (eww `overview`, `.ov-*`), die
+  Missionen (eww `mission`, `.ms-*`) und die Konsole (cool-retro-term, eigenes `profile.json` in den Farben des
   Themes). Nach dem Umbau alle einmal ausprobieren:
-  `notify-send`, Super+Shift+V, Super+Tab, Super+Shift+Tab, Super+b (Symbol
+  `notify-send`, Super+Shift+V, Super+Tab (✕ schliesst ein Fenster, Kachel
+  verschwindet), Super+m (Ziel mit `'` anlegen, abhaken), Super+Shift+Tab, Super+b (Symbol
   in `custom/wins` wechselt, Zahl stimmt mit den Fenstern ueberein).
 - Aendern sich Binds oder Assigns, das Hilfe-Panel `info` in `eww.yuck`
   mitziehen.
