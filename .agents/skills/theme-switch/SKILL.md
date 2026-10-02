@@ -34,9 +34,10 @@ S=.claude/skills/theme-switch/scripts/theme.sh
    swayidle mit dem Lock-Befehl des neuen Themes neu und
    oeffnet die eww-Fenster, die die neue sway-Config nennt.
 
-5. **Ergebnis melden.** Welcher Tag jetzt live ist, und dass Firefox/Chrome
+5. **Ergebnis melden.** Welcher Tag jetzt live ist, dass Firefox/Chrome
    neu gestartet werden muessen, falls sich Dateien unter `browser/`
-   geaendert haben. Laeuft keine Sway-Session (Skript meldet das), soll der
+   geaendert haben, und die Konsole (schliessen, Super+Shift+Tab), falls sich
+   `cool-retro-term/profile.json` geaendert hat. Laeuft keine Sway-Session (Skript meldet das), soll der
    User Super+Shift+C druecken.
 
 ## Gut zu wissen

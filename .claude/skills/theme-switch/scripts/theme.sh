@@ -18,7 +18,7 @@ set -eu
 REPO=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 STATE=${XDG_STATE_HOME:-$HOME/.local/state}/wm-theme
 FFP=$HOME/snap/firefox/common/.mozilla/firefox/h5d4ltr7.default
-DIRS="sway hypr waybar rofi eww swaync swaylock alacritty"
+DIRS="sway hypr waybar rofi eww swaync swaylock alacritty cool-retro-term"
 # Muell in den Live-Ordnern, der nie ins Repo gehoert
 EXCL="--exclude=.git --exclude=*.bak* --exclude=themes/ --exclude=*.pak"
 
@@ -118,7 +118,7 @@ switch)
     else
         echo "Keine Sway-Session: Neuladen uebersprungen (Super+Shift+C spaeter)."
     fi
-    echo "deployt: $tag. Firefox/Chrome neu starten, damit das Browser-Theme greift."
+    echo "deployt: $tag. Firefox/Chrome und Konsole neu starten, damit ihr Theme greift."
     ;;
 sync-back)
     map | while read -r src dst; do
