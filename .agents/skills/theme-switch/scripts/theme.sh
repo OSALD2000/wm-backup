@@ -20,7 +20,7 @@ STATE=${XDG_STATE_HOME:-$HOME/.local/state}/wm-theme
 FFP=$HOME/snap/firefox/common/.mozilla/firefox/h5d4ltr7.default
 DIRS="sway hypr waybar rofi eww swaync swaylock alacritty cool-retro-term"
 # Muell in den Live-Ordnern, der nie ins Repo gehoert
-EXCL="--exclude=.git --exclude=*.bak* --exclude=themes/ --exclude=*.pak"
+EXCL="--exclude=.git --exclude=__pycache__ --exclude=*.bak* --exclude=themes/ --exclude=*.pak"
 
 # Paare "Repo-Pfad Ziel-Pfad"; Ordner mit /, Dateien ohne
 map() {
@@ -50,7 +50,7 @@ export_ref() {  # $1 ref, $2 Zielordner
 drift() {
     map | while read -r src dst; do
         [ -e "$1/$src" ] || continue
-        rsync -rcn --out-format="$(fmt "$src" "$dst")" "$1/$src" "$dst" | grep -v '/$' || true
+        rsync -rcn $EXCL --out-format="$(fmt "$src" "$dst")" "$1/$src" "$dst" | grep -v '/$' || true
     done | sed 's|//*|/|g'
 }
 
@@ -92,7 +92,7 @@ switch)
     map | while read -r src dst; do
         [ -e "$TMP/new/$src" ] || continue
         mkdir -p "$(dirname "$dst")"
-        rsync -rlc ${dry:+-n} --out-format="  $(fmt "$src" "$dst")" "$TMP/new/$src" "$dst" | grep -v '/$' || true
+        rsync -rlc ${dry:+-n} $EXCL --out-format="  $(fmt "$src" "$dst")" "$TMP/new/$src" "$dst" | grep -v '/$' || true
     done
     [ -n "$dry" ] && { echo "(Probelauf, nichts geaendert)"; exit 0; }
     mkdir -p "$(dirname "$STATE")"; echo "$tag" > "$STATE"
