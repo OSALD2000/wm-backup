@@ -51,15 +51,16 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v5` | wie v4 + Vorschau-Raster (Super+Tab), Benachrichtigungen als HL2-Pickups, Zwischenablage im HL2-Menue (Super+Shift+V), Konsole als Scratchpad-Terminal (Super+^) |
 | `HL2-v6` | wie v5, Konsole auf Super+Shift+Tab |
 | `HL2-v7` | wie v6, waybar: Nummer vor jedem Workspace-Icon, aktueller Workspace auch auf Monitoren ohne Fokus hervorgehoben. |
-| `HL2-v8` | wie v7, Pickup-Popups mit dunklerem, deckenderem Hintergrund (besser lesbar). **Aktueller Standard** fuer neue Themes |
+| `HL2-v8` | wie v7, Pickup-Popups mit dunklerem, deckenderem Hintergrund (besser lesbar). |
+| `HL2-v9` | wie v8, waybar links: Fensterzahl des sichtbaren Workspaces + Symbol Fensterliste offen/zu (`custom/wins`, Klick = Super+b). **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v7` (Vorschau,
-Zwischenablage, Konsole, Pickup-Popups, Workspace-Nummern in waybar). Alles in dieser Liste gilt fuer
+Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v9` (Vorschau,
+Zwischenablage, Konsole, Pickup-Popups, Workspace-Nummern und Fensterzahl in waybar). Alles in dieser Liste gilt fuer
 **jedes** neue Theme, nicht nur fuer HL2: es aendert nur den **Look**
 (Farben, Schrift, Formen), nicht Tasten, Workspace-Schema, Fensterliste oder
 die Bausteine unten. Basis fuer ein neues Theme ist immer der neueste Standard-Tag.
@@ -107,17 +108,23 @@ Wer davon abweicht, fragt vorher.
   (`1` … `9`, `0` fuer 10, wie Super+N; steht in `format-icons`). Der sichtbare
   Workspace jedes Monitors ist gleich hervorgehoben wie der fokussierte
   (`button.visible, button.focused` in `style.css`), damit jede Bar zeigt, was
-  auf ihrem Monitor gerade offen ist.
+  auf ihrem Monitor gerade offen ist. Daneben `custom/wins` (`sidebar.py bar`):
+  Zahl der Fenster im sichtbaren Workspace + Symbol der Fensterliste
+  (Spalten = offen, gedimmt = erst ab 2 Fenstern, Vollbild = per Super+b aus),
+  Klick schaltet die Liste. Der Watcher schreibt den Stand nach
+  `$XDG_RUNTIME_DIR/eww-sidebar.bar` und weckt waybar per `SIGRTMIN+9`.
+  `sway/scratchpad` (≡ N) zaehlt die Fenster im Scratchpad, also die Konsole.
 
 Ein neues Theme uebernimmt `ws.sh`, `sidebar.py`, `clip.sh`, die
-`format-icons` der waybar (Nummer vor dem Icon), die
+`format-icons` der waybar (Nummer vor dem Icon) und das Modul `custom/wins`, die
 Workspace-/Bind-Bloecke und die `scratch-term`-Regel der sway-Config, die
 eww-Fenster `sidebar`/`info` und Lage/Timeout der swaync-Popups
 (`swaync/config.json`) und passt nur Farben und Schrift an: `eww.scss`,
 waybar `style.css`, den Popup-Block in `swaync/style.css` und die
 `-theme-str`-Teile in `clip.sh` / `sidebar.py overview` (die rofi-Theme-Datei
 liefert den Rest). In `style.css` muss `button.visible` dieselbe
-Hervorhebung bekommen wie `button.focused`.
+Hervorhebung bekommen wie `button.focused`; `#custom-wins` mit den Klassen
+`open`/`idle`/`off` umfaerben.
 
 **Allgemeine Aenderungen** (Bedienung, Bausteine, Verhalten, nicht nur Farben)
 gelten ab dann fuer jedes Theme: hier unter Standard-Bedienung eintragen, im
