@@ -107,7 +107,8 @@ Wer davon abweicht, fragt vorher.
   oben rechts **✕** = Fenster schliessen (`swaymsg kill`) und **⏻** = App
   beenden (SIGTERM an die pid, `sidebar.py quit`, nie Xwayland/sway). Klick
   auf die Kachel fokussiert und schliesst das Raster. Offen = sway-Mode
-  `λ fenster`: Escape oder Super+Tab schliesst, Klick daneben auch. Die
+  `λ fenster`: Escape oder Super+Tab schliesst (kein Klick daneben: eww
+  reicht den Klick auf ✕ an eine umgebende `eventbox` weiter). Die
   Kacheln (`ov`) haelt der Watcher aktuell, nach ✕ verschwindet die Kachel
   von selbst. Bilder macht der Watcher in `snap()`, solange ein Fenster
   sichtbar ist (`$XDG_RUNTIME_DIR/win-shots`, nicht bei Sperre und nicht,
