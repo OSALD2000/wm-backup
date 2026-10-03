@@ -216,8 +216,9 @@ def overview():
         subprocess.run(["swaymsg", "mode", "default"], capture_output=True)
         return
     open(OVERVIEW, "w").close()  # vorher: snap() soll das Raster nicht fotografieren
-    out = next(o["name"] for o in swaymsg("-t", "get_outputs") if o.get("focused"))
-    eww("open", "overview", "--screen", out)
+    out = next(o for o in swaymsg("-t", "get_outputs") if o.get("focused"))
+    eww("open", "overview", "--screen", out["name"],
+        "--arg", f"height={out['rect']['height'] - WAYBAR_HEIGHT}px")
     subprocess.run(["swaymsg", 'mode "λ fenster"'], capture_output=True)
     subprocess.run(["swaymsg", "-t", "send_tick", "overview"], capture_output=True)  # Watcher fuellt ov
 
