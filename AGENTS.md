@@ -16,7 +16,7 @@ Sprache in Commits und Kommentaren: Deutsch, Umlaute als ae/oe/ue.
 | `hypr/` | `~/.config/hypr/` | **nur hyprlock** (Sperrbildschirm) + `loading.sh` (Ladebalken). Hyprland selbst wird nicht benutzt |
 | `waybar/` | `~/.config/waybar/` | obere Leiste (`config.jsonc`, `style.css`): Monitor-Badge U/I/O + Workspaces als `<Taste> <Icon>`, sichtbarer Workspace je Monitor hervorgehoben, `custom/wins` = Fensterzahl + Fensterliste offen/zu |
 | `rofi/` | `~/.config/rofi/` | Launcher. Sway ruft `rofi -config ~/.config/rofi/config-nord.rasi` auf; der Name "nord" ist historisch, das aktive Theme steht per `@theme` darin (HL2: `hl2-menu.rasi`). `config.rasi` gehoert zu i3 |
-| `eww/` | `~/.config/eww/` | Desktop-Widgets. HL2: `hud-left`/`hud-right` + Lern-Panel `learn` (Super+Z), Hilfe `info` (Super+Shift+Z), Fensterliste `sidebar` je Monitor, Vorschau-Raster `overview` (Super+Tab), Missionen `mission` (Super+m). `scripts/learn.py` = Lern-Timer, Daten in `~/.local/share/learn-timer/`; `scripts/sidebar.py` = Watcher fuer die Fensterliste + Super+q/b + Vorschau-Raster Super+Tab (`overview`/`pick`/`quit`) + Stand fuer waybar `custom/wins` (`bar`); `scripts/todo.py` = Missionen (Todo-Liste), Daten in `~/.local/share/missions/` |
+| `eww/` | `~/.config/eww/` | Desktop-Widgets. HL2: `hud-left`/`hud-right` + Lern-Panel `learn` (Super+Z), Hilfe `info` (Super+Shift+Z), Fensterliste `sidebar` je Monitor, Missionen `mission` (Super+m). `scripts/learn.py` = Lern-Timer, Daten in `~/.local/share/learn-timer/`; `scripts/sidebar.py` = Watcher fuer die Fensterliste + Super+q/b + Vorschau-Raster Super+Tab (`overview`, rofi) + Stand fuer waybar `custom/wins` (`bar`); `scripts/todo.py` = Missionen (Todo-Liste), Daten in `~/.local/share/missions/` |
 | `swaync/` | `~/.config/swaync/` | Benachrichtigungen (Popups als Pickups unten rechts) + Panel hinter der Glocke |
 | `swaylock/` | `~/.config/swaylock/` | Fallback-Sperre |
 | `alacritty/` | `~/.config/alacritty/` | Terminal. `alacritty.toml` importiert die Farbdatei (`hl2.toml`, `nord.toml`), `lambda.txt` = Begruessung |
@@ -56,16 +56,17 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v9` | wie v8, waybar links: Fensterzahl des sichtbaren Workspaces + Symbol Fensterliste offen/zu (`custom/wins`, Klick = Super+b). |
 | `HL2-v10` | wie v9, Hilfe-Panel nennt den Klick auf die Fensterzahl. |
 | `HL2-v11` | wie v10, Konsole ist cool-retro-term mit HL2-Profil (Gelb auf `#141310`, leichte CRT-Effekte). |
-| `HL2-v12` | wie v11, Vorschau-Raster (Super+Tab) als eww-Fenster mit ✕ (Fenster schliessen) / ⏻ (App beenden) je Kachel, Missionen-Panel im Stil der HL2-Missionsziele (Todo-Liste, Super+m). **Aktueller Standard** fuer neue Themes |
+| `HL2-v12` | wie v11, Vorschau-Raster (Super+Tab) als eww-Fenster mit ✕ (Fenster schliessen) / ⏻ (App beenden) je Kachel, Missionen-Panel im Stil der HL2-Missionsziele (Todo-Liste, Super+m). |
+| `HL2-v13` | wie v12, Vorschau-Raster (Super+Tab) wieder als rofi-Raster wie bis v11 (eww-Raster mit ✕/⏻ raus), Missionen bleiben. **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v12` (Vorschau,
+Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v13` (Vorschau,
 Zwischenablage, Konsole, Pickup-Popups, Workspace-Nummern und Fensterzahl in waybar,
-Schliessen im Vorschau-Raster, Missionen). Alles in dieser Liste gilt fuer
+Missionen). Alles in dieser Liste gilt fuer
 **jedes** neue Theme, nicht nur fuer HL2: es aendert nur den **Look**
 (Farben, Schrift, Formen), nicht Tasten, Workspace-Schema, Fensterliste oder
 die Bausteine unten. Basis fuer ein neues Theme ist immer der neueste Standard-Tag.
@@ -82,7 +83,7 @@ Wer davon abweicht, fragt vorher.
   Monitor, mit Ctrl schieben (Sway-Modes, Escape bricht ab).
   `Super+q` / `Super+Ctrl+q` = naechstes / voriges Fenster der Liste links,
   bleibt auf dem Monitor. `Super+b` = Liste an/aus. `Super+Shift+z` = Hilfe.
-  `Super+Tab` = alle Fenster aller Monitore als Vorschau-Raster (eww; Bild =
+  `Super+Tab` = alle Fenster aller Monitore als Vorschau-Raster (rofi; Bild =
   letzter sichtbarer Stand, sway kann verdeckte Fenster nicht abfotografieren).
   `Super+m` = Missionen (Todo-Liste).
 - **Zwischenablage** (`Super+Shift+V`, `sway/scripts/clip.sh`): copyq speichert
@@ -101,18 +102,10 @@ Wer davon abweicht, fragt vorher.
   Themes, unten rechts ueber dem rechten HUD-Kasten (`positionY bottom`,
   `.floating-notifications` mit `margin-bottom` = HUD-Hoehe), 5 s, schmal.
   Das Panel hinter der Glocke (`Super+n`) ist davon getrennt gestylt.
-- **Vorschau-Raster** (`Super+Tab`, `sidebar.py overview`, eww `overview`):
-  alle Fenster aller Monitore als Kacheln (5 je Reihe, scrollt), auf dem
-  fokussierten Monitor, Beschriftung `<Kuerzel> <Bereich>` + App. Je Kachel
-  oben rechts **✕** = Fenster schliessen (`swaymsg kill`) und **⏻** = App
-  beenden (SIGTERM an die pid, `sidebar.py quit`, nie Xwayland/sway). Klick
-  auf die Kachel fokussiert und schliesst das Raster. Offen = sway-Mode
-  `λ fenster`: Escape oder Super+Tab schliesst (kein Klick daneben: eww
-  reicht den Klick auf ✕ an eine umgebende `eventbox` weiter). Die
-  Kacheln (`ov`) haelt der Watcher aktuell, nach ✕ verschwindet die Kachel
-  von selbst. Bilder macht der Watcher in `snap()`, solange ein Fenster
-  sichtbar ist (`$XDG_RUNTIME_DIR/win-shots`, nicht bei Sperre und nicht,
-  solange das Raster offen ist: `eww-overview.open`).
+- **Vorschau-Raster** (`Super+Tab`, `sidebar.py overview`): alle Fenster aller
+  Monitore als Kacheln (rofi, 5 je Reihe), Beschriftung `<Kuerzel> <Bereich>`
+  + App. Bilder macht der Watcher in `snap()`, solange ein Fenster sichtbar ist
+  (`$XDG_RUNTIME_DIR/win-shots`, nicht bei Sperre).
 - **Missionen** (`Super+m`, eww `mission`, `scripts/todo.py`): Todo-Liste im
   Stil der Missionsziele des Themes, oeffnet oben rechts auf dem fokussierten
   Monitor. Ziel eintippen + Enter, Klick = erfuellt/wieder offen (bleibt
@@ -144,11 +137,11 @@ Ein neues Theme uebernimmt `ws.sh`, `sidebar.py`, `clip.sh`, die
 `format-icons` der waybar (Nummer vor dem Icon) und das Modul `custom/wins`, die
 Workspace-/Bind-Bloecke und die Konsolen-Regel (`console.py`, `for_window` auf
 cool-retro-term) der sway-Config, die
-eww-Fenster `sidebar`/`info`/`overview`/`mission` (mit `todo.py`) und Lage/Timeout der swaync-Popups
+eww-Fenster `sidebar`/`info`/`mission` (mit `todo.py`) und Lage/Timeout der swaync-Popups
 (`swaync/config.json`) und passt nur Farben und Schrift an: `eww.scss`,
 waybar `style.css`, den Popup-Block in `swaync/style.css` und die
-`-theme-str`-Teile in `clip.sh` (die rofi-Theme-Datei liefert den Rest); in
-`eww.scss` auch die Bloecke `.ov-*` (Raster) und `.ms-*` (Missionen). In `style.css` muss `button.visible` dieselbe
+`-theme-str`-Teile in `clip.sh` und `overview()` in `sidebar.py` (die rofi-Theme-Datei liefert den Rest); in
+`eww.scss` auch den Block `.ms-*` (Missionen). In `style.css` muss `button.visible` dieselbe
 Hervorhebung bekommen wie `button.focused`; `#custom-wins` mit den Klassen
 `open`/`idle`/`off` umfaerben; `cool-retro-term/profile.json` mit den Farben
 des Themes neu einstellen (`fontColor`, `backgroundColor`, Effekte).

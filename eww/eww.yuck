@@ -128,40 +128,6 @@
           (image :path {w.icon} :image-width 16 :image-height 16)
           (label :class "win-app" :limit-width 8 :text {w.name}))))))
 
-; Vorschau-Raster (Super+Tab, sidebar.py overview): alle Fenster aller
-; Monitore als Kacheln, Bild = letzter sichtbarer Stand. ov fuellt der Watcher.
-; Klick = fokussieren, X = Fenster schliessen, ⏻ = App beenden.
-; Escape/Super+Tab (sway-Mode "λ fenster") schliesst. Kein Klick daneben: eww
-; reicht den Klick auf X an eine umgebende eventbox weiter, das Raster ginge mit.
-; timeout: die Python-Aufrufe brauchen ~150 ms, eww killt onclick nach 200 ms
-; (dann haengt sway im Mode).
-(defvar ov "[]")
-
-(defwindow overview
-  :monitor "eDP-1"  ; sidebar.py oeffnet es per --screen auf dem fokussierten Monitor
-  :geometry (geometry :width "100%" :height "100%" :anchor "center")
-  :stacking "overlay"
-  :exclusive false
-  :focusable "exclusive"
-  (box :class "ov" :orientation "v" :space-evenly false :spacing 16
-      (label :class "ov-title" :text "λ  FENSTER")
-      (scroll :vscroll true :hscroll false :vexpand true
-        (box :orientation "v" :space-evenly false :spacing 12 :halign "center"
-          (for row in {ov}
-            (box :space-evenly false :spacing 12
-              (for t in row
-                (overlay
-                  (button :class "ov-tile" :timeout "2s" :onclick "~/.config/eww/scripts/sidebar.py pick ${t.id}"
-                    (box :orientation "v" :space-evenly false :spacing 6
-                      (box :class "ov-img" (image :path {t.img} :image-width 250 :image-height 150))
-                      (label :class "ov-label" :text {t.label})
-                      (label :class "ov-app" :limit-width 30 :text {t.app})))
-                  (box :class "ov-btns" :halign "end" :valign "start" :space-evenly false :spacing 4
-                    (button :class "ov-x" :tooltip "Fenster schliessen"
-                      :onclick "swaymsg '[con_id=${t.id}] kill'" "✕")
-                    (button :class "ov-x" :timeout "2s" :tooltip "App beenden (alle ihre Fenster)"
-                      :onclick "~/.config/eww/scripts/sidebar.py quit ${t.pid}" "⏻"))))))))))
-
 ; Missionen (Super+m): Todo-Liste im Stil der HL2-Missionsziele. todo.py haelt
 ; die Daten in ~/.local/share/missions, deflisten meldet jede Aenderung.
 ; Text geht per Heredoc an todo.py: eww setzt {} ungeschuetzt ein, ein ' im
@@ -304,7 +270,7 @@ eww update new_mission=''"))
         (key :k "Super+Return" :d "Terminal")
         (key :k "Super+Shift+Tab" :d "Konsole (cool-retro-term ein/aus)")
         (key :k "Super+d" :d "Launcher")
-        (key :k "Super+Tab" :d "alle Fenster als Vorschau (✕ schliesst, ⏻ beendet)")
+        (key :k "Super+Tab" :d "alle Fenster als Vorschau")
         (key :k "Super+x" :d "KeePassXC")
         (key :k "Super+t / Super+Shift+t" :d "To Do / Teams")
         (key :k "Super+Shift+m w h o" :d "Outlook, WhatsApp, Whiteboard, Office")

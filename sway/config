@@ -423,12 +423,6 @@ bindsym $mod+x       exec --no-startup-id keepassxc
 bindsym $mod+Shift+p exec --no-startup-id alacritty -e calcurse
 bindsym $mod+Shift+v exec --no-startup-id ~/.config/sway/scripts/clip.sh
 bindsym $mod+Tab     exec ~/.config/eww/scripts/sidebar.py overview
-# Solange das Vorschau-Raster offen ist (sidebar.py setzt den Mode): Escape oder
-# Super+Tab schliesst es. Andere Tasten gehen ans Raster (Tab, Pfeile, Enter).
-mode "λ fenster" {
-    bindsym Escape   exec ~/.config/eww/scripts/sidebar.py overview
-    bindsym $mod+Tab exec ~/.config/eww/scripts/sidebar.py overview
-}
 # Notification-Center auch per Tastatur, nicht nur ueber die Glocke
 bindsym $mod+n       exec --no-startup-id swaync-client -t -sw
 bindsym $mod+Shift+n exec --no-startup-id swaync-client -d -sw
