@@ -202,20 +202,34 @@ def overview_entries(tree, apps):
 
 
 def overview():
-    tree = swaymsg("-t", "get_tree")
-    entries = overview_entries(tree, desktop_apps())
-    r = subprocess.run(
-        ["rofi", "-dmenu", "-sep", "|", "-eh", "2", "-i", "-p", "λ", "-no-custom", "-format", "i", "-show-icons",
-         "-config", os.path.expanduser("~/.config/rofi/config-nord.rasi"),
-         "-theme-str", """mainbox { padding: 5% 6% 0 6%; }
-                          textbox-title { str: "λ  FENSTER"; }
-                          listview { columns: 5; lines: 3; fixed-columns: true; spacing: 12px; flow: horizontal; }
-                          element { orientation: vertical; padding: 8px; spacing: 6px; }
-                          element-icon { size: 250px; }
-                          element-text { font: "Verdana Bold 11"; horizontal-align: 0.5; }"""],
-        input="|".join(line for _, line in entries), capture_output=True, text=True)
-    if r.stdout.strip():
-        subprocess.run(["swaymsg", f"[con_id={entries[int(r.stdout)][0]}] focus"], capture_output=True)
+    """Super+Tab: rofi-Raster, Enter fokussiert. Entf schliesst das gewaehlte
+    Fenster (kb-custom-1, rofi endet mit 10), dann geht das Raster neu auf."""
+    row = 0
+    while True:
+        entries = overview_entries(swaymsg("-t", "get_tree"), desktop_apps())
+        if not entries:
+            return
+        r = subprocess.run(
+            ["rofi", "-dmenu", "-sep", "|", "-eh", "2", "-i", "-p", "λ", "-no-custom", "-format", "i", "-show-icons",
+             "-selected-row", str(min(row, len(entries) - 1)),
+             "-kb-remove-char-forward", "Control+d", "-kb-custom-1", "Delete",
+             "-config", os.path.expanduser("~/.config/rofi/config-nord.rasi"),
+             "-theme-str", """mainbox { padding: 5% 6% 0 6%; }
+                              textbox-title { str: "λ  FENSTER   ·   Entf schliesst"; }
+                              listview { columns: 5; lines: 3; fixed-columns: true; spacing: 12px; flow: horizontal; }
+                              element { orientation: vertical; padding: 8px; spacing: 6px; }
+                              element-icon { size: 250px; }
+                              element-text { font: "Verdana Bold 11"; horizontal-align: 0.5; }"""],
+            input="|".join(line for _, line in entries), capture_output=True, text=True)
+        if not r.stdout.strip():
+            return
+        row = int(r.stdout)
+        con = entries[row][0]
+        if r.returncode != 10:
+            subprocess.run(["swaymsg", f"[con_id={con}] focus"], capture_output=True)
+            return
+        subprocess.run(["swaymsg", f"[con_id={con}] kill"], capture_output=True)
+        time.sleep(0.3)  # ponytail: Apps mit Rueckfrage (ungespeichert) bleiben stehen, Raster zeigt sie wieder
 
 
 def kill_previous():
