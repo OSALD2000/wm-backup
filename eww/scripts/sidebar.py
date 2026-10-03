@@ -14,10 +14,8 @@ Aufruf: sidebar.py watch       eww neu starten (HUD oeffnen), dann bei jeder
         sidebar.py toggle      Sidebar an/aus (Super+b)
         sidebar.py bar         waybar-Modul custom/wins: Fensterzahl des
                                sichtbaren Workspaces + ob die Liste offen ist
-        sidebar.py overview    Vorschau-Raster aller Fenster aller Monitore
-                               (eww "overview", Super+Tab) auf/zu
-        sidebar.py pick ID     Fenster fokussieren, Raster zu (Klick auf Kachel)
-        sidebar.py quit PID    App beenden (Kachel-Button, alle ihre Fenster)
+        sidebar.py overview    alle Fenster aller Monitore als Vorschau-Raster
+                               (rofi, Super+Tab), Enter fokussiert
         sidebar.py selftest
 """
 import configparser
@@ -55,8 +53,6 @@ BAR_SIGNAL = 9  # = "signal" von custom/wins in waybar/config.jsonc
 # dem Abmelden. ponytail: alte Bilder geschlossener Fenster bleiben bis dahin.
 SHOTS = os.path.join(RUN, "win-shots")
 SHOT_EVERY = 3  # Sekunden, hoechstens so oft je Fenster
-OVERVIEW = os.path.join(RUN, "eww-overview.open")  # existiert = Raster offen
-OV_COLS = 5  # Kacheln je Reihe
 AREAS = ["TERMINAL", "BROWSER", "CODE", "CODE 2", "TRADING", "FREI", "TOOLS",
          "TODOS", "CHAT", "MEDIEN"]  # Workspace-Raster 1-10, siehe CLAUDE.md
 
@@ -179,17 +175,17 @@ def snap(tree, taken):
             taken[w["id"]] = now
             r, f = w["rect"], os.path.join(SHOTS, f'{w["id"]}.png')
             cmds.append(f'grim -s 0.3 -l 1 -g "{r["x"]},{r["y"]} {r["width"]}x{r["height"]}" {f}.tmp && mv {f}.tmp {f}')
-    if cmds and not os.path.exists(OVERVIEW):
+    if cmds:
         os.makedirs(SHOTS, mode=0o700, exist_ok=True)
         subprocess.run(["sh", "-c", "(sleep 0.3; pgrep -x 'hyprlock|swaylock' >/dev/null || { "
                         + "; ".join(cmds) + "; }) >/dev/null 2>&1 &"])
 
 
-def overview_rows(tree, apps, index):
-    """-> Reihen zu OV_COLS Kacheln fuer eww "overview", nach Workspace 11-40.
-    Kachel = {id, pid, label "U2  BROWSER", app, img}; img = letztes Bild, ohne
-    Bild das App-Icon. Der Watcher haelt das aktuell, auch nach Klick auf X."""
-    tiles = []
+def overview_entries(tree, apps):
+    """-> [(con_id, rofi-Eintrag)], sortiert nach Workspace 11-40. Zweizeilig,
+    deshalb trennt overview die Eintraege mit | statt Zeilenumbruch. Eintrag =
+    "U2  BROWSER\nChrome\0icon\x1f<Bild>", ohne Bild das App-Icon."""
+    out = []
     for o in tree.get("nodes", []):
         if o.get("name") == "__i3":
             continue
@@ -200,43 +196,26 @@ def overview_rows(tree, apps, index):
                 icon, name = apps.get(app.lower(), (FALLBACK, ""))
                 shot = os.path.join(SHOTS, f'{w["id"]}.png')
                 area = AREAS[(num - 1) % 10] if num > 0 else ""
-                tiles.append((num, {"id": w["id"], "pid": w["pid"], "label": f"{short}  {area}",
-                                    "app": name or app,
-                                    "img": shot if os.path.exists(shot) else resolve(icon, index)}))
-    tiles = [t for _, t in sorted(tiles, key=lambda e: e[0])]
-    return [tiles[i:i + OV_COLS] for i in range(0, len(tiles), OV_COLS)]
+                out.append((num, w["id"], f"{short}  {area}\n{name or app}"
+                            f"\0icon\x1f{shot if os.path.exists(shot) else icon}"))
+    return [(i, line) for _, i, line in sorted(out, key=lambda e: e[0])]
 
 
 def overview():
-    """Super+Tab: Raster auf/zu. Offen = sway-Mode "λ fenster", damit Escape und
-    Super+Tab es schliessen (eww kennt keine Tasten-Handler)."""
-    if os.path.exists(OVERVIEW):
-        eww("close", "overview")
-        os.remove(OVERVIEW)
-        subprocess.run(["swaymsg", "mode", "default"], capture_output=True)
-        return
-    open(OVERVIEW, "w").close()  # vorher: snap() soll das Raster nicht fotografieren
-    out = next(o["name"] for o in swaymsg("-t", "get_outputs") if o.get("focused"))
-    eww("open", "overview", "--screen", out)
-    subprocess.run(["swaymsg", 'mode "λ fenster"'], capture_output=True)
-    subprocess.run(["swaymsg", "-t", "send_tick", "overview"], capture_output=True)  # Watcher fuellt ov
-
-
-def pick(wid):
-    subprocess.run(["swaymsg", f"[con_id={int(wid)}] focus"], capture_output=True)
-    overview()
-
-
-def quit_app(pid):
-    """Prozess der App beenden. Nie Xwayland oder sway: das risse alle Fenster mit."""
-    pid = int(pid)
-    try:
-        with open(f"/proc/{pid}/comm") as f:
-            if f.read().strip() in ("Xwayland", "sway"):
-                return
-        os.kill(pid, 15)
-    except OSError:
-        pass
+    tree = swaymsg("-t", "get_tree")
+    entries = overview_entries(tree, desktop_apps())
+    r = subprocess.run(
+        ["rofi", "-dmenu", "-sep", "|", "-eh", "2", "-i", "-p", "λ", "-no-custom", "-format", "i", "-show-icons",
+         "-config", os.path.expanduser("~/.config/rofi/config-nord.rasi"),
+         "-theme-str", """mainbox { padding: 5% 6% 0 6%; }
+                          textbox-title { str: "λ  FENSTER"; }
+                          listview { columns: 5; lines: 3; fixed-columns: true; spacing: 12px; flow: horizontal; }
+                          element { orientation: vertical; padding: 8px; spacing: 6px; }
+                          element-icon { size: 250px; }
+                          element-text { font: "Verdana Bold 11"; horizontal-align: 0.5; }"""],
+        input="|".join(line for _, line in entries), capture_output=True, text=True)
+    if r.stdout.strip():
+        subprocess.run(["swaymsg", f"[con_id={entries[int(r.stdout)][0]}] focus"], capture_output=True)
 
 
 def kill_previous():
@@ -287,14 +266,12 @@ def watch():
     # verloren hat (zwei gleichzeitige Starts), zeigt seine Fenster weiter an
     # und ist per eww nicht mehr erreichbar -> doppelte Sidebar.
     subprocess.run(["pkill", "-x", "eww"])
-    if os.path.exists(OVERVIEW):  # Raster ist mit eww weg
-        os.remove(OVERVIEW)
     time.sleep(0.3)
     eww("open-many", "hud-left", "hud-right")
     apps, index = desktop_apps(), icon_index()  # ponytail: nur beim Start; neue Apps nach Super+Shift+C
     events = subprocess.Popen(["swaymsg", "-m", "-t", "subscribe", '["window","workspace","output","tick"]'],
                               stdout=subprocess.PIPE, text=True)
-    last, shown, taken, barstate, lastov = None, set(), {}, None, None
+    last, shown, taken, barstate = None, set(), {}, None
     while True:
         tree = swaymsg("-t", "get_tree")
         snap(tree, taken)
@@ -303,11 +280,6 @@ def watch():
         if cur != last:
             eww("update", "wins=" + cur)
             last = cur
-        rows = json.dumps(overview_rows(tree, apps, index))
-        cur = rows + str(os.path.exists(OVERVIEW))  # beim Oeffnen neu senden: eww reload leert ov
-        if cur != lastov:
-            eww("update", "ov=" + rows)
-            lastov = cur
         want = set() if os.path.exists(OFF) else {o for o, w in wins.items() if len(w) >= MIN_WINDOWS}
         if want != shown:
             heights = {o["name"]: o["rect"]["height"] for o in swaymsg("-t", "get_outputs")}
@@ -358,13 +330,10 @@ def selftest():
     assert step(w["DP-7"], 1) == 3 and step(w["DP-7"], -1) == 1
     assert step(w["DP-7"][:2], 1) == 1  # im Kreis
     assert step([], 1) is None
-    rows = overview_rows(tree, apps, index)
-    assert [[t["id"] for t in r] for r in rows] == [[5, 1, 2, 3]], rows  # Scratchpad nicht
-    assert rows[0][0] == {"id": 5, "pid": 5, "label": "I1  TERMINAL", "app": "hidden", "img": "/i/fb.svg"}
-    assert (rows[0][1]["label"], rows[0][1]["app"]) == ("I3  CODE", "Visual Studio Code")
-    big = {"type": "root", "nodes": [{"type": "output", "name": "X", "nodes": [
-        {"type": "workspace", "name": "11:u1", "num": 11, "nodes": [con(i, "a") for i in range(1, 8)]}]}]}
-    assert [len(r) for r in overview_rows(big, {}, {})] == [OV_COLS, 7 - OV_COLS]
+    e = overview_entries(tree, apps)
+    assert [i for i, _ in e] == [5, 1, 2, 3], e  # alle Workspaces, Scratchpad nicht
+    assert e[0][1] == "I1  TERMINAL\nhidden\0icon\x1f" + FALLBACK, e[0]
+    assert e[1][1].startswith("I3  CODE\nVisual Studio Code\0icon\x1f"), e[1]
     assert json.loads(bar_json({"DP-7": [3, True]}, "DP-7"))["text"].startswith("\uf2d2 3  ")
     assert json.loads(bar_json({}, "HDMI-1"))["text"].startswith("\uf2d2 0")
     print("ok")
@@ -373,5 +342,4 @@ def selftest():
 if __name__ == "__main__":
     {"watch": watch, "next": lambda: cycle(1), "prev": lambda: cycle(-1),
      "toggle": toggle, "overview": overview, "bar": bar,
-     "pick": lambda: pick(sys.argv[2]), "quit": lambda: quit_app(sys.argv[2]),
      "selftest": selftest}[sys.argv[1]]()
