@@ -57,14 +57,15 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v10` | wie v9, Hilfe-Panel nennt den Klick auf die Fensterzahl. |
 | `HL2-v11` | wie v10, Konsole ist cool-retro-term mit HL2-Profil (Gelb auf `#141310`, leichte CRT-Effekte). |
 | `HL2-v12` | wie v11, Vorschau-Raster (Super+Tab) als eww-Fenster mit ✕ (Fenster schliessen) / ⏻ (App beenden) je Kachel, Missionen-Panel im Stil der HL2-Missionsziele (Todo-Liste, Super+m). |
-| `HL2-v13` | wie v12, Vorschau-Raster (Super+Tab) wieder als rofi-Raster wie bis v11 (eww-Raster mit ✕/⏻ raus), Missionen bleiben. **Aktueller Standard** fuer neue Themes |
+| `HL2-v13` | wie v12, Vorschau-Raster (Super+Tab) wieder als rofi-Raster wie bis v11 (eww-Raster mit ✕/⏻ raus), Missionen bleiben. |
+| `HL2-v14` | wie v13, im Vorschau-Raster schliesst Entf das gewaehlte Fenster, das Raster geht danach wieder auf. **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v13` (Vorschau,
+Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v14` (Vorschau,
 Zwischenablage, Konsole, Pickup-Popups, Workspace-Nummern und Fensterzahl in waybar,
 Missionen). Alles in dieser Liste gilt fuer
 **jedes** neue Theme, nicht nur fuer HL2: es aendert nur den **Look**
@@ -104,7 +105,8 @@ Wer davon abweicht, fragt vorher.
   Das Panel hinter der Glocke (`Super+n`) ist davon getrennt gestylt.
 - **Vorschau-Raster** (`Super+Tab`, `sidebar.py overview`): alle Fenster aller
   Monitore als Kacheln (rofi, 5 je Reihe), Beschriftung `<Kuerzel> <Bereich>`
-  + App. Bilder macht der Watcher in `snap()`, solange ein Fenster sichtbar ist
+  + App. Enter fokussiert, **Entf** schliesst das gewaehlte Fenster
+  (`kb-custom-1`, `swaymsg kill`), danach geht das Raster neu auf. Bilder macht der Watcher in `snap()`, solange ein Fenster sichtbar ist
   (`$XDG_RUNTIME_DIR/win-shots`, nicht bei Sperre).
 - **Missionen** (`Super+m`, eww `mission`, `scripts/todo.py`): Todo-Liste im
   Stil der Missionsziele des Themes, oeffnet oben rechts auf dem fokussierten
