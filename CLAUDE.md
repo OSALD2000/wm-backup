@@ -58,14 +58,15 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v11` | wie v10, Konsole ist cool-retro-term mit HL2-Profil (Gelb auf `#141310`, leichte CRT-Effekte). |
 | `HL2-v12` | wie v11, Vorschau-Raster (Super+Tab) als eww-Fenster mit ✕ (Fenster schliessen) / ⏻ (App beenden) je Kachel, Missionen-Panel im Stil der HL2-Missionsziele (Todo-Liste, Super+m). |
 | `HL2-v13` | wie v12, Vorschau-Raster (Super+Tab) wieder als rofi-Raster wie bis v11 (eww-Raster mit ✕/⏻ raus), Missionen bleiben. |
-| `HL2-v14` | wie v13, im Vorschau-Raster schliesst Entf das gewaehlte Fenster, das Raster geht danach wieder auf. **Aktueller Standard** fuer neue Themes |
+| `HL2-v14` | wie v13, im Vorschau-Raster schliesst Entf das gewaehlte Fenster, das Raster geht danach wieder auf. |
+| `HL2-v15` | wie v14, Monitor-Kuerzel nach Anzahl Schirme (1: o, 2: o+i, 3: o+i+u), Workspaces fehlender Kuerzel werden eingeklappt. **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v14` (Vorschau,
+Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v15` (Vorschau,
 Zwischenablage, Konsole, Pickup-Popups, Workspace-Nummern und Fensterzahl in waybar,
 Missionen). Alles in dieser Liste gilt fuer
 **jedes** neue Theme, nicht nur fuer HL2: es aendert nur den **Look**
@@ -79,6 +80,12 @@ Wer davon abweicht, fragt vorher.
   `i` = Mitte (21-30), `o` = Laptop (31-40). Kuerzel nach **Position** ueber
   die Fallback-Listen `$mon_l/$mon_m/$mon_r`, nicht nach Anschlussname.
   Die Nummer haelt die Sortierung, `ws.sh` rechnet daraus den Monitor zurueck.
+  **Kuerzel nach Anzahl Monitore:** 1 Monitor = nur `o`, 2 = `o` + `i`,
+  3 = `o` + `i` + `u`. Workspaces mit fehlendem Kuerzel (Super+u/i, Assigns,
+  abgezogener Schirm, erster Workspace nach dem Login) klappt der Watcher
+  (`collapse()` in `sidebar.py`) mit gleicher Nummer auf das letzte vorhandene
+  Kuerzel zusammen (`23:i3` -> `33:o3`). Steckt man einen Schirm wieder an,
+  wandern die Fenster nicht zurueck.
 - **Tasten:** `Super+N` / `Super+Shift+N` = Workspace N des aktuellen Monitors
   (hin / Fenster schieben). `Super+u/i/o` dann `Super+N` = Workspace N auf dem
   Monitor, mit Ctrl schieben (Sway-Modes, Escape bricht ab).

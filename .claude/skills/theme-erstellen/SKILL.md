@@ -32,7 +32,7 @@ S=.claude/skills/theme-switch/scripts/theme.sh
   oder erst verworfen werden sollen.
 - `git status` im Repo sauber, `master` aktuell (`git pull`).
 - Basis festlegen: der neueste Standard-Tag (in der Theme-Tabelle als
-  "Aktueller Standard" markiert, derzeit `HL2-v14`), sonst fehlen dem neuen
+  "Aktueller Standard" markiert, derzeit `HL2-v15`), sonst fehlen dem neuen
   Theme Bausteine der Standard-Bedienung. Will der User bewusst auf einem
   aelteren Tag aufbauen (z. B. FirstSetup), erst mit `theme-switch` dorthin
   wechseln und die Bausteine danach nachruesten. Der neue Commit landet trotzdem linear auf
@@ -92,6 +92,8 @@ Konventionen aus den bisherigen Themes, die sich bewaehrt haben:
 - eww startet nur ueber `exec_always … sidebar.py watch`; der Watcher oeffnet
   `hud-left hud-right` in `watch()`. Braucht das Theme andere Dauer-Fenster,
   dort eintragen, keine zweite `eww open`-Zeile (zwei Starts = zwei Daemons).
+  Der Watcher klappt auch Workspaces ohne eigenen Monitor ein (`collapse()`,
+  1 Monitor = nur o, 2 = o+i): `sidebar.py` unveraendert uebernehmen.
 - Die Bausteine der Standard-Bedienung mit umfaerben, nicht weglassen:
   `sidebar`, `info`, die waybar-Workspaces (Nummer + Icon, `button.visible`
   wie `button.focused`), `custom/wins` (Klassen `open`/`idle`/`off`), die swaync-Popups (Pickups
