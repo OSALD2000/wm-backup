@@ -55,6 +55,8 @@ SHOTS = os.path.join(RUN, "win-shots")
 SHOT_EVERY = 3  # Sekunden, hoechstens so oft je Fenster
 AREAS = ["TERMINAL", "BROWSER", "CODE", "CODE 2", "TRADING", "FREI", "TOOLS",
          "TODOS", "CHAT", "MEDIEN"]  # Workspace-Raster 1-10, siehe CLAUDE.md
+LETTERS = "oiu"  # Monitor-Kuerzel von rechts (Laptop) nach links, siehe collapse()
+BASE = {"u": 10, "i": 20, "o": 30}  # Workspace-Nummer = BASE + N
 
 
 def swaymsg(*args):
@@ -130,10 +132,37 @@ def visible_windows(tree, apps, index=None):
     return out
 
 
+def has_focus(n):
+    return n.get("focused") or any(has_focus(c) for c in n.get("nodes", []) + n.get("floating_nodes", []))
+
+
 def focused_output(tree):
-    def has_focus(n):
-        return n.get("focused") or any(has_focus(c) for c in n.get("nodes", []) + n.get("floating_nodes", []))
     return next((o["name"] for o in tree.get("nodes", []) if has_focus(o)), None)
+
+
+def collapse(tree):
+    """-> sway-Befehle, die Workspaces ohne eigenen Monitor einklappen. Bei N
+    Monitoren gibt es nur die ersten N Kuerzel aus LETTERS (1: o, 2: o+i,
+    3: o+i+u); ein Workspace mit Kuerzel darueber wandert mit gleicher Nummer
+    zum letzten erlaubten (i3 -> o3). Faengt Super+u/i/o, Assigns, den ersten
+    Workspace nach dem Login und abgezogene Schirme an einer Stelle ab.
+    ponytail: Steckt man einen Schirm wieder an, wandern die Fenster nicht zurueck."""
+    outs = [o for o in tree.get("nodes", []) if o.get("active")]
+    if not outs:
+        return []
+    k = LETTERS[min(len(outs), len(LETTERS)) - 1]
+    cmds = []
+    for o in outs:
+        for ws in o.get("nodes", []):
+            m = re.fullmatch(r"\d+:([uio])(\d+)", ws.get("name", ""))
+            if not m or LETTERS.index(m[1]) < len(outs):
+                continue
+            dest = f"{BASE[k] + int(m[2])}:{k}{m[2]}"
+            cmds += [f"[con_id={c['id']}] move container to workspace {dest}"
+                     for c in ws.get("nodes", []) + ws.get("floating_nodes", [])]
+            if has_focus(ws):
+                cmds.append(f"workspace {dest}")  # der leere alte verschwindet dann
+    return cmds
 
 
 def step(wins, delta):
@@ -288,6 +317,10 @@ def watch():
     last, shown, taken, barstate = None, set(), {}, None
     while True:
         tree = swaymsg("-t", "get_tree")
+        cmds = collapse(tree)
+        if cmds:
+            subprocess.run(["swaymsg", "; ".join(cmds)], capture_output=True)
+            tree = swaymsg("-t", "get_tree")
         snap(tree, taken)
         wins = visible_windows(tree, apps, index)
         cur = json.dumps(wins)
@@ -350,6 +383,15 @@ def selftest():
     assert e[1][1].startswith("I3  CODE\nVisual Studio Code\0icon\x1f"), e[1]
     assert json.loads(bar_json({"DP-7": [3, True]}, "DP-7"))["text"].startswith("\uf2d2 3  ")
     assert json.loads(bar_json({}, "HDMI-1"))["text"].startswith("\uf2d2 0")
+    lap = lambda *ws: {"nodes": [{"type": "output", "name": "__i3", "nodes": []},
+                                 {"type": "output", "name": "eDP-1", "active": True, "nodes": list(ws)}]}
+    assert collapse(lap({"name": "11:u1", "nodes": [], "focused": True})) == ["workspace 31:o1"]
+    assert collapse(lap({"name": "31:o1", "nodes": [con(1, "a")]})) == []
+    two = lap({"name": "11:u1", "nodes": [con(1, "a")]}, {"name": "21:i1", "nodes": []})
+    two["nodes"].append({"type": "output", "name": "DP-7", "active": True, "nodes": []})
+    assert collapse(two) == ["[con_id=1] move container to workspace 21:i1"]
+    two["nodes"].append({"type": "output", "name": "DP-8", "active": True, "nodes": []})
+    assert collapse(two) == []  # drei Monitore: u bleibt
     print("ok")
 
 
