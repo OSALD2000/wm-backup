@@ -163,6 +163,8 @@ bindsym XF86MonBrightnessDown exec --no-startup-id /usr/bin/brightnessctl set 25
 bindsym Print       exec --no-startup-id ~/.local/bin/shot-wl
 bindsym Ctrl+Print  exec --no-startup-id ~/.local/bin/shot-wl clip
 bindsym Shift+Print exec --no-startup-id grim -g "$(slurp)" - | wl-copy
+# OCR: Text aus einem Bereich in die Zwischenablage (tesseract, deu+eng)
+bindsym $mod+Print exec --no-startup-id grim -g "$(slurp)" - | tesseract -l deu+eng - - 2>/dev/null | wl-copy && notify-send OCR "Text in Zwischenablage"
 
 # ── Window Management ─────────────────────────────────────────────────────────
 tiling_drag enable
