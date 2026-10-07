@@ -31,7 +31,8 @@ Die Zuordnung steht einmalig in `map()` in
 nur dort eintragen.
 
 Nicht im Repo, gehoert aber zum Setup: `~/.config/environment.d/50-wayland.conf`
-(Wayland-Variablen), `~/.local/bin/shot-wl` (Screenshots),
+(Wayland-Variablen), `~/.local/bin/shot-wl` (Screenshots), Pakete `tesseract-ocr` +
+`tesseract-ocr-deu` (OCR auf Super+Print),
 `~/Private/shell_scripts/` (Lautstaerke-OSD), `~/.config/rofi/themes/` und
 `~/.config/alacritty/themes/` (fremde Themes, per `.gitignore` draussen),
 `~/.config/i3/` (alte i3-Session als Rollback: am GDM "i3" waehlen).
@@ -60,14 +61,15 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v13` | wie v12, Vorschau-Raster (Super+Tab) wieder als rofi-Raster wie bis v11 (eww-Raster mit ✕/⏻ raus), Missionen bleiben. |
 | `HL2-v14` | wie v13, im Vorschau-Raster schliesst Entf das gewaehlte Fenster, das Raster geht danach wieder auf. |
 | `HL2-v15` | wie v14, Monitor-Kuerzel nach Anzahl Schirme (1: o, 2: o+i, 3: o+i+u), Workspaces fehlender Kuerzel werden eingeklappt. |
-| `HL2-v16` | wie v15, Super+u/i/o-Modes raus: Ziel-Monitor in waybar (`custom/target`, `→ U/I/O`), Super+Esc schaltet weiter, Super+Ctrl+N / Super+Ctrl+Shift+N = Workspace N dort / Fenster dorthin. **Aktueller Standard** fuer neue Themes |
+| `HL2-v16` | wie v15, Super+u/i/o-Modes raus: Ziel-Monitor in waybar (`custom/target`, `→ U/I/O`), Super+Esc schaltet weiter, Super+Ctrl+N / Super+Ctrl+Shift+N = Workspace N dort / Fenster dorthin. |
+| `HL2-v17` | wie v16, Super+Print = OCR: Text aus einem Bereich in die Zwischenablage (tesseract deu+eng). **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v16` (Vorschau,
+Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v17` (Vorschau,
 Zwischenablage, Konsole, Pickup-Popups, Workspace-Nummern und Fensterzahl in waybar,
 Missionen). Alles in dieser Liste gilt fuer
 **jedes** neue Theme, nicht nur fuer HL2: es aendert nur den **Look**
@@ -99,7 +101,8 @@ Wer davon abweicht, fragt vorher.
   bleibt auf dem Monitor. `Super+b` = Liste an/aus. `Super+Shift+z` = Hilfe.
   `Super+Tab` = alle Fenster aller Monitore als Vorschau-Raster (rofi; Bild =
   letzter sichtbarer Stand, sway kann verdeckte Fenster nicht abfotografieren).
-  `Super+m` = Missionen (Todo-Liste).
+  `Super+m` = Missionen (Todo-Liste). `Super+Print` = OCR: Bereich aufziehen,
+  erkannter Text (tesseract, `deu+eng`) landet in der Zwischenablage, Popup bestaetigt.
 - **Zwischenablage** (`Super+Shift+V`, `sway/scripts/clip.sh`): copyq speichert
   (laeuft per `exec_always`), rofi zeigt den Verlauf im Menue-Stil des Themes,
   Enter = `copyq select`, also wieder in die Zwischenablage. Kein eigenes
