@@ -113,6 +113,8 @@ tooltip label { padding: 5px 7px; }
 #custom-wins { color: @ink_dim; padding: 0 8px; }
 #custom-wins.open { color: @ink; }
 #custom-wins.off  { color: @ink_dim; opacity: 0.6; }
+#custom-target { color: @ink; padding: 0 8px; }
+#custom-target:hover { background: @hover; }
 #window { color: @ink_dim; font-weight: normal; padding: 0 12px; }
 window#waybar.empty #window { padding: 0; }
 

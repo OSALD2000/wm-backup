@@ -144,7 +144,7 @@ def collapse(tree):
     """-> sway-Befehle, die Workspaces ohne eigenen Monitor einklappen. Bei N
     Monitoren gibt es nur die ersten N Kuerzel aus LETTERS (1: o, 2: o+i,
     3: o+i+u); ein Workspace mit Kuerzel darueber wandert mit gleicher Nummer
-    zum letzten erlaubten (i3 -> o3). Faengt Super+u/i/o, Assigns, den ersten
+    zum letzten erlaubten (i3 -> o3). Faengt Assigns, den ersten
     Workspace nach dem Login und abgezogene Schirme an einer Stelle ab.
     ponytail: Steckt man einen Schirm wieder an, wandern die Fenster nicht zurueck."""
     outs = [o for o in tree.get("nodes", []) if o.get("active")]

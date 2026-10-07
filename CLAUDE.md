@@ -12,9 +12,9 @@ Sprache in Commits und Kommentaren: Deutsch, Umlaute als ae/oe/ue.
 | Repo-Pfad | Live-Pfad | Was |
 |---|---|---|
 | `sway/config` | `~/.config/sway/config` | Compositor, Keybinds, Workspaces, Farben (`set $hl2_*` …), Autostart |
-| `sway/scripts/` | `~/.config/sway/scripts/` | `lock.sh` (hyprlock, sonst swaylock), `powermenu.sh` (rofi -dmenu), `clip.sh` (Zwischenablage, rofi ueber copyq), `screens.py` (Monitore anordnen, Laptop rechts), `ws.sh` (Super+N = Workspace N des aktuellen Monitors), `console.py` (Konsole Super+Shift+Tab), `ipv6.sh` |
+| `sway/scripts/` | `~/.config/sway/scripts/` | `lock.sh` (hyprlock, sonst swaylock), `powermenu.sh` (rofi -dmenu), `clip.sh` (Zwischenablage, rofi ueber copyq), `screens.py` (Monitore anordnen, Laptop rechts), `ws.sh` (Super+N = Workspace N des aktuellen Monitors, Super+Ctrl+N = des Ziel-Monitors, Super+Esc = Ziel weiter), `console.py` (Konsole Super+Shift+Tab), `ipv6.sh` |
 | `hypr/` | `~/.config/hypr/` | **nur hyprlock** (Sperrbildschirm) + `loading.sh` (Ladebalken). Hyprland selbst wird nicht benutzt |
-| `waybar/` | `~/.config/waybar/` | obere Leiste (`config.jsonc`, `style.css`): Monitor-Badge U/I/O + Workspaces als `<Taste> <Icon>`, sichtbarer Workspace je Monitor hervorgehoben, `custom/wins` = Fensterzahl + Fensterliste offen/zu |
+| `waybar/` | `~/.config/waybar/` | obere Leiste (`config.jsonc`, `style.css`): Monitor-Badge U/I/O + Workspaces als `<Taste> <Icon>`, sichtbarer Workspace je Monitor hervorgehoben, `custom/wins` = Fensterzahl + Fensterliste offen/zu, `custom/target` = Ziel-Monitor `→ U/I/O` |
 | `rofi/` | `~/.config/rofi/` | Launcher. Sway ruft `rofi -config ~/.config/rofi/config-nord.rasi` auf; der Name "nord" ist historisch, das aktive Theme steht per `@theme` darin (HL2: `hl2-menu.rasi`). `config.rasi` gehoert zu i3 |
 | `eww/` | `~/.config/eww/` | Desktop-Widgets. HL2: `hud-left`/`hud-right` + Lern-Panel `learn` (Super+Z), Hilfe `info` (Super+Shift+Z), Fensterliste `sidebar` je Monitor, Missionen `mission` (Super+m). `scripts/learn.py` = Lern-Timer, Daten in `~/.local/share/learn-timer/`; `scripts/sidebar.py` = Watcher fuer die Fensterliste + Super+q/b + Vorschau-Raster Super+Tab (`overview`, rofi) + Stand fuer waybar `custom/wins` (`bar`); `scripts/todo.py` = Missionen (Todo-Liste), Daten in `~/.local/share/missions/` |
 | `swaync/` | `~/.config/swaync/` | Benachrichtigungen (Popups als Pickups unten rechts) + Panel hinter der Glocke |
@@ -59,14 +59,15 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v12` | wie v11, Vorschau-Raster (Super+Tab) als eww-Fenster mit ✕ (Fenster schliessen) / ⏻ (App beenden) je Kachel, Missionen-Panel im Stil der HL2-Missionsziele (Todo-Liste, Super+m). |
 | `HL2-v13` | wie v12, Vorschau-Raster (Super+Tab) wieder als rofi-Raster wie bis v11 (eww-Raster mit ✕/⏻ raus), Missionen bleiben. |
 | `HL2-v14` | wie v13, im Vorschau-Raster schliesst Entf das gewaehlte Fenster, das Raster geht danach wieder auf. |
-| `HL2-v15` | wie v14, Monitor-Kuerzel nach Anzahl Schirme (1: o, 2: o+i, 3: o+i+u), Workspaces fehlender Kuerzel werden eingeklappt. **Aktueller Standard** fuer neue Themes |
+| `HL2-v15` | wie v14, Monitor-Kuerzel nach Anzahl Schirme (1: o, 2: o+i, 3: o+i+u), Workspaces fehlender Kuerzel werden eingeklappt. |
+| `HL2-v16` | wie v15, Super+u/i/o-Modes raus: Ziel-Monitor in waybar (`custom/target`, `→ U/I/O`), Super+Esc schaltet weiter, Super+Ctrl+N / Super+Ctrl+Shift+N = Workspace N dort / Fenster dorthin. **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v15` (Vorschau,
+Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v16` (Vorschau,
 Zwischenablage, Konsole, Pickup-Popups, Workspace-Nummern und Fensterzahl in waybar,
 Missionen). Alles in dieser Liste gilt fuer
 **jedes** neue Theme, nicht nur fuer HL2: es aendert nur den **Look**
@@ -81,14 +82,19 @@ Wer davon abweicht, fragt vorher.
   die Fallback-Listen `$mon_l/$mon_m/$mon_r`, nicht nach Anschlussname.
   Die Nummer haelt die Sortierung, `ws.sh` rechnet daraus den Monitor zurueck.
   **Kuerzel nach Anzahl Monitore:** 1 Monitor = nur `o`, 2 = `o` + `i`,
-  3 = `o` + `i` + `u`. Workspaces mit fehlendem Kuerzel (Super+u/i, Assigns,
+  3 = `o` + `i` + `u`. Workspaces mit fehlendem Kuerzel (Assigns,
   abgezogener Schirm, erster Workspace nach dem Login) klappt der Watcher
   (`collapse()` in `sidebar.py`) mit gleicher Nummer auf das letzte vorhandene
   Kuerzel zusammen (`23:i3` -> `33:o3`). Steckt man einen Schirm wieder an,
   wandern die Fenster nicht zurueck.
 - **Tasten:** `Super+N` / `Super+Shift+N` = Workspace N des aktuellen Monitors
-  (hin / Fenster schieben). `Super+u/i/o` dann `Super+N` = Workspace N auf dem
-  Monitor, mit Ctrl schieben (Sway-Modes, Escape bricht ab).
+  (hin / Fenster schieben). `Super+Ctrl+N` / `Super+Ctrl+Shift+N` = dasselbe
+  auf dem **Ziel-Monitor** (Fokus bleibt beim Schieben). Das Ziel zeigt waybar
+  (`custom/target`, `→ U/I/O`, bei 1 Monitor ausgeblendet), `Super+Esc` oder
+  Klick schaltet es weiter (u -> i -> o, nur vorhandene Kuerzel). Es bleibt
+  stehen, bis man es aendert; Start (und Rueckfall, wenn der Schirm fehlt) ist
+  `o`. Gespeichert in `$XDG_RUNTIME_DIR/ws-target` (`ws.sh cycle`/`bar`),
+  `ws.sh cycle` weckt waybar per `SIGRTMIN+10`.
   `Super+q` / `Super+Ctrl+q` = naechstes / voriges Fenster der Liste links,
   bleibt auf dem Monitor. `Super+b` = Liste an/aus. `Super+Shift+z` = Hilfe.
   `Super+Tab` = alle Fenster aller Monitore als Vorschau-Raster (rofi; Bild =
@@ -140,10 +146,11 @@ Wer davon abweicht, fragt vorher.
   (Spalten = offen, gedimmt = erst ab 2 Fenstern, Vollbild = per Super+b aus),
   Klick schaltet die Liste. Der Watcher schreibt den Stand nach
   `$XDG_RUNTIME_DIR/eww-sidebar.bar` und weckt waybar per `SIGRTMIN+9`.
+  Rechts daneben `custom/target` (`ws.sh bar`) = Ziel-Monitor fuer Super+Ctrl+N.
   `sway/scratchpad` (≡ N) zaehlt die Fenster im Scratchpad, also die Konsole.
 
 Ein neues Theme uebernimmt `ws.sh`, `sidebar.py`, `clip.sh`, die
-`format-icons` der waybar (Nummer vor dem Icon) und das Modul `custom/wins`, die
+`format-icons` der waybar (Nummer vor dem Icon) und die Module `custom/wins` und `custom/target`, die
 Workspace-/Bind-Bloecke und die Konsolen-Regel (`console.py`, `for_window` auf
 cool-retro-term) der sway-Config, die
 eww-Fenster `sidebar`/`info`/`mission` (mit `todo.py`) und Lage/Timeout der swaync-Popups
@@ -152,7 +159,7 @@ waybar `style.css`, den Popup-Block in `swaync/style.css` und die
 `-theme-str`-Teile in `clip.sh` und `overview()` in `sidebar.py` (die rofi-Theme-Datei liefert den Rest); in
 `eww.scss` auch den Block `.ms-*` (Missionen). In `style.css` muss `button.visible` dieselbe
 Hervorhebung bekommen wie `button.focused`; `#custom-wins` mit den Klassen
-`open`/`idle`/`off` umfaerben; `cool-retro-term/profile.json` mit den Farben
+`open`/`idle`/`off` und `#custom-target` umfaerben; `cool-retro-term/profile.json` mit den Farben
 des Themes neu einstellen (`fontColor`, `backgroundColor`, Effekte).
 
 **Allgemeine Aenderungen** (Bedienung, Bausteine, Verhalten, nicht nur Farben)
