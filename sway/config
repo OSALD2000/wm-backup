@@ -313,102 +313,30 @@ bindsym $mod+Shift+8 exec ~/.config/sway/scripts/ws.sh move 8
 bindsym $mod+Shift+9 exec ~/.config/sway/scripts/ws.sh move 9
 bindsym $mod+Shift+0 exec ~/.config/sway/scripts/ws.sh move 10
 
-# Super+u/i/o, dann Super+N (Super gedrueckt halten): Workspace N auf dem
-# Monitor. Mit Ctrl dasselbe, aber das Fenster wandert mit hin. waybar zeigt
-# den offenen Mode im sway/mode-Modul an; Escape bricht ab.
-
-bindsym $mod+u mode "λ u"
-mode "λ u" {
-    bindsym $mod+1 workspace 11:u1, mode default
-    bindsym $mod+2 workspace 12:u2, mode default
-    bindsym $mod+3 workspace 13:u3, mode default
-    bindsym $mod+4 workspace 14:u4, mode default
-    bindsym $mod+5 workspace 15:u5, mode default
-    bindsym $mod+6 workspace 16:u6, mode default
-    bindsym $mod+7 workspace 17:u7, mode default
-    bindsym $mod+8 workspace 18:u8, mode default
-    bindsym $mod+9 workspace 19:u9, mode default
-    bindsym $mod+0 workspace 20:u10, mode default
-    bindsym Escape mode default
-    bindsym $mod+Escape mode default
-}
-bindsym $mod+Ctrl+u mode "λ u →"
-mode "λ u →" {
-    bindsym $mod+Ctrl+1 move container to workspace 11:u1, mode default
-    bindsym $mod+Ctrl+2 move container to workspace 12:u2, mode default
-    bindsym $mod+Ctrl+3 move container to workspace 13:u3, mode default
-    bindsym $mod+Ctrl+4 move container to workspace 14:u4, mode default
-    bindsym $mod+Ctrl+5 move container to workspace 15:u5, mode default
-    bindsym $mod+Ctrl+6 move container to workspace 16:u6, mode default
-    bindsym $mod+Ctrl+7 move container to workspace 17:u7, mode default
-    bindsym $mod+Ctrl+8 move container to workspace 18:u8, mode default
-    bindsym $mod+Ctrl+9 move container to workspace 19:u9, mode default
-    bindsym $mod+Ctrl+0 move container to workspace 20:u10, mode default
-    bindsym Escape mode default
-    bindsym $mod+Ctrl+Escape mode default
-}
-
-bindsym $mod+i mode "λ i"
-mode "λ i" {
-    bindsym $mod+1 workspace 21:i1, mode default
-    bindsym $mod+2 workspace 22:i2, mode default
-    bindsym $mod+3 workspace 23:i3, mode default
-    bindsym $mod+4 workspace 24:i4, mode default
-    bindsym $mod+5 workspace 25:i5, mode default
-    bindsym $mod+6 workspace 26:i6, mode default
-    bindsym $mod+7 workspace 27:i7, mode default
-    bindsym $mod+8 workspace 28:i8, mode default
-    bindsym $mod+9 workspace 29:i9, mode default
-    bindsym $mod+0 workspace 30:i10, mode default
-    bindsym Escape mode default
-    bindsym $mod+Escape mode default
-}
-bindsym $mod+Ctrl+i mode "λ i →"
-mode "λ i →" {
-    bindsym $mod+Ctrl+1 move container to workspace 21:i1, mode default
-    bindsym $mod+Ctrl+2 move container to workspace 22:i2, mode default
-    bindsym $mod+Ctrl+3 move container to workspace 23:i3, mode default
-    bindsym $mod+Ctrl+4 move container to workspace 24:i4, mode default
-    bindsym $mod+Ctrl+5 move container to workspace 25:i5, mode default
-    bindsym $mod+Ctrl+6 move container to workspace 26:i6, mode default
-    bindsym $mod+Ctrl+7 move container to workspace 27:i7, mode default
-    bindsym $mod+Ctrl+8 move container to workspace 28:i8, mode default
-    bindsym $mod+Ctrl+9 move container to workspace 29:i9, mode default
-    bindsym $mod+Ctrl+0 move container to workspace 30:i10, mode default
-    bindsym Escape mode default
-    bindsym $mod+Ctrl+Escape mode default
-}
-
-bindsym $mod+o mode "λ o"
-mode "λ o" {
-    bindsym $mod+1 workspace 31:o1, mode default
-    bindsym $mod+2 workspace 32:o2, mode default
-    bindsym $mod+3 workspace 33:o3, mode default
-    bindsym $mod+4 workspace 34:o4, mode default
-    bindsym $mod+5 workspace 35:o5, mode default
-    bindsym $mod+6 workspace 36:o6, mode default
-    bindsym $mod+7 workspace 37:o7, mode default
-    bindsym $mod+8 workspace 38:o8, mode default
-    bindsym $mod+9 workspace 39:o9, mode default
-    bindsym $mod+0 workspace 40:o10, mode default
-    bindsym Escape mode default
-    bindsym $mod+Escape mode default
-}
-bindsym $mod+Ctrl+o mode "λ o →"
-mode "λ o →" {
-    bindsym $mod+Ctrl+1 move container to workspace 31:o1, mode default
-    bindsym $mod+Ctrl+2 move container to workspace 32:o2, mode default
-    bindsym $mod+Ctrl+3 move container to workspace 33:o3, mode default
-    bindsym $mod+Ctrl+4 move container to workspace 34:o4, mode default
-    bindsym $mod+Ctrl+5 move container to workspace 35:o5, mode default
-    bindsym $mod+Ctrl+6 move container to workspace 36:o6, mode default
-    bindsym $mod+Ctrl+7 move container to workspace 37:o7, mode default
-    bindsym $mod+Ctrl+8 move container to workspace 38:o8, mode default
-    bindsym $mod+Ctrl+9 move container to workspace 39:o9, mode default
-    bindsym $mod+Ctrl+0 move container to workspace 40:o10, mode default
-    bindsym Escape mode default
-    bindsym $mod+Ctrl+Escape mode default
-}
+# Super+Ctrl+N / Super+Ctrl+Shift+N: Workspace N auf dem Ziel-Monitor (hin /
+# Fenster schieben). Ziel steht in waybar (custom/target), Super+Esc schaltet
+# es weiter (u -> i -> o, nur vorhandene Kuerzel), Start ist o.
+bindsym $mod+Escape exec ~/.config/sway/scripts/ws.sh cycle
+bindsym $mod+Ctrl+1 exec ~/.config/sway/scripts/ws.sh tgo 1
+bindsym $mod+Ctrl+2 exec ~/.config/sway/scripts/ws.sh tgo 2
+bindsym $mod+Ctrl+3 exec ~/.config/sway/scripts/ws.sh tgo 3
+bindsym $mod+Ctrl+4 exec ~/.config/sway/scripts/ws.sh tgo 4
+bindsym $mod+Ctrl+5 exec ~/.config/sway/scripts/ws.sh tgo 5
+bindsym $mod+Ctrl+6 exec ~/.config/sway/scripts/ws.sh tgo 6
+bindsym $mod+Ctrl+7 exec ~/.config/sway/scripts/ws.sh tgo 7
+bindsym $mod+Ctrl+8 exec ~/.config/sway/scripts/ws.sh tgo 8
+bindsym $mod+Ctrl+9 exec ~/.config/sway/scripts/ws.sh tgo 9
+bindsym $mod+Ctrl+0 exec ~/.config/sway/scripts/ws.sh tgo 10
+bindsym $mod+Ctrl+Shift+1 exec ~/.config/sway/scripts/ws.sh tmove 1
+bindsym $mod+Ctrl+Shift+2 exec ~/.config/sway/scripts/ws.sh tmove 2
+bindsym $mod+Ctrl+Shift+3 exec ~/.config/sway/scripts/ws.sh tmove 3
+bindsym $mod+Ctrl+Shift+4 exec ~/.config/sway/scripts/ws.sh tmove 4
+bindsym $mod+Ctrl+Shift+5 exec ~/.config/sway/scripts/ws.sh tmove 5
+bindsym $mod+Ctrl+Shift+6 exec ~/.config/sway/scripts/ws.sh tmove 6
+bindsym $mod+Ctrl+Shift+7 exec ~/.config/sway/scripts/ws.sh tmove 7
+bindsym $mod+Ctrl+Shift+8 exec ~/.config/sway/scripts/ws.sh tmove 8
+bindsym $mod+Ctrl+Shift+9 exec ~/.config/sway/scripts/ws.sh tmove 9
+bindsym $mod+Ctrl+Shift+0 exec ~/.config/sway/scripts/ws.sh tmove 10
 
 # ── Session ───────────────────────────────────────────────────────────────────
 # Sway kennt kein "restart" — reload reicht, der Compositor bleibt stehen.

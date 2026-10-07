@@ -32,6 +32,7 @@
     "sway/mode",
     "sway/scratchpad",
     "custom/wins",
+    "custom/target",
     "sway/window"
   ],
   "modules-center": ["clock"],
@@ -130,6 +131,17 @@
     "interval": "once",
     "signal": 9,
     "on-click": "~/.config/eww/scripts/sidebar.py toggle"
+  },
+
+  // Ziel-Monitor fuer Super+Ctrl[+Shift]+N, Super+Esc oder Klick schaltet
+  // weiter. Leer (ausgeblendet) bei einem Monitor. Signal kommt von ws.sh
+  // cycle, das Intervall faengt an-/abgesteckte Schirme ab.
+  "custom/target": {
+    "exec": "~/.config/sway/scripts/ws.sh bar",
+    "interval": 5,
+    "signal": 10,
+    "tooltip": false,
+    "on-click": "~/.config/sway/scripts/ws.sh cycle"
   },
 
   "sway/window": {
