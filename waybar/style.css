@@ -126,6 +126,9 @@ window#waybar.empty #window { padding: 0; }
   text-shadow: 0 0 5px rgba(255, 220, 0, 0.5);
 }
 #clock:hover { background: @hover; }
+#custom-market { color: @ink_dim; padding: 0 12px; }
+#custom-market.active { color: @ink; text-shadow: 0 0 5px rgba(255, 220, 0, 0.5); }
+#custom-market.closed { opacity: 0.6; }
 
 /* ── Systeminfo ─────────────────────────────────────────────────────────────*/
 #disk,

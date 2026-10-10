@@ -141,23 +141,31 @@ def focused_output(tree):
 
 
 def collapse(tree):
-    """-> sway-Befehle, die Workspaces ohne eigenen Monitor einklappen. Bei N
-    Monitoren gibt es nur die ersten N Kuerzel aus LETTERS (1: o, 2: o+i,
-    3: o+i+u); ein Workspace mit Kuerzel darueber wandert mit gleicher Nummer
-    zum letzten erlaubten (i3 -> o3). Faengt Assigns, den ersten
-    Workspace nach dem Login und abgezogene Schirme an einer Stelle ab.
+    """-> sway-Befehle, damit jeder Workspace das Kuerzel seines Monitors traegt.
+    Kuerzel nach Position, von rechts: o, i, u (1: o, 2: o+i, 3: o+i+u). Ein
+    Workspace mit fremdem Kuerzel bekommt mit gleicher Nummer das des Monitors,
+    auf dem er liegt (i3 -> o3). Faengt Assigns, abgezogene Schirme und den
+    Login ab: sway legt den ersten Workspace je Monitor an, solange noch nicht
+    alle Monitore da sind, und erwischt dabei fremde Kuerzel (u1 auf der Mitte).
+    Gibt es den Ziel-Workspace noch nicht, wird umbenannt (bleibt, wo er ist),
+    sonst wandern die Fenster dorthin.
     ponytail: Steckt man einen Schirm wieder an, wandern die Fenster nicht zurueck."""
     outs = [o for o in tree.get("nodes", []) if o.get("active")]
-    if not outs:
-        return []
-    k = LETTERS[min(len(outs), len(LETTERS)) - 1]
+    outs.sort(key=lambda o: o.get("rect", {}).get("x", 0), reverse=True)
+    own = {o["name"]: LETTERS[min(i, len(LETTERS) - 1)] for i, o in enumerate(outs)}
+    names = {ws.get("name") for o in outs for ws in o.get("nodes", [])}
     cmds = []
     for o in outs:
+        k = own[o["name"]]
         for ws in o.get("nodes", []):
             m = re.fullmatch(r"\d+:([uio])(\d+)", ws.get("name", ""))
-            if not m or LETTERS.index(m[1]) < len(outs):
+            if not m or m[1] == k:
                 continue
             dest = f"{BASE[k] + int(m[2])}:{k}{m[2]}"
+            if dest not in names:
+                cmds.append(f'rename workspace "{ws["name"]}" to "{dest}"')
+                names.add(dest)
+                continue
             cmds += [f"[con_id={c['id']}] move container to workspace {dest}"
                      for c in ws.get("nodes", []) + ws.get("floating_nodes", [])]
             if has_focus(ws):
@@ -383,15 +391,26 @@ def selftest():
     assert e[1][1].startswith("I3  CODE\nVisual Studio Code\0icon\x1f"), e[1]
     assert json.loads(bar_json({"DP-7": [3, True]}, "DP-7"))["text"].startswith("\uf2d2 3  ")
     assert json.loads(bar_json({}, "HDMI-1"))["text"].startswith("\uf2d2 0")
+    out = lambda name, x, *ws: {"type": "output", "name": name, "active": True,
+                                "rect": {"x": x}, "nodes": list(ws)}
     lap = lambda *ws: {"nodes": [{"type": "output", "name": "__i3", "nodes": []},
-                                 {"type": "output", "name": "eDP-1", "active": True, "nodes": list(ws)}]}
-    assert collapse(lap({"name": "11:u1", "nodes": [], "focused": True})) == ["workspace 31:o1"]
+                                 out("eDP-1", 3840, *ws)]}
+    assert collapse(lap({"name": "11:u1", "nodes": [], "focused": True})) == \
+        ['rename workspace "11:u1" to "31:o1"']
     assert collapse(lap({"name": "31:o1", "nodes": [con(1, "a")]})) == []
-    two = lap({"name": "11:u1", "nodes": [con(1, "a")]}, {"name": "21:i1", "nodes": []})
-    two["nodes"].append({"type": "output", "name": "DP-7", "active": True, "nodes": []})
-    assert collapse(two) == ["[con_id=1] move container to workspace 21:i1"]
-    two["nodes"].append({"type": "output", "name": "DP-8", "active": True, "nodes": []})
-    assert collapse(two) == []  # drei Monitore: u bleibt
+    # Ziel gibt es schon -> Fenster wandern
+    assert collapse(lap({"name": "33:o3", "nodes": []}, {"name": "23:i3", "nodes": [con(1, "a")]})) == \
+        ["[con_id=1] move container to workspace 33:o3"]
+    # Login: u1 auf der Mitte, u3 auf dem Laptop (drei Monitore)
+    three = {"nodes": [out("HDMI-A-1", 0, {"name": "11:u1", "nodes": []}),
+                       out("DP-7", 1920, {"name": "12:u2", "nodes": []}),
+                       out("eDP-1", 3840, {"name": "13:u3", "nodes": []})]}
+    assert collapse(three) == ['rename workspace "13:u3" to "33:o3"',
+                               'rename workspace "12:u2" to "22:i2"']
+    # zwei Monitore: u wird i in der Mitte, o auf dem Laptop
+    two = {"nodes": [out("DP-7", 1920, {"name": "11:u1", "nodes": [con(1, "a")]}),
+                     out("eDP-1", 3840, {"name": "31:o1", "nodes": []})]}
+    assert collapse(two) == ['rename workspace "11:u1" to "21:i1"']
     print("ok")
 
 

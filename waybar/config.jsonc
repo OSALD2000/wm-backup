@@ -35,7 +35,7 @@
     "custom/target",
     "sway/window"
   ],
-  "modules-center": ["clock"],
+  "modules-center": ["clock", "custom/market"],
   "modules-right": [
     "custom/ipv6",
     "network#v4",
@@ -156,6 +156,13 @@
   },
 
   // ── mitte ──────────────────────────────────────────────────────────────────
+  // New-York-Zeit + ICT-Session (sway/scripts/market.py), Tooltip = alle Zeiten
+  "custom/market": {
+    "exec": "~/.config/sway/scripts/market.py",
+    "return-type": "json",
+    "interval": 30
+  },
+
   "clock": {
     "format": "{:%H:%M}",
     "format-alt": "{:%a %d. %B %Y   %H:%M}",

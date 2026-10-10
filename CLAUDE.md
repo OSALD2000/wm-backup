@@ -12,7 +12,7 @@ Sprache in Commits und Kommentaren: Deutsch, Umlaute als ae/oe/ue.
 | Repo-Pfad | Live-Pfad | Was |
 |---|---|---|
 | `sway/config` | `~/.config/sway/config` | Compositor, Keybinds, Workspaces, Farben (`set $hl2_*` …), Autostart |
-| `sway/scripts/` | `~/.config/sway/scripts/` | `lock.sh` (hyprlock, sonst swaylock), `powermenu.sh` (rofi -dmenu), `clip.sh` (Zwischenablage, rofi ueber copyq), `screens.py` (Monitore anordnen, Laptop rechts), `ws.sh` (Super+N = Workspace N des aktuellen Monitors, Super+Ctrl+N = des Ziel-Monitors, Super+Esc = Ziel weiter), `console.py` (Konsole Super+Shift+Tab), `ipv6.sh` |
+| `sway/scripts/` | `~/.config/sway/scripts/` | `lock.sh` (hyprlock, sonst swaylock), `powermenu.sh` (rofi -dmenu), `clip.sh` (Zwischenablage, rofi ueber copyq), `screens.py` (Monitore anordnen, Laptop rechts), `ws.sh` (Super+N = Workspace N des aktuellen Monitors, Super+Ctrl+N = des Ziel-Monitors, Super+Esc = Ziel weiter), `console.py` (Konsole Super+Shift+Tab), `market.py` (waybar `custom/market`: NY-Zeit + Session), `journal.sh` (Trading-Journal), `ask.sh` (rofi-Eingabezeile), `ipv6.sh` |
 | `hypr/` | `~/.config/hypr/` | **nur hyprlock** (Sperrbildschirm) + `loading.sh` (Ladebalken). Hyprland selbst wird nicht benutzt |
 | `waybar/` | `~/.config/waybar/` | obere Leiste (`config.jsonc`, `style.css`): Monitor-Badge U/I/O + Workspaces als `<Taste> <Icon>`, sichtbarer Workspace je Monitor hervorgehoben, `custom/wins` = Fensterzahl + Fensterliste offen/zu, `custom/target` = Ziel-Monitor `→ U/I/O` |
 | `rofi/` | `~/.config/rofi/` | Launcher. Sway ruft `rofi -config ~/.config/rofi/config-nord.rasi` auf; der Name "nord" ist historisch, das aktive Theme steht per `@theme` darin (HL2: `hl2-menu.rasi`). `config.rasi` gehoert zu i3 |
@@ -32,7 +32,8 @@ nur dort eintragen.
 
 Nicht im Repo, gehoert aber zum Setup: `~/.config/environment.d/50-wayland.conf`
 (Wayland-Variablen), `~/.local/bin/shot-wl` (Screenshots), Pakete `tesseract-ocr` +
-`tesseract-ocr-deu` (OCR auf Super+Print),
+`tesseract-ocr-deu` (OCR auf Super+Print), `wlsunset` (Nachtlicht),
+`~/Documents/Obsidian Vault/Trading/journaling/` (Ziel des Trading-Journals),
 `~/Private/shell_scripts/` (Lautstaerke-OSD), `~/.config/rofi/themes/` und
 `~/.config/alacritty/themes/` (fremde Themes, per `.gitignore` draussen),
 `~/.config/i3/` (alte i3-Session als Rollback: am GDM "i3" waehlen).
@@ -62,14 +63,15 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v14` | wie v13, im Vorschau-Raster schliesst Entf das gewaehlte Fenster, das Raster geht danach wieder auf. |
 | `HL2-v15` | wie v14, Monitor-Kuerzel nach Anzahl Schirme (1: o, 2: o+i, 3: o+i+u), Workspaces fehlender Kuerzel werden eingeklappt. |
 | `HL2-v16` | wie v15, Super+u/i/o-Modes raus: Ziel-Monitor in waybar (`custom/target`, `→ U/I/O`), Super+Esc schaltet weiter, Super+Ctrl+N / Super+Ctrl+Shift+N = Workspace N dort / Fenster dorthin. |
-| `HL2-v17` | wie v16, Super+Print = OCR: Text aus einem Bereich in die Zwischenablage (tesseract deu+eng). **Aktueller Standard** fuer neue Themes |
+| `HL2-v17` | wie v16, Super+Print = OCR: Text aus einem Bereich in die Zwischenablage (tesseract deu+eng). |
+| `HL2-v18` | wie v17, Boersenuhr in waybar (NY-Zeit + ICT-Session), Trading-Journal nach Obsidian (Super+Ctrl+j), Mission-Schnelleingabe (Super+Ctrl+m), kein Sperren bei sichtbarem TradingView, Nachtlicht (wlsunset), Workspaces mit fremdem Kuerzel nach dem Login werden umbenannt. **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v17` (Vorschau,
+Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v18` (Vorschau,
 Zwischenablage, Konsole, Pickup-Popups, Workspace-Nummern und Fensterzahl in waybar,
 Missionen). Alles in dieser Liste gilt fuer
 **jedes** neue Theme, nicht nur fuer HL2: es aendert nur den **Look**
@@ -87,7 +89,10 @@ Wer davon abweicht, fragt vorher.
   3 = `o` + `i` + `u`. Workspaces mit fehlendem Kuerzel (Assigns,
   abgezogener Schirm, erster Workspace nach dem Login) klappt der Watcher
   (`collapse()` in `sidebar.py`) mit gleicher Nummer auf das letzte vorhandene
-  Kuerzel zusammen (`23:i3` -> `33:o3`). Steckt man einen Schirm wieder an,
+  Kuerzel zusammen (`23:i3` -> `33:o3`). Genauso jeder Workspace mit dem
+  Kuerzel eines anderen Monitors (Login: sway legt den ersten Workspace je
+  Schirm an, bevor alle da sind): er bekommt das Kuerzel seines Monitors, per
+  `rename`, wenn es den Ziel-Workspace noch nicht gibt. Steckt man einen Schirm wieder an,
   wandern die Fenster nicht zurueck.
 - **Tasten:** `Super+N` / `Super+Shift+N` = Workspace N des aktuellen Monitors
   (hin / Fenster schieben). `Super+Ctrl+N` / `Super+Ctrl+Shift+N` = dasselbe
@@ -103,6 +108,19 @@ Wer davon abweicht, fragt vorher.
   letzter sichtbarer Stand, sway kann verdeckte Fenster nicht abfotografieren).
   `Super+m` = Missionen (Todo-Liste). `Super+Print` = OCR: Bereich aufziehen,
   erkannter Text (tesseract, `deu+eng`) landet in der Zwischenablage, Popup bestaetigt.
+  `Super+Ctrl+m` = Mission schnell eintragen (nur Eingabezeile `ask.sh`, Panel bleibt zu).
+- **Trading-Journal** (`Super+Ctrl+j`, `sway/scripts/journal.sh`): erst
+  Screenshot des fokussierten Monitors, dann Notiz per `ask.sh` (rofi-Eingabezeile
+  im Menue-Stil). Beides landet in `~/Documents/Obsidian Vault/Trading/journaling/<datum>/<datum>.md`
+  (Abschnitt `## HH:MM (NY HH:MM)`, Bild `<datum>_HHMMSS.png` daneben als `![[…]]`),
+  Popup bestaetigt. Esc = verwerfen, das Bild wird geloescht.
+- **Boersenuhr** (waybar `custom/market` neben der Uhr, `sway/scripts/market.py`):
+  NY-Zeit + ICT-Session (Asia 20-00, London 02-05, NY AM 07-10 mit Countdown bis
+  09:30, NY PM 13:30-16, alles NY-Zeit), sonst Countdown zur naechsten; CME-Pause
+  und Wochenende = `zu`. Klassen `active`/`idle`/`closed`, Tooltip mit Ortszeiten.
+- **TradingView** (app_id `tradingview`) hat `inhibit_idle visible`: kein
+  Sperrbildschirm, solange der Chart zu sehen ist. **Nachtlicht**: `wlsunset`
+  per `exec`, 07:00-19:30 normal, sonst 4000 K.
 - **Zwischenablage** (`Super+Shift+V`, `sway/scripts/clip.sh`): copyq speichert
   (laeuft per `exec_always`), rofi zeigt den Verlauf im Menue-Stil des Themes,
   Enter = `copyq select`, also wieder in die Zwischenablage. Kein eigenes
@@ -152,17 +170,17 @@ Wer davon abweicht, fragt vorher.
   Rechts daneben `custom/target` (`ws.sh bar`) = Ziel-Monitor fuer Super+Ctrl+N.
   `sway/scratchpad` (≡ N) zaehlt die Fenster im Scratchpad, also die Konsole.
 
-Ein neues Theme uebernimmt `ws.sh`, `sidebar.py`, `clip.sh`, die
-`format-icons` der waybar (Nummer vor dem Icon) und die Module `custom/wins` und `custom/target`, die
+Ein neues Theme uebernimmt `ws.sh`, `sidebar.py`, `clip.sh`, `market.py`, `journal.sh`, `ask.sh`, die
+`format-icons` der waybar (Nummer vor dem Icon) und die Module `custom/wins`, `custom/target` und `custom/market`, die
 Workspace-/Bind-Bloecke und die Konsolen-Regel (`console.py`, `for_window` auf
 cool-retro-term) der sway-Config, die
 eww-Fenster `sidebar`/`info`/`mission` (mit `todo.py`) und Lage/Timeout der swaync-Popups
 (`swaync/config.json`) und passt nur Farben und Schrift an: `eww.scss`,
 waybar `style.css`, den Popup-Block in `swaync/style.css` und die
-`-theme-str`-Teile in `clip.sh` und `overview()` in `sidebar.py` (die rofi-Theme-Datei liefert den Rest); in
+`-theme-str`-Teile in `clip.sh`, `ask.sh` und `overview()` in `sidebar.py` (die rofi-Theme-Datei liefert den Rest); in
 `eww.scss` auch den Block `.ms-*` (Missionen). In `style.css` muss `button.visible` dieselbe
 Hervorhebung bekommen wie `button.focused`; `#custom-wins` mit den Klassen
-`open`/`idle`/`off` und `#custom-target` umfaerben; `cool-retro-term/profile.json` mit den Farben
+`open`/`idle`/`off`, `#custom-target` und `#custom-market` (Klassen `active`/`idle`/`closed`) umfaerben; `cool-retro-term/profile.json` mit den Farben
 des Themes neu einstellen (`fontColor`, `backgroundColor`, Effekte).
 
 **Allgemeine Aenderungen** (Bedienung, Bausteine, Verhalten, nicht nur Farben)
