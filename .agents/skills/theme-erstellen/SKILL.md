@@ -49,7 +49,7 @@ unsichtbare Tab-Zeile, Vorschau Super+Tab (rofi, Entf schliesst), Missionen Supe
 Zwischenablage Super+Shift+V, Pickup-Popups unten rechts,
 waybar mit Nummer vor dem Icon und hervorgehobenem Workspace auf jedem Monitor, daneben Fensterzahl + Symbol
 der Fensterliste `custom/wins`, Ziel-Monitor `custom/target` und Boersenuhr `custom/market`,
-Trading-Journal Super+Ctrl+j, Mission-Schnelleingabe Super+Ctrl+m). Das gilt fuer jedes
+Trading-Journal Super+Ctrl+j, Schnellnotiz Super+Ctrl+n, Mission-Schnelleingabe Super+Ctrl+m). Das gilt fuer jedes
 Theme, nicht nur HL2. Ein Theme aendert nur den Look. Soll davon etwas
 anders werden, erst mit dem User klaeren und danach `AGENTS.md` nachziehen.
 Kommt ein neuer Baustein dazu, in `AGENTS.md`/`CLAUDE.md` unter
@@ -99,12 +99,12 @@ Konventionen aus den bisherigen Themes, die sich bewaehrt haben:
   `sidebar`, `info`, die waybar-Workspaces (Nummer + Icon, `button.visible`
   wie `button.focused`), `custom/wins` (Klassen `open`/`idle`/`off`), `custom/target`, `custom/market` (Klassen `active`/`idle`/`closed`), die swaync-Popups (Pickups
   unten rechts, Block `.floating-notifications` in `swaync/style.css`), das
-  Zwischenablage-Menue `clip.sh`, die Eingabezeile `ask.sh` (Journal, Mission-Schnelleingabe), das Vorschau-Raster (rofi, `overview()` in `sidebar.py`), die
+  Zwischenablage-Menue `clip.sh`, die Eingabezeile `ask.sh` (Journal, Schnellnotiz, Mission-Schnelleingabe), das Vorschau-Raster (rofi, `overview()` in `sidebar.py`), die
   Missionen (eww `mission`, `.ms-*`) und die Konsole (cool-retro-term, eigenes `profile.json` in den Farben des
   Themes). Nach dem Umbau alle einmal ausprobieren:
   `notify-send`, Super+Shift+V, Super+Tab (Entf schliesst ein Fenster), Super+m (Ziel mit `'` anlegen, abhaken), Super+Shift+Tab, Super+b (Symbol
   in `custom/wins` wechselt, Zahl stimmt mit den Fenstern ueberein), Super+Esc
-  (`custom/target` schaltet weiter) + Super+Ctrl+Shift+N, Super+Ctrl+m, Super+Ctrl+j (Eintrag im Obsidian-Journal, Esc verwirft).
+  (`custom/target` schaltet weiter) + Super+Ctrl+Shift+N, Super+Ctrl+m, Super+Ctrl+j (Eintrag im Obsidian-Journal, Esc verwirft), Super+Ctrl+n (Notiz geht in Obsidian auf).
 - Aendern sich Binds oder Assigns, das Hilfe-Panel `info` in `eww.yuck`
   mitziehen.
 - Neue Komponente (neuer Ordner, neues Ziel ausserhalb von `~/.config`)?

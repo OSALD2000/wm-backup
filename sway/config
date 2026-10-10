@@ -170,6 +170,8 @@ bindsym $mod+Print exec --no-startup-id grim -g "$(slurp)" - | tesseract -l deu+
 # Trading-Journal: Screenshot des Monitors + Notiz ins Obsidian-Vault
 # (Trading/journaling/<datum>/<datum>.md, siehe scripts/journal.sh)
 bindsym $mod+Ctrl+j exec --no-startup-id ~/.config/sway/scripts/journal.sh
+# Schnellnotiz: Name eintippen, Notiz aus Vorlage im Vault anlegen + in Obsidian oeffnen
+bindsym $mod+Ctrl+n exec --no-startup-id ~/.config/sway/scripts/note.py
 
 # ── Window Management ─────────────────────────────────────────────────────────
 tiling_drag enable
