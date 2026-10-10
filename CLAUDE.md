@@ -32,7 +32,7 @@ nur dort eintragen.
 
 Nicht im Repo, gehoert aber zum Setup: `~/.config/environment.d/50-wayland.conf`
 (Wayland-Variablen), `~/.local/bin/shot-wl` (Screenshots), Pakete `tesseract-ocr` +
-`tesseract-ocr-deu` (OCR auf Super+Print), `wlsunset` (Nachtlicht),
+`tesseract-ocr-deu` (OCR auf Super+Print),
 `~/Documents/Obsidian Vault/Trading/journaling/` (Ziel des Trading-Journals),
 `~/Private/shell_scripts/` (Lautstaerke-OSD), `~/.config/rofi/themes/` und
 `~/.config/alacritty/themes/` (fremde Themes, per `.gitignore` draussen),
@@ -65,14 +65,15 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v16` | wie v15, Super+u/i/o-Modes raus: Ziel-Monitor in waybar (`custom/target`, `→ U/I/O`), Super+Esc schaltet weiter, Super+Ctrl+N / Super+Ctrl+Shift+N = Workspace N dort / Fenster dorthin. |
 | `HL2-v17` | wie v16, Super+Print = OCR: Text aus einem Bereich in die Zwischenablage (tesseract deu+eng). |
 | `HL2-v18` | wie v17, Boersenuhr in waybar (NY-Zeit + ICT-Session), Trading-Journal nach Obsidian (Super+Ctrl+j), Mission-Schnelleingabe (Super+Ctrl+m), kein Sperren bei sichtbarem TradingView, Nachtlicht (wlsunset), Workspaces mit fremdem Kuerzel nach dem Login werden umbenannt. |
-| `HL2-v19` | wie v18, Schnellnotiz in Obsidian (Super+Ctrl+n): Name eintippen, Notiz aus Vorlage anlegen und oeffnen. **Aktueller Standard** fuer neue Themes |
+| `HL2-v19` | wie v18, Schnellnotiz in Obsidian (Super+Ctrl+n): Name eintippen, Notiz aus Vorlage anlegen und oeffnen. |
+| `HL2-v20` | wie v19, ohne Nachtlicht (wlsunset raus). **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v19` (Vorschau,
+Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v20` (Vorschau,
 Zwischenablage, Konsole, Pickup-Popups, Workspace-Nummern und Fensterzahl in waybar,
 Missionen). Alles in dieser Liste gilt fuer
 **jedes** neue Theme, nicht nur fuer HL2: es aendert nur den **Look**
@@ -126,8 +127,7 @@ Wer davon abweicht, fragt vorher.
   09:30, NY PM 13:30-16, alles NY-Zeit), sonst Countdown zur naechsten; CME-Pause
   und Wochenende = `zu`. Klassen `active`/`idle`/`closed`, Tooltip mit Ortszeiten.
 - **TradingView** (app_id `tradingview`) hat `inhibit_idle visible`: kein
-  Sperrbildschirm, solange der Chart zu sehen ist. **Nachtlicht**: `wlsunset`
-  per `exec`, 07:00-19:30 normal, sonst 4000 K.
+  Sperrbildschirm, solange der Chart zu sehen ist.
 - **Zwischenablage** (`Super+Shift+V`, `sway/scripts/clip.sh`): copyq speichert
   (laeuft per `exec_always`), rofi zeigt den Verlauf im Menue-Stil des Themes,
   Enter = `copyq select`, also wieder in die Zwischenablage. Kein eigenes

@@ -66,8 +66,6 @@ exec_always --no-startup-id "pkill -x dunst; pkill -x swaync; swaync"
 # starten, bis drei uebereinander liegen.
 exec_always --no-startup-id "pkill -x waybar; waybar"
 exec_always --no-startup-id copyq
-# Nachtlicht: abends waermere Farben (Paket wlsunset), feste Zeiten statt Standort
-exec --no-startup-id wlsunset -S 07:00 -s 19:30 -t 4000
 
 exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=sway
 # picom entfaellt — Sway komponiert selbst. Die picom.conf machte nur Shadows,
