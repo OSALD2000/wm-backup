@@ -270,7 +270,7 @@ def codex_threads(where, args=()):
 
 def codex_details(path):
     """busy?, letzter Prompt, letzte Aktion, Kontext aus dem rollout-Ende."""
-    busy, prompt, action, ctx = False, "", "", 0
+    busy, prompt, action, ctx = None, "", "", 0
     for r in tail_lines(path, 64 * 1024):
         p = r.get("payload") or {}
         t = p.get("type")
@@ -292,7 +292,8 @@ def codex_details(path):
             except ValueError:
                 inp = {}
             action = tool_text(p.get("name", "shell"), inp if isinstance(inp, dict) else {})
-    return busy, prompt, action, ctx
+    # Kein Marker im Ende = langer Turn, task_started liegt weiter vorn -> arbeitet
+    return busy is not False, prompt, action, ctx
 
 
 def codex_tui_pids():
@@ -568,6 +569,14 @@ def selftest():
                   [{"id": 3, "app": "google-chrome"}]) == "[con_id=3] focus"
     assert short("# Chrome tabs:\n- x\n\n## My request:\nseo &amp; so") == "seo & so"
     assert tool_text("Edit", {"file_path": home + "/x/y"}) == "Edit ~/x/y"
+    import tempfile
+    with tempfile.NamedTemporaryFile("w", suffix=".jsonl") as f:
+        f.write('{"type":"event_msg","payload":{"type":"item_completed"}}\n' * 3)
+        f.flush()
+        assert codex_details(f.name)[0] is True
+        f.write('{"type":"event_msg","payload":{"type":"task_complete"}}\n')
+        f.flush()
+        assert codex_details(f.name)[0] is False
     print("selftest ok")
 
 
