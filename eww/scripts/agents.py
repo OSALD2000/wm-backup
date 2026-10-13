@@ -126,6 +126,8 @@ def tail_lines(path, size=256 * 1024):
         return []
     out = []
     for line in data.splitlines()[1:] if len(data) >= size else data.splitlines():
+        if len(line) > 200_000:  # Bilder (Screenshots als base64), nie Chat-Text
+            continue
         try:
             out.append(json.loads(line))
         except ValueError:
@@ -193,7 +195,8 @@ def claude_live(wins, now):
             continue
         if not proc_alive(s.get("pid", 0), s.get("procStart")):
             continue
-        title, prompt, action, ctx = claude_details(claude_transcript(s.get("sessionId", "")))
+        path = claude_transcript(s.get("sessionId", ""))
+        title, prompt, action, ctx = claude_details(path)
         w = window_of(s["pid"], wins, title)
         st = s.get("status", "idle")
         out.append({"key": "claude:" + s.get("sessionId", ""), "tool": "claude", "sid": s.get("sessionId", ""),
@@ -202,7 +205,7 @@ def claude_live(wins, now):
                     "since": dur(now - s.get("startedAt", now * 1000) / 1000),
                     "prompt": short(prompt), "action": action, "tokens": tokens(ctx),
                     "con": w and w["id"], "ws": w["ws"] if w else "", "visible": bool(w and w["visible"]),
-                    "focused": bool(w and w["focused"]), "t": s.get("updatedAt", 0) / 1000})
+                    "focused": bool(w and w["focused"]), "t": s.get("updatedAt", 0) / 1000, "path": path})
     return out
 
 
@@ -287,13 +290,23 @@ def codex_details(path):
             elif p.get("role") == "assistant" and txt.strip():
                 action = "» " + short(txt, 70)
         elif r.get("type") == "response_item" and t in ("function_call", "custom_tool_call", "local_shell_call"):
-            try:
-                inp = json.loads(p.get("arguments") or "{}")
-            except ValueError:
-                inp = {}
-            action = tool_text(p.get("name", "shell"), inp if isinstance(inp, dict) else {})
+            action = codex_tool(p)
     # Kein Marker im Ende = langer Turn, task_started liegt weiter vorn -> arbeitet
     return busy is not False, prompt, action, ctx
+
+
+def codex_tool(p):
+    """Tool-Aufruf im rollout -> Kurztext. function_call hat JSON in arguments,
+    custom_tool_call (Code-Modus) JS-Text in input: dort das cmd:"…" heraussuchen."""
+    if p.get("type") == "custom_tool_call":
+        m = re.search(r'cmd:\s*"((?:\\.|[^"\\])*)"', p.get("input") or "")
+        arg = json.loads('"' + m.group(1) + '"') if m else short(p.get("input"), 60)
+        return short(f"{p.get('name', 'exec')} {arg}".splitlines()[0] if m else f"{p.get('name')} {arg}", 70)
+    try:
+        inp = json.loads(p.get("arguments") or "{}")
+    except ValueError:
+        inp = {}
+    return tool_text(p.get("name", "shell"), inp if isinstance(inp, dict) else {})
 
 
 def codex_tui_pids():
@@ -338,7 +351,7 @@ def codex_live(wins, now):
                     "since": dur(now - r["created_at"]), "prompt": short(prompt or r["first_user_message"]),
                     "action": action, "tokens": tokens(ctx), "con": w and w["id"],
                     "ws": w["ws"] if w else "", "visible": bool(w and w["visible"]),
-                    "focused": bool(w and w["focused"]), "t": r["updated_at"]})
+                    "focused": bool(w and w["focused"]), "t": r["updated_at"], "path": r["rollout_path"]})
     return out
 
 
@@ -451,6 +464,114 @@ def watch():
             subprocess.run(["pkill", f"-RTMIN+{SIGNAL}", "-x", "waybar"])
             last = cur
         time.sleep(TICK)
+
+
+# ── Tafel (Super+g): voller Chat je Session, live ────────────────────
+CHAR_W, LINE_H = 7.2, 15  # Iosevka 11px in eww.scss (.ch-*), fuer die Zeilenschaetzung
+
+
+def chat_msgs(path, tool):
+    """-> [{r: du|ai|tool, t: Text}] aus dem Transkript-/rollout-Ende."""
+    out = []
+    for r in tail_lines(path, 4 * 1024 * 1024) if path else []:
+        if tool == "claude":
+            msg = r.get("message") or {}
+            c = msg.get("content")
+            if r.get("type") == "user":
+                txt = c if isinstance(c, str) else " ".join(
+                    x.get("text", "") for x in c or [] if isinstance(x, dict) and x.get("type") == "text")
+                if txt.strip() and not txt.lstrip().startswith("<"):
+                    out.append({"r": "du", "t": txt.strip()})
+            elif r.get("type") == "assistant":
+                for x in c or []:
+                    if x.get("type") == "text" and x.get("text", "").strip():
+                        out.append({"r": "ai", "t": x["text"].strip()})
+                    elif x.get("type") == "tool_use":
+                        out.append({"r": "tool", "t": tool_text(x.get("name", ""), x.get("input"))})
+        elif r.get("type") == "response_item":
+            p = r.get("payload") or {}
+            if p.get("type") == "message":
+                txt = " ".join(x.get("text", "") for x in p.get("content") or [] if isinstance(x, dict)).strip()
+                if p.get("role") == "user" and txt and not txt.startswith(("<", "#")):
+                    out.append({"r": "du", "t": txt})
+                elif p.get("role") == "assistant" and txt:
+                    out.append({"r": "ai", "t": txt})
+            elif p.get("type") in ("function_call", "custom_tool_call", "local_shell_call"):
+                out.append({"r": "tool", "t": codex_tool(p)})
+    return out
+
+
+def fit(msgs, cols, lines):
+    """Neueste Nachrichten, bis die Spalte voll ist (cols Zeichen x lines Zeilen).
+    Die aelteste angeschnittene wird vorn gekuerzt. ponytail: Schaetzung per
+    Zeichenbreite, kein echtes Messen -> lieber etwas Luft lassen."""
+    out, left = [], lines
+    for m in reversed(msgs):
+        paras = m["t"].split("\n")
+        # Zeilen: Tool 1, sonst Text (+1 Kopf "DU"), dazu 0.4 Abstand zwischen Nachrichten
+        need = (1 if m["r"] == "tool" else (m["r"] == "du") + sum(max(1, -(-len(p) // cols)) for p in paras)) + 0.4
+        if need > left:
+            if left > 3 and m["r"] != "tool":
+                keep, n = [], int(left - 1.4)
+                for p in reversed(paras):
+                    k = max(1, -(-len(p) // cols))
+                    if k > n:
+                        keep.insert(0, "…" + p[len(p) - n * cols + 1:] if n > 0 else "…")
+                        break
+                    keep.insert(0, p)
+                    n -= k
+                out.insert(0, {"r": m["r"], "t": "\n".join(keep)})
+            break
+        out.insert(0, m)
+        left -= need
+    return out
+
+
+def board_rect():
+    """Freie Flaeche des fokussierten Monitors (ohne waybar/Fensterliste):
+    -> (Output-Name, x, y, w, h), x/y relativ zum Output."""
+    o = next((o for o in swaymsg("-t", "get_outputs") or [] if o.get("focused")), None)
+    ws = next((w for w in swaymsg("-t", "get_workspaces") or [] if w.get("focused")), None)
+    if not o or not ws:
+        return "eDP-1", 0, 0, 1920, 1200
+    r = ws["rect"]
+    return o["name"], r["x"] - o["rect"]["x"], r["y"] - o["rect"]["y"], r["width"], r["height"]
+
+
+def board():
+    """Super+g: Tafel an/aus, genau ueber der freien Flaeche."""
+    r = subprocess.run(["eww", "active-windows"], capture_output=True, text=True, timeout=3)
+    if "agents-board" in r.stdout:
+        subprocess.run(["eww", "close", "agents-board"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return
+    out, x, y, w, h = board_rect()
+    # x/y bleiben 0: layer-shell rechnet waybar/Fensterliste selbst heraus
+    subprocess.run(["eww", "open", "agents-board", "--screen", out, "--arg", f"w={w}px", "--arg", f"h={h}px"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def chat():
+    """deflisten der Tafel: je laufender Session die letzten Nachrichten, so
+    viele in die Spalte passen; nur solange die Tafel offen ist."""
+    _, _, _, W, H = board_rect()
+    last, cache = None, {}
+    while True:
+        live = [it for g in load()["live"] for it in g["items"]]
+        n = max(len(live), 1)
+        cols = int(((W - 40) / n - 40) / CHAR_W)
+        lines = int((H - 170) / LINE_H * 0.95)  # Kopf + Spaltenkopf + Raender, 5 % Luft
+        out = []
+        for it in live:
+            p = it.get("path")
+            m = os.path.getmtime(p) if p and os.path.exists(p) else 0
+            if cache.get(p, (None,))[0] != m:
+                cache[p] = (m, chat_msgs(p, it["tool"]))
+            out.append({k: it.get(k, "") for k in ("key", "tool", "name", "status", "new", "since", "tokens", "ws")}
+                       | {"group": group_of(it["cwd"]), "msgs": fit(cache[p][1], cols, lines)})
+        cur = json.dumps({"cols": out}, ensure_ascii=False)
+        if cur != last:
+            print(cur, flush=True)
+            last = cur
+        time.sleep(1)
 
 
 # ── Panel ────────────────────────────────────────────────────────────
@@ -577,6 +698,14 @@ def selftest():
         f.write('{"type":"event_msg","payload":{"type":"task_complete"}}\n')
         f.flush()
         assert codex_details(f.name)[0] is False
+    m = [{"r": "du", "t": "a" * 25}, {"r": "tool", "t": "Bash ls"}, {"r": "ai", "t": "x\n" + "b" * 30}]
+    assert fit(m, 10, 100) == m
+    f = fit(m, 10, 6)  # ai: 1+3+0.4, tool: 1.4 -> 5.8, du passt nicht mehr, kein Platz zum Kuerzen
+    assert [x["r"] for x in f] == ["tool", "ai"], f
+    f = fit(m, 10, 10)  # du angeschnitten: vorn gekuerzt, Ende bleibt
+    assert f[0]["r"] == "du" and f[0]["t"].startswith("…") and f[0]["t"].endswith("a"), f
+    assert codex_tool({"type": "custom_tool_call", "name": "exec",
+                       "input": 'text(await tools.exec_command({cmd:"sed -n \'1p\' a.java\\nx"}))'}) == "exec sed -n '1p' a.java"
     print("selftest ok")
 
 
@@ -585,6 +714,10 @@ if __name__ == "__main__":
     arg = sys.argv[2] if len(sys.argv) > 2 else None
     if cmd == "watch":
         watch()
+    elif cmd == "board":
+        board()
+    elif cmd == "chat":
+        chat()
     elif cmd == "follow":
         follow()
     elif cmd == "open":

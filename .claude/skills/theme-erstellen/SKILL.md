@@ -104,7 +104,7 @@ Konventionen aus den bisherigen Themes, die sich bewaehrt haben:
   Themes). Nach dem Umbau alle einmal ausprobieren:
   `notify-send`, Super+Shift+V, Super+Tab (Entf schliesst ein Fenster), Super+m (Ziel mit `'` anlegen, abhaken), Super+Shift+Tab, Super+b (Symbol
   in `custom/wins` wechselt, Zahl stimmt mit den Fenstern ueberein), Super+Esc
-  (`custom/target` schaltet weiter) + Super+Ctrl+Shift+N, Super+Ctrl+m, Super+Ctrl+j (Eintrag im Obsidian-Journal, Esc verwirft), Super+Ctrl+n (Notiz geht in Obsidian auf), Super+c (j/k, Enter springt, Esc zu, Mode wieder `default`), Super+g (Boxen nebeneinander).
+  (`custom/target` schaltet weiter) + Super+Ctrl+Shift+N, Super+Ctrl+m, Super+Ctrl+j (Eintrag im Obsidian-Journal, Esc verwirft), Super+Ctrl+n (Notiz geht in Obsidian auf), Super+c (j/k, Enter springt, Esc zu, Mode wieder `default`), Super+g (Chats live nebeneinander, Spalten voll, nichts laeuft unten raus).
 - Aendern sich Binds oder Assigns, das Hilfe-Panel `info` in `eww.yuck`
   mitziehen.
 - Neue Komponente (neuer Ordner, neues Ziel ausserhalb von `~/.config`)?

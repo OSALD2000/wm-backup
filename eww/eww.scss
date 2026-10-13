@@ -137,8 +137,17 @@ tooltip { background: rgba(0, 0, 0, 0.85); color: $bright; border: 1px solid $fg
 .ag-row .ag-name { font-size: 12px; font-weight: normal; }
 .ag-hist { margin-top: 10px; border-top: 1px solid $edge; padding-top: 8px; }
 .ag-foot { margin-top: 6px; }
-.ag-box { min-width: 260px; min-height: 180px; border-top: 3px solid $fg; background: $box_hi; border-radius: 0 0 6px 6px; padding: 10px 12px; }
-.ag-box.busy, .ag-box.new { border-top-color: $bright; }
-.ag-box.new { background: rgba(255, 220, 0, 0.12); }
-.ag-box.busy .ag-status { color: $bright; text-shadow: $glow; }
-.ag-box.new .ag-status { color: black; background: $bright; border-radius: 3px; padding: 0 6px; }
+// Tafel (agents-board, Super+g): Spalten mit dem Chat live
+.board { font-family: "Iosevka Nerd Font", monospace; background: #141310; padding: 18px 20px; color: $bright; }
+.ch-col { border-top: 3px solid $fg; background: $box_hi; border-radius: 0 0 6px 6px; padding: 10px 14px; }
+.ch-col.busy, .ch-col.new { border-top-color: $bright; }
+.ch-col.new { background: rgba(255, 220, 0, 0.08); }
+.ch-col.busy .ag-status { color: $bright; text-shadow: $glow; }
+.ch-col.new .ag-status { color: black; background: $bright; border-radius: 3px; padding: 0 6px; }
+.ch-head { border-bottom: 1px solid $edge; padding-bottom: 8px; }
+.ch-text { font-size: 11px; color: $label; }
+.ch-msg.du { border-left: 2px solid $bright; padding-left: 8px; }
+.ch-msg.du .ch-text { color: $bright; font-weight: bold; }
+.ch-who { color: $bright; font-size: 9px; font-weight: bold; letter-spacing: 2px; }
+.ch-msg.ai .ch-text { color: rgba(255, 230, 120, 0.88); }
+.ch-msg.tool .ch-text { color: $fg; font-size: 10px; }

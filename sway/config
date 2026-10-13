@@ -432,8 +432,8 @@ bindsym $mod+m exec --no-startup-id sh -c 'eww open --toggle mission --screen "$
 exec_always --no-startup-id ~/.config/eww/scripts/agents.py watch
 set $agents ~/.config/eww/scripts/agents.py
 bindsym $mod+c exec $agents open
-# Agenten-Tafel: nur Anzeige der laufenden Sessions nebeneinander, ohne Mode
-bindsym $mod+g exec --no-startup-id sh -c 'eww open --toggle agents-board --screen "$(swaymsg -t get_outputs | jq -r ".[] | select(.focused).name")"'
+# Agenten-Tafel: Chats der laufenden Sessions live nebeneinander, nur Anzeige
+bindsym $mod+g exec $agents board
 mode "[ AGENTS ]" {
         bindsym j exec $agents sel 1
         bindsym k exec $agents sel -1
