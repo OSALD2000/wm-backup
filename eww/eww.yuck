@@ -238,6 +238,38 @@ eww update new_mission=''"))
     (label :class "muted small ag-foot" :xalign 0
       :text "j/k waehlen · Enter hinspringen (beendet = fortsetzen) · Esc / Super+c zu")))
 
+; Agenten-Tafel (Super+g): nur die laufenden Sessions als Boxen nebeneinander,
+; reine Anzeige (kein Klick, kein Mode). Gleiche Daten wie agents.
+(defwidget agent-box [it g]
+  (box :class "ag-box ${it.status} ${it.new ? 'new' : ''}" :orientation "v" :space-evenly false :spacing 6
+    (box :space-evenly false
+      (label :class "ag-tool" :hexpand true :xalign 0 :text {it.tool == "claude" ? "λ CLAUDE" : "◆ CODEX"})
+      (label :class "ag-status" :text {it.status == "busy" ? "⚙ ARBEITET" : "✓ BEREIT"}))
+    (label :class "ag-gname" :xalign 0 :text "▸ ${g}")
+    (label :class "ag-name" :xalign 0 :wrap true :text {it.name})
+    (label :class "ag-prompt" :xalign 0 :wrap true :visible {it.prompt != ""} :text "“${it.prompt}”")
+    (label :class "ag-action" :xalign 0 :wrap true :vexpand true :valign "start" :text "› ${it.action}")
+    (label :class "ag-meta" :xalign 0 :text "${it.since}${it.tokens != '' ? ' · ' + it.tokens : ''}${it.ws != '' ? ' · ' + it.ws : ''}")))
+
+(defwindow agents-board
+  :monitor "eDP-1"  ; Super+g oeffnet es per --screen auf dem fokussierten Monitor
+  :geometry (geometry :anchor "center")
+  :stacking "overlay"
+  :exclusive false
+  :focusable false
+  (box :class "panel agents" :orientation "v" :space-evenly false :spacing 10
+    (box :class "ms-head" :space-evenly false
+      (label :class "ms-lambda" :text "λ")
+      (box :orientation "v" :space-evenly false :hexpand true
+        (label :class "ms-title" :xalign 0 :text "SQUAD STATUS")
+        (label :class "muted small" :xalign 0
+          :text "${agents.busy} arbeiten · ${agents.idle} bereit · Super+g schliesst")))
+    (label :class "muted" :visible {agents.n == 0} :xalign 0 :text "Keine laufenden Agenten.")
+    (box :space-evenly false :spacing 10
+      (for g in {agents.live}
+        (box :space-evenly false :spacing 10
+          (for it in {g.items} (agent-box :it it :g {g.name})))))))
+
 ; Hilfe (Super+Shift+z oder ? neben AMMO): Workspace-Matrix und Shortcuts.
 ; Statisch — bei neuen Binds oder assigns in sway/config hier nachziehen.
 (defwidget ws-cell [ws app]
@@ -338,6 +370,7 @@ eww update new_mission=''"))
         (key :k "Super+z" :d "Lern-Timer")
         (key :k "Super+m / Super+Ctrl+m" :d "Missionen / Mission schnell eintragen")
         (key :k "Super+c" :d "Agenten: Claude/Codex-Sessions (j/k, Enter, Esc)")
+        (key :k "Super+g" :d "Agenten-Tafel: laufende Sessions nebeneinander (nur Anzeige)")
         (key :k "Super+Ctrl+j" :d "Trading-Journal: Screenshot + Notiz (Obsidian)")
         (key :k "Super+Ctrl+n" :d "Schnellnotiz in Obsidian (Name #tag, Ordner/Name)")
         (key :k "Super+Shift+z" :d "diese Hilfe")
