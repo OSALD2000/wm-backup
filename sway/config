@@ -170,6 +170,9 @@ bindsym $mod+Print exec --no-startup-id grim -g "$(slurp)" - | tesseract -l deu+
 bindsym $mod+Ctrl+j exec --no-startup-id ~/.config/sway/scripts/journal.sh
 # Schnellnotiz: Name eintippen, Notiz aus Vorlage im Vault anlegen + in Obsidian oeffnen
 bindsym $mod+Ctrl+n exec --no-startup-id ~/.config/sway/scripts/note.py
+# Session parken: alle Fenster unter einem Namen auf o6 / zurueck an ihre Plaetze
+bindsym $mod+Ctrl+p       exec --no-startup-id ~/.config/sway/scripts/park.py save
+bindsym $mod+Ctrl+Shift+p exec --no-startup-id ~/.config/sway/scripts/park.py restore
 
 # ── Window Management ─────────────────────────────────────────────────────────
 tiling_drag enable
