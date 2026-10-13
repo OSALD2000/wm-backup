@@ -16,7 +16,7 @@ Sprache in Commits und Kommentaren: Deutsch, Umlaute als ae/oe/ue.
 | `hypr/` | `~/.config/hypr/` | **nur hyprlock** (Sperrbildschirm) + `loading.sh` (Ladebalken). Hyprland selbst wird nicht benutzt |
 | `waybar/` | `~/.config/waybar/` | obere Leiste (`config.jsonc`, `style.css`): Monitor-Badge U/I/O + Workspaces als `<Taste> <Icon>`, sichtbarer Workspace je Monitor hervorgehoben, `custom/wins` = Fensterzahl + Fensterliste offen/zu, `custom/target` = Ziel-Monitor `→ U/I/O`, `custom/agents` = Claude/Codex-Status |
 | `rofi/` | `~/.config/rofi/` | Launcher. Sway ruft `rofi -config ~/.config/rofi/config-nord.rasi` auf; der Name "nord" ist historisch, das aktive Theme steht per `@theme` darin (HL2: `hl2-menu.rasi`). `config.rasi` gehoert zu i3 |
-| `eww/` | `~/.config/eww/` | Desktop-Widgets. HL2: `hud-left`/`hud-right` + Lern-Panel `learn` (Super+Z), Hilfe `info` (Super+Shift+Z), Fensterliste `sidebar` je Monitor, Missionen `mission` (Super+m). `scripts/learn.py` = Lern-Timer, Daten in `~/.local/share/learn-timer/`; `scripts/sidebar.py` = Watcher fuer die Fensterliste + Super+q/b + Vorschau-Raster Super+Tab (`overview`, rofi) + Stand fuer waybar `custom/wins` (`bar`); `scripts/todo.py` = Missionen (Todo-Liste), Daten in `~/.local/share/missions/`; `scripts/agents.py` = Agenten-Panel `agents` (Super+c) + waybar `custom/agents` |
+| `eww/` | `~/.config/eww/` | Desktop-Widgets. HL2: `hud-left`/`hud-right` + Lern-Panel `learn` (Super+Z), Hilfe `info` (Super+Shift+Z), Fensterliste `sidebar` je Monitor, Missionen `mission` (Super+m). `scripts/learn.py` = Lern-Timer, Daten in `~/.local/share/learn-timer/`; `scripts/sidebar.py` = Watcher fuer die Fensterliste + Super+q/b + Vorschau-Raster Super+Tab (`overview`, rofi) + Stand fuer waybar `custom/wins` (`bar`); `scripts/todo.py` = Missionen (Todo-Liste), Daten in `~/.local/share/missions/`; `scripts/agents.py` = Agenten-Panel `agents` (Super+c) + Tafel `agents-board` (Super+g) + waybar `custom/agents` |
 | `swaync/` | `~/.config/swaync/` | Benachrichtigungen (Popups als Pickups unten rechts) + Panel hinter der Glocke |
 | `swaylock/` | `~/.config/swaylock/` | Fallback-Sperre |
 | `alacritty/` | `~/.config/alacritty/` | Terminal. `alacritty.toml` importiert die Farbdatei (`hl2.toml`, `nord.toml`), `lambda.txt` = Begruessung |
@@ -67,7 +67,7 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v18` | wie v17, Boersenuhr in waybar (NY-Zeit + ICT-Session), Trading-Journal nach Obsidian (Super+Ctrl+j), Mission-Schnelleingabe (Super+Ctrl+m), kein Sperren bei sichtbarem TradingView, Nachtlicht (wlsunset), Workspaces mit fremdem Kuerzel nach dem Login werden umbenannt. |
 | `HL2-v19` | wie v18, Schnellnotiz in Obsidian (Super+Ctrl+n): Name eintippen, Notiz aus Vorlage anlegen und oeffnen. |
 | `HL2-v20` | wie v19, ohne Nachtlicht (wlsunset raus). |
-| `HL2-v21` | wie v20, Agenten-Panel (Super+c): laufende Claude-Code-/Codex-Sessions mit Status + Verlauf, waybar `custom/agents`, Meldung wenn ein Agent fertig ist. **Aktueller Standard** fuer neue Themes |
+| `HL2-v21` | wie v20, Agenten-Panel (Super+c): laufende Claude-Code-/Codex-Sessions mit Status + Verlauf, Agenten-Tafel nur zum Anschauen (Super+g), waybar `custom/agents`, Meldung wenn ein Agent fertig ist. **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
@@ -173,6 +173,9 @@ Wer davon abweicht, fragt vorher.
   angesehen) per `SIGRTMIN+11` und schickt ein Pickup, wenn ein Agent fertig
   wird und sein Fenster nicht sichtbar ist (Klick springt hin). Kein Status
   "wartet auf Freigabe": Claude meldet nur busy/idle.
+  **Agenten-Tafel** (`Super+g`, eww `agents-board`): nur die laufenden Sessions
+  als Boxen nebeneinander, reine Anzeige (kein Klick, kein Mode), `eww open
+  --toggle` auf dem fokussierten Monitor, gleiche Daten wie `agents`.
 - **Assigns:** VS Code `23:i3`, IntelliJ `24:i4`, KeePassXC `37:o7`, To Do
   `38:o8`, Teams `39:o9`, YouTube `40:o10`.
 - **Fenster:** `workspace_layout tabbed`, Tab-Zeile per Schrift 1 + leerem
@@ -199,7 +202,7 @@ Ein neues Theme uebernimmt `ws.sh`, `sidebar.py`, `agents.py`, `clip.sh`, `marke
 `format-icons` der waybar (Nummer vor dem Icon) und die Module `custom/wins`, `custom/target`, `custom/market` und `custom/agents`, die
 Workspace-/Bind-Bloecke, den Mode `[ AGENTS ]` und die Konsolen-Regel (`console.py`, `for_window` auf
 cool-retro-term) der sway-Config, die
-eww-Fenster `sidebar`/`info`/`mission`/`agents` (mit `todo.py`) und Lage/Timeout der swaync-Popups
+eww-Fenster `sidebar`/`info`/`mission`/`agents`/`agents-board` (mit `todo.py`) und Lage/Timeout der swaync-Popups
 (`swaync/config.json`) und passt nur Farben und Schrift an: `eww.scss`,
 waybar `style.css`, den Popup-Block in `swaync/style.css` und die
 `-theme-str`-Teile in `clip.sh`, `ask.sh` und `overview()` in `sidebar.py` (die rofi-Theme-Datei liefert den Rest); in

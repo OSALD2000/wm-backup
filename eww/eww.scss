@@ -137,3 +137,8 @@ tooltip { background: rgba(0, 0, 0, 0.85); color: $bright; border: 1px solid $fg
 .ag-row .ag-name { font-size: 12px; font-weight: normal; }
 .ag-hist { margin-top: 10px; border-top: 1px solid $edge; padding-top: 8px; }
 .ag-foot { margin-top: 6px; }
+.ag-box { min-width: 260px; min-height: 180px; border-top: 3px solid $fg; background: $box_hi; border-radius: 0 0 6px 6px; padding: 10px 12px; }
+.ag-box.busy, .ag-box.new { border-top-color: $bright; }
+.ag-box.new { background: rgba(255, 220, 0, 0.12); }
+.ag-box.busy .ag-status { color: $bright; text-shadow: $glow; }
+.ag-box.new .ag-status { color: black; background: $bright; border-radius: 3px; padding: 0 6px; }
