@@ -49,7 +49,7 @@ unsichtbare Tab-Zeile, Vorschau Super+Tab (rofi, Entf schliesst), Missionen Supe
 Zwischenablage Super+Shift+V, Pickup-Popups unten rechts,
 waybar mit Nummer vor dem Icon und hervorgehobenem Workspace auf jedem Monitor, daneben Fensterzahl + Symbol
 der Fensterliste `custom/wins`, Ziel-Monitor `custom/target`, Boersenuhr `custom/market` und Agenten `custom/agents`,
-Trading-Journal Super+Ctrl+j, Schnellnotiz Super+Ctrl+n, Mission-Schnelleingabe Super+Ctrl+m, Agenten-Panel Super+c, Agenten-Tafel Super+g). Das gilt fuer jedes
+Trading-Journal Super+Ctrl+j, Schnellnotiz Super+Ctrl+n, Mission-Schnelleingabe Super+Ctrl+m, Agenten-Panel Super+c, Agenten-Tafel Super+g, Session parken Super+Ctrl+p / zurueck Super+Ctrl+Shift+p). Das gilt fuer jedes
 Theme, nicht nur HL2. Ein Theme aendert nur den Look. Soll davon etwas
 anders werden, erst mit dem User klaeren und danach `AGENTS.md` nachziehen.
 Kommt ein neuer Baustein dazu, in `AGENTS.md`/`CLAUDE.md` unter
@@ -99,7 +99,7 @@ Konventionen aus den bisherigen Themes, die sich bewaehrt haben:
   `sidebar`, `info`, die waybar-Workspaces (Nummer + Icon, `button.visible`
   wie `button.focused`), `custom/wins` (Klassen `open`/`idle`/`off`), `custom/target`, `custom/market` (Klassen `active`/`idle`/`closed`), `custom/agents` (Klassen `busy`/`idle`/`new`/`none`), die swaync-Popups (Pickups
   unten rechts, Block `.floating-notifications` in `swaync/style.css`), das
-  Zwischenablage-Menue `clip.sh`, die Eingabezeile `ask.sh` (Journal, Schnellnotiz, Mission-Schnelleingabe), das Vorschau-Raster (rofi, `overview()` in `sidebar.py`), die
+  Zwischenablage-Menue `clip.sh`, die Eingabezeile `ask.sh` (Journal, Schnellnotiz, Mission-Schnelleingabe, Session parken), das Vorschau-Raster (rofi, `overview()` in `sidebar.py`), die
   Missionen (eww `mission`, `.ms-*`), das Agenten-Panel (eww `agents` + Tafel `agents-board`, `.ag-*`) und die Konsole (cool-retro-term, eigenes `profile.json` in den Farben des
   Themes). Nach dem Umbau alle einmal ausprobieren:
   `notify-send`, Super+Shift+V, Super+Tab (Entf schliesst ein Fenster), Super+m (Ziel mit `'` anlegen, abhaken), Super+Shift+Tab, Super+b (Symbol

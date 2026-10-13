@@ -12,7 +12,7 @@ Sprache in Commits und Kommentaren: Deutsch, Umlaute als ae/oe/ue.
 | Repo-Pfad | Live-Pfad | Was |
 |---|---|---|
 | `sway/config` | `~/.config/sway/config` | Compositor, Keybinds, Workspaces, Farben (`set $hl2_*` …), Autostart |
-| `sway/scripts/` | `~/.config/sway/scripts/` | `lock.sh` (hyprlock, sonst swaylock), `powermenu.sh` (rofi -dmenu), `clip.sh` (Zwischenablage, rofi ueber copyq), `screens.py` (Monitore anordnen, Laptop rechts), `ws.sh` (Super+N = Workspace N des aktuellen Monitors, Super+Ctrl+N = des Ziel-Monitors, Super+Esc = Ziel weiter), `console.py` (Konsole Super+Shift+Tab), `market.py` (waybar `custom/market`: NY-Zeit + Session), `journal.sh` (Trading-Journal), `note.py` (Schnellnotiz Obsidian), `ask.sh` (rofi-Eingabezeile), `ipv6.sh` |
+| `sway/scripts/` | `~/.config/sway/scripts/` | `lock.sh` (hyprlock, sonst swaylock), `powermenu.sh` (rofi -dmenu), `clip.sh` (Zwischenablage, rofi ueber copyq), `screens.py` (Monitore anordnen, Laptop rechts), `ws.sh` (Super+N = Workspace N des aktuellen Monitors, Super+Ctrl+N = des Ziel-Monitors, Super+Esc = Ziel weiter), `console.py` (Konsole Super+Shift+Tab), `market.py` (waybar `custom/market`: NY-Zeit + Session), `journal.sh` (Trading-Journal), `note.py` (Schnellnotiz Obsidian), `park.py` (Session parken), `ask.sh` (rofi-Eingabezeile, mit `-` Auswahlliste), `ipv6.sh` |
 | `hypr/` | `~/.config/hypr/` | **nur hyprlock** (Sperrbildschirm) + `loading.sh` (Ladebalken). Hyprland selbst wird nicht benutzt |
 | `waybar/` | `~/.config/waybar/` | obere Leiste (`config.jsonc`, `style.css`): Monitor-Badge U/I/O + Workspaces als `<Taste> <Icon>`, sichtbarer Workspace je Monitor hervorgehoben, `custom/wins` = Fensterzahl + Fensterliste offen/zu, `custom/target` = Ziel-Monitor `→ U/I/O`, `custom/agents` = Claude/Codex-Status |
 | `rofi/` | `~/.config/rofi/` | Launcher. Sway ruft `rofi -config ~/.config/rofi/config-nord.rasi` auf; der Name "nord" ist historisch, das aktive Theme steht per `@theme` darin (HL2: `hl2-menu.rasi`). `config.rasi` gehoert zu i3 |
@@ -67,14 +67,15 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v18` | wie v17, Boersenuhr in waybar (NY-Zeit + ICT-Session), Trading-Journal nach Obsidian (Super+Ctrl+j), Mission-Schnelleingabe (Super+Ctrl+m), kein Sperren bei sichtbarem TradingView, Nachtlicht (wlsunset), Workspaces mit fremdem Kuerzel nach dem Login werden umbenannt. |
 | `HL2-v19` | wie v18, Schnellnotiz in Obsidian (Super+Ctrl+n): Name eintippen, Notiz aus Vorlage anlegen und oeffnen. |
 | `HL2-v20` | wie v19, ohne Nachtlicht (wlsunset raus). |
-| `HL2-v21` | wie v20, Agenten-Panel (Super+c): laufende Claude-Code-/Codex-Sessions mit Status + Verlauf, Agenten-Tafel mit den Chats live nebeneinander (Super+g), waybar `custom/agents`, Meldung wenn ein Agent fertig ist. **Aktueller Standard** fuer neue Themes |
+| `HL2-v21` | wie v20, Agenten-Panel (Super+c): laufende Claude-Code-/Codex-Sessions mit Status + Verlauf, Agenten-Tafel mit den Chats live nebeneinander (Super+g), waybar `custom/agents`, Meldung wenn ein Agent fertig ist. |
+| `HL2-v22` | wie v21, Session parken: Super+Ctrl+p schiebt alle Fenster unter einem Namen auf o6, Super+Ctrl+Shift+p holt eine Session zurueck an die alten Plaetze. **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v21` (Vorschau,
+Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v22` (Vorschau,
 Zwischenablage, Konsole, Pickup-Popups, Workspace-Nummern und Fensterzahl in waybar,
 Missionen). Alles in dieser Liste gilt fuer
 **jedes** neue Theme, nicht nur fuer HL2: es aendert nur den **Look**
@@ -129,6 +130,13 @@ Wer davon abweicht, fragt vorher.
   und Wochenende = `zu`. Klassen `active`/`idle`/`closed`, Tooltip mit Ortszeiten.
 - **TradingView** (app_id `tradingview`) hat `inhibit_idle visible`: kein
   Sperrbildschirm, solange der Chart zu sehen ist.
+- **Session parken** (`sway/scripts/park.py`): `Super+Ctrl+p` fragt per `ask.sh`
+  einen Namen, merkt sich je Fenster aller Monitore (ohne Scratchpad) den
+  Workspace und schiebt alle auf `36:o6`. `Super+Ctrl+Shift+p` zeigt die
+  geparkten Sessions (`ask.sh TITEL -` = Auswahlliste), schiebt jedes noch
+  offene Fenster zurueck und vergisst die Session. Gleicher Name = Session
+  erweitern. Gespeichert per con_id in `$XDG_RUNTIME_DIR/parked.json`, gilt
+  also nur bis zum Neustart von sway.
 - **Zwischenablage** (`Super+Shift+V`, `sway/scripts/clip.sh`): copyq speichert
   (laeuft per `exec_always`), rofi zeigt den Verlauf im Menue-Stil des Themes,
   Enter = `copyq select`, also wieder in die Zwischenablage. Kein eigenes
@@ -202,7 +210,7 @@ Wer davon abweicht, fragt vorher.
   Rechts daneben `custom/target` (`ws.sh bar`) = Ziel-Monitor fuer Super+Ctrl+N.
   `sway/scratchpad` (≡ N) zaehlt die Fenster im Scratchpad, also die Konsole.
 
-Ein neues Theme uebernimmt `ws.sh`, `sidebar.py`, `agents.py`, `clip.sh`, `market.py`, `journal.sh`, `note.py`, `ask.sh`, die
+Ein neues Theme uebernimmt `ws.sh`, `sidebar.py`, `agents.py`, `clip.sh`, `market.py`, `journal.sh`, `note.py`, `park.py`, `ask.sh`, die
 `format-icons` der waybar (Nummer vor dem Icon) und die Module `custom/wins`, `custom/target`, `custom/market` und `custom/agents`, die
 Workspace-/Bind-Bloecke, den Mode `[ AGENTS ]` und die Konsolen-Regel (`console.py`, `for_window` auf
 cool-retro-term) der sway-Config, die
