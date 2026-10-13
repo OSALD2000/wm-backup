@@ -114,3 +114,26 @@ tooltip { background: rgba(0, 0, 0, 0.85); color: $bright; border: 1px solid $fg
 .ms-nr { color: $label; font-size: 10px; font-weight: bold; letter-spacing: 2px; }
 .ms-text { color: $bright; font-size: 13px; font-weight: bold; }
 .ms-item.done .ms-text, .ms-item.done .ms-check { color: $fg; text-decoration-line: line-through; }
+
+// ── Agenten (agents, Super+c) — Squad-Status im HUD-Gelb ─────────
+.agents { font-family: "Iosevka Nerd Font", monospace; background: rgba(20, 19, 16, 0.96); }
+.ag-group { margin-top: 6px; }
+.ag-gname { color: $bright; font-weight: bold; letter-spacing: 1px; }
+.ag-card { border-left: 3px solid $fg; background: $box_hi; border-radius: 0 6px 6px 0; padding: 7px 12px; }
+.ag-card.busy { border-left-color: $bright; }
+.ag-card.new { border-left-color: $bright; background: rgba(255, 220, 0, 0.12); }
+.ag-card:hover, .ag-row:hover { background: rgba(255, 220, 0, 0.08); }
+.ag-card.sel, .ag-row.sel { background: rgba(255, 220, 0, 0.18); box-shadow: inset 0 0 0 1px rgba(255, 220, 0, 0.60); }
+.ag-tool { color: $label; font-size: 10px; font-weight: bold; letter-spacing: 2px; min-width: 70px; }
+.ag-row .ag-tool { min-width: 14px; }
+.ag-name { color: $bright; font-size: 13px; font-weight: bold; }
+.ag-status { color: $label; font-size: 10px; font-weight: bold; letter-spacing: 2px; }
+.ag-card.busy .ag-status { color: $bright; text-shadow: $glow; }
+.ag-card.new .ag-status { color: black; background: $bright; border-radius: 3px; padding: 0 6px; }
+.ag-prompt { color: $label; font-size: 11px; }
+.ag-action { color: $bright; font-size: 11px; }
+.ag-meta { color: $label; font-size: 10px; }
+.ag-row { padding: 4px 12px; border-radius: 4px; }
+.ag-row .ag-name { font-size: 12px; font-weight: normal; }
+.ag-hist { margin-top: 10px; border-top: 1px solid $edge; padding-top: 8px; }
+.ag-foot { margin-top: 6px; }

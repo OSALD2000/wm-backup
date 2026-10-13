@@ -179,6 +179,65 @@ eww update new_mission=''"))
       (button :class "btn ghost small" :visible {missions.done > 0}
         :onclick "~/.config/eww/scripts/todo.py clear" "Erfuellte entfernen"))))
 
+; Agenten (Super+c): laufende Claude-Code-/Codex-Sessions + Verlauf, nach Ordner.
+; agents.py watch (exec_always) schreibt den Stand, follow liest ihn nur, solange
+; das Fenster offen ist. Tasten kommen ueber den sway-Mode "[ AGENTS ]" (eww
+; selbst kann keine Tasten), der setzt agent_sel per `eww update`.
+(deflisten agents
+  :initial `{"live":[],"hist":[],"count":0,"busy":0,"idle":0,"new":0,"n":0}`
+  "~/.config/eww/scripts/agents.py follow")
+(defvar agent_sel 0)
+
+(defwidget agent-card [it]
+  (button :class "ag-card ${it.status} ${it.new ? 'new' : ''} ${agent_sel == it.idx ? 'sel' : ''}"
+          :onclick "~/.config/eww/scripts/agents.py go ${it.idx}"
+    (box :orientation "v" :space-evenly false :spacing 3
+      (box :space-evenly false :spacing 12
+        (label :class "ag-tool" :text {it.tool == "claude" ? "λ CLAUDE" : "◆ CODEX"})
+        (label :class "ag-name" :hexpand true :xalign 0 :limit-width 56 :text {it.name})
+        (label :class "ag-status" :text {it.status == "busy" ? "⚙ ARBEITET" : "✓ BEREIT"}))
+      (label :class "ag-prompt" :xalign 0 :limit-width 96 :visible {it.prompt != ""} :text "“${it.prompt}”")
+      (box :space-evenly false :spacing 12
+        (label :class "ag-action" :hexpand true :xalign 0 :limit-width 70 :text "› ${it.action}")
+        (label :class "ag-meta" :text "${it.since}${it.tokens != '' ? ' · ' + it.tokens : ''}${it.ws != '' ? ' · ' + it.ws : ''}")))))
+
+(defwidget agent-row [it]
+  (button :class "ag-row ${agent_sel == it.idx ? 'sel' : ''}" :onclick "~/.config/eww/scripts/agents.py go ${it.idx}"
+    (box :space-evenly false :spacing 12
+      (label :class "ag-tool" :text {it.tool == "claude" ? "λ" : "◆"})
+      (label :class "ag-name" :hexpand true :xalign 0 :limit-width 70 :text {it.name != "" ? it.name : it.prompt})
+      (label :class "ag-meta" :text {it.ago}))))
+
+(defwindow agents
+  :monitor "eDP-1"  ; agents.py open setzt --screen auf den fokussierten Monitor
+  :geometry (geometry :anchor "center" :width "780px")
+  :stacking "overlay"
+  :exclusive false
+  :focusable false
+  (box :class "panel agents" :orientation "v" :space-evenly false :spacing 8
+    (box :class "ms-head" :space-evenly false
+      (label :class "ms-lambda" :text "λ")
+      (box :orientation "v" :space-evenly false :hexpand true
+        (label :class "ms-title" :xalign 0 :text "SQUAD STATUS")
+        (label :class "muted small" :xalign 0
+          :text "${agents.busy} arbeiten · ${agents.idle} bereit${agents.new > 0 ? ' · ' + agents.new + ' neu' : ''}")))
+    (label :class "muted" :visible {agents.n == 0} :xalign 0 :text "Keine laufenden Agenten.")
+    (for g in {agents.live}
+      (box :orientation "v" :space-evenly false :spacing 4
+        (box :class "ag-group" :space-evenly false :spacing 10
+          (label :class "ag-gname" :text "▸ ${g.name}")
+          (label :class "muted small" :text {g.path}))
+        (for it in {g.items} (agent-card :it it))))
+    (label :class "section ag-hist" :xalign 0 :visible {arraylength(agents.hist) > 0} :text "VERLAUF")
+    (for g in {agents.hist}
+      (box :orientation "v" :space-evenly false :spacing 2
+        (box :class "ag-group" :space-evenly false :spacing 10
+          (label :class "ag-gname" :text "▸ ${g.name}")
+          (label :class "muted small" :text {g.path}))
+        (for it in {g.items} (agent-row :it it))))
+    (label :class "muted small ag-foot" :xalign 0
+      :text "j/k waehlen · Enter hinspringen (beendet = fortsetzen) · Esc / Super+c zu")))
+
 ; Hilfe (Super+Shift+z oder ? neben AMMO): Workspace-Matrix und Shortcuts.
 ; Statisch — bei neuen Binds oder assigns in sway/config hier nachziehen.
 (defwidget ws-cell [ws app]
@@ -278,6 +337,7 @@ eww update new_mission=''"))
       (label :class "section" :xalign 0 :text "SYSTEM")
         (key :k "Super+z" :d "Lern-Timer")
         (key :k "Super+m / Super+Ctrl+m" :d "Missionen / Mission schnell eintragen")
+        (key :k "Super+c" :d "Agenten: Claude/Codex-Sessions (j/k, Enter, Esc)")
         (key :k "Super+Ctrl+j" :d "Trading-Journal: Screenshot + Notiz (Obsidian)")
         (key :k "Super+Ctrl+n" :d "Schnellnotiz in Obsidian (Name #tag, Ordner/Name)")
         (key :k "Super+Shift+z" :d "diese Hilfe")
