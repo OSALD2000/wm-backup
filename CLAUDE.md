@@ -67,7 +67,7 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v18` | wie v17, Boersenuhr in waybar (NY-Zeit + ICT-Session), Trading-Journal nach Obsidian (Super+Ctrl+j), Mission-Schnelleingabe (Super+Ctrl+m), kein Sperren bei sichtbarem TradingView, Nachtlicht (wlsunset), Workspaces mit fremdem Kuerzel nach dem Login werden umbenannt. |
 | `HL2-v19` | wie v18, Schnellnotiz in Obsidian (Super+Ctrl+n): Name eintippen, Notiz aus Vorlage anlegen und oeffnen. |
 | `HL2-v20` | wie v19, ohne Nachtlicht (wlsunset raus). |
-| `HL2-v21` | wie v20, Agenten-Panel (Super+c): laufende Claude-Code-/Codex-Sessions mit Status + Verlauf, Agenten-Tafel nur zum Anschauen (Super+g), waybar `custom/agents`, Meldung wenn ein Agent fertig ist. **Aktueller Standard** fuer neue Themes |
+| `HL2-v21` | wie v20, Agenten-Panel (Super+c): laufende Claude-Code-/Codex-Sessions mit Status + Verlauf, Agenten-Tafel mit den Chats live nebeneinander (Super+g), waybar `custom/agents`, Meldung wenn ein Agent fertig ist. **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
@@ -173,9 +173,13 @@ Wer davon abweicht, fragt vorher.
   angesehen) per `SIGRTMIN+11` und schickt ein Pickup, wenn ein Agent fertig
   wird und sein Fenster nicht sichtbar ist (Klick springt hin). Kein Status
   "wartet auf Freigabe": Claude meldet nur busy/idle.
-  **Agenten-Tafel** (`Super+g`, eww `agents-board`): nur die laufenden Sessions
-  als Boxen nebeneinander, reine Anzeige (kein Klick, kein Mode), `eww open
-  --toggle` auf dem fokussierten Monitor, gleiche Daten wie `agents`.
+  **Agenten-Tafel** (`Super+g`, eww `agents-board`, `agents.py board`):
+  fuellt die freie Flaeche des fokussierten Monitors, je laufender Session
+  eine Spalte mit dem Chat live (Prompts, Antworten, Tool-Aufrufe, neueste
+  unten). Reine Anzeige, kein Klick, kein Mode. `agents.py chat` (deflisten,
+  nur solange offen) liest jede Sekunde das Transkript-Ende (Bild-Zeilen
+  uebersprungen) und kuerzt per Zeilenschaetzung (`fit()`, `CHAR_W`/`LINE_H`
+  passend zu `.ch-*` in `eww.scss`) auf das, was in die Spalte passt.
 - **Assigns:** VS Code `23:i3`, IntelliJ `24:i4`, KeePassXC `37:o7`, To Do
   `38:o8`, Teams `39:o9`, YouTube `40:o10`.
 - **Fenster:** `workspace_layout tabbed`, Tab-Zeile per Schrift 1 + leerem
