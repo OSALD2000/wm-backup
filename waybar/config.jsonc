@@ -33,6 +33,7 @@
     "sway/scratchpad",
     "custom/wins",
     "custom/target",
+    "custom/agents",
     "sway/window"
   ],
   "modules-center": ["clock", "custom/market"],
@@ -142,6 +143,16 @@
     "signal": 10,
     "tooltip": false,
     "on-click": "~/.config/sway/scripts/ws.sh cycle"
+  },
+
+  // Agenten (Claude Code + Codex): ⚙ = arbeiten, ✓ = bereit; Klick = Panel
+  // (Super+c). Den Stand schreibt agents.py watch, Signal 11 weckt.
+  "custom/agents": {
+    "exec": "~/.config/eww/scripts/agents.py bar",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 11,
+    "on-click": "~/.config/eww/scripts/agents.py toggle"
   },
 
   "sway/window": {

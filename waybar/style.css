@@ -115,6 +115,11 @@ tooltip label { padding: 5px 7px; }
 #custom-wins.off  { color: @ink_dim; opacity: 0.6; }
 #custom-target { color: @ink; padding: 0 8px; }
 #custom-target:hover { background: @hover; }
+#custom-agents { color: @ink_dim; padding: 0 8px; }
+#custom-agents:hover { background: @hover; }
+#custom-agents.busy { color: @ink; }
+#custom-agents.new  { color: #000000; background: @ink; }
+#custom-agents.none { opacity: 0.5; }
 #window { color: @ink_dim; font-weight: normal; padding: 0 12px; }
 window#waybar.empty #window { padding: 0; }
 

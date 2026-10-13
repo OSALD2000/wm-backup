@@ -425,5 +425,21 @@ bindsym $mod+z exec --no-startup-id eww open --toggle learn
 bindsym $mod+Ctrl+m exec --no-startup-id sh -c '~/.config/sway/scripts/ask.sh "NEUE MISSION" | ~/.config/eww/scripts/todo.py add'
 # Missionen (Todo-Liste, eww mission) auf dem Monitor, auf dem man gerade ist
 bindsym $mod+m exec --no-startup-id sh -c 'eww open --toggle mission --screen "$(swaymsg -t get_outputs | jq -r ".[] | select(.focused).name")"'
+
+# Agenten (Claude Code + Codex): Watcher fuer Panel, waybar custom/agents und
+# Meldungen; ersetzt sich selbst per PID-Datei. Super+c oeffnet das Panel und
+# den Mode, eww kann keine Tasten -> j/k/Enter/Esc laufen ueber sway.
+exec_always --no-startup-id ~/.config/eww/scripts/agents.py watch
+set $agents ~/.config/eww/scripts/agents.py
+bindsym $mod+c exec $agents open
+mode "[ AGENTS ]" {
+        bindsym j exec $agents sel 1
+        bindsym k exec $agents sel -1
+        bindsym Down exec $agents sel 1
+        bindsym Up exec $agents sel -1
+        bindsym Return exec $agents go
+        bindsym Escape exec $agents close
+        bindsym $mod+c exec $agents close
+}
 # Hilfe (Workspace-Matrix + Shortcuts) auf dem Monitor, auf dem man gerade ist
 bindsym $mod+Shift+z exec --no-startup-id sh -c 'eww open --toggle info --screen "$(swaymsg -t get_outputs | jq -r ".[] | select(.focused).name")"'

@@ -14,9 +14,9 @@ Sprache in Commits und Kommentaren: Deutsch, Umlaute als ae/oe/ue.
 | `sway/config` | `~/.config/sway/config` | Compositor, Keybinds, Workspaces, Farben (`set $hl2_*` …), Autostart |
 | `sway/scripts/` | `~/.config/sway/scripts/` | `lock.sh` (hyprlock, sonst swaylock), `powermenu.sh` (rofi -dmenu), `clip.sh` (Zwischenablage, rofi ueber copyq), `screens.py` (Monitore anordnen, Laptop rechts), `ws.sh` (Super+N = Workspace N des aktuellen Monitors, Super+Ctrl+N = des Ziel-Monitors, Super+Esc = Ziel weiter), `console.py` (Konsole Super+Shift+Tab), `market.py` (waybar `custom/market`: NY-Zeit + Session), `journal.sh` (Trading-Journal), `note.py` (Schnellnotiz Obsidian), `ask.sh` (rofi-Eingabezeile), `ipv6.sh` |
 | `hypr/` | `~/.config/hypr/` | **nur hyprlock** (Sperrbildschirm) + `loading.sh` (Ladebalken). Hyprland selbst wird nicht benutzt |
-| `waybar/` | `~/.config/waybar/` | obere Leiste (`config.jsonc`, `style.css`): Monitor-Badge U/I/O + Workspaces als `<Taste> <Icon>`, sichtbarer Workspace je Monitor hervorgehoben, `custom/wins` = Fensterzahl + Fensterliste offen/zu, `custom/target` = Ziel-Monitor `→ U/I/O` |
+| `waybar/` | `~/.config/waybar/` | obere Leiste (`config.jsonc`, `style.css`): Monitor-Badge U/I/O + Workspaces als `<Taste> <Icon>`, sichtbarer Workspace je Monitor hervorgehoben, `custom/wins` = Fensterzahl + Fensterliste offen/zu, `custom/target` = Ziel-Monitor `→ U/I/O`, `custom/agents` = Claude/Codex-Status |
 | `rofi/` | `~/.config/rofi/` | Launcher. Sway ruft `rofi -config ~/.config/rofi/config-nord.rasi` auf; der Name "nord" ist historisch, das aktive Theme steht per `@theme` darin (HL2: `hl2-menu.rasi`). `config.rasi` gehoert zu i3 |
-| `eww/` | `~/.config/eww/` | Desktop-Widgets. HL2: `hud-left`/`hud-right` + Lern-Panel `learn` (Super+Z), Hilfe `info` (Super+Shift+Z), Fensterliste `sidebar` je Monitor, Missionen `mission` (Super+m). `scripts/learn.py` = Lern-Timer, Daten in `~/.local/share/learn-timer/`; `scripts/sidebar.py` = Watcher fuer die Fensterliste + Super+q/b + Vorschau-Raster Super+Tab (`overview`, rofi) + Stand fuer waybar `custom/wins` (`bar`); `scripts/todo.py` = Missionen (Todo-Liste), Daten in `~/.local/share/missions/` |
+| `eww/` | `~/.config/eww/` | Desktop-Widgets. HL2: `hud-left`/`hud-right` + Lern-Panel `learn` (Super+Z), Hilfe `info` (Super+Shift+Z), Fensterliste `sidebar` je Monitor, Missionen `mission` (Super+m). `scripts/learn.py` = Lern-Timer, Daten in `~/.local/share/learn-timer/`; `scripts/sidebar.py` = Watcher fuer die Fensterliste + Super+q/b + Vorschau-Raster Super+Tab (`overview`, rofi) + Stand fuer waybar `custom/wins` (`bar`); `scripts/todo.py` = Missionen (Todo-Liste), Daten in `~/.local/share/missions/`; `scripts/agents.py` = Agenten-Panel `agents` (Super+c) + waybar `custom/agents` |
 | `swaync/` | `~/.config/swaync/` | Benachrichtigungen (Popups als Pickups unten rechts) + Panel hinter der Glocke |
 | `swaylock/` | `~/.config/swaylock/` | Fallback-Sperre |
 | `alacritty/` | `~/.config/alacritty/` | Terminal. `alacritty.toml` importiert die Farbdatei (`hl2.toml`, `nord.toml`), `lambda.txt` = Begruessung |
@@ -66,14 +66,15 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v17` | wie v16, Super+Print = OCR: Text aus einem Bereich in die Zwischenablage (tesseract deu+eng). |
 | `HL2-v18` | wie v17, Boersenuhr in waybar (NY-Zeit + ICT-Session), Trading-Journal nach Obsidian (Super+Ctrl+j), Mission-Schnelleingabe (Super+Ctrl+m), kein Sperren bei sichtbarem TradingView, Nachtlicht (wlsunset), Workspaces mit fremdem Kuerzel nach dem Login werden umbenannt. |
 | `HL2-v19` | wie v18, Schnellnotiz in Obsidian (Super+Ctrl+n): Name eintippen, Notiz aus Vorlage anlegen und oeffnen. |
-| `HL2-v20` | wie v19, ohne Nachtlicht (wlsunset raus). **Aktueller Standard** fuer neue Themes |
+| `HL2-v20` | wie v19, ohne Nachtlicht (wlsunset raus). |
+| `HL2-v21` | wie v20, Agenten-Panel (Super+c): laufende Claude-Code-/Codex-Sessions mit Status + Verlauf, waybar `custom/agents`, Meldung wenn ein Agent fertig ist. **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v20` (Vorschau,
+Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v21` (Vorschau,
 Zwischenablage, Konsole, Pickup-Popups, Workspace-Nummern und Fensterzahl in waybar,
 Missionen). Alles in dieser Liste gilt fuer
 **jedes** neue Theme, nicht nur fuer HL2: es aendert nur den **Look**
@@ -155,6 +156,23 @@ Wer davon abweicht, fragt vorher.
   durchgestrichen stehen), ✕ = loeschen, "Erfuellte entfernen" raeumt auf.
   Gespeichert in `~/.local/share/missions/data.json` (atomar, Tagesbackups,
   30 bleiben); `todo.py watch` meldet jede Aenderung per `deflisten`.
+- **Agenten** (`Super+c`, eww `agents`, `scripts/agents.py`): laufende
+  Claude-Code- und Codex-Sessions als Karten (Tool, Titel, ⚙ arbeitet / ✓ bereit,
+  letzter Prompt, letzte Aktion, Laufzeit, Kontext-Tokens, Workspace), darunter
+  die letzten 10 beendeten, beides nach Ordner gruppiert. Overlay mittig auf dem
+  fokussierten Monitor; eww kann keine Tasten, deshalb sway-Mode `[ AGENTS ]`:
+  `j/k` waehlen, Enter springt zum Fenster (Elternkette der PID bis zum
+  sway-Fenster) bzw. setzt eine beendete Session in Alacritty fort
+  (`claude --resume`, `codex resume`), Esc / Super+c zu. Alles Oeffnen und
+  Schliessen laeuft ueber `agents.py open|close|toggle`, sonst bleibt der Mode haengen.
+  Quellen: `~/.claude/sessions/<pid>.json` (`status` busy/idle) + Transkript,
+  `~/.codex/state_5.sqlite` (nur `thread_source='user'`: ohne Subagents und
+  Claude-Importe) + Ende der rollout-Datei. `agents.py watch` (exec_always,
+  PID-Datei, ruft nie eww) schreibt `$XDG_RUNTIME_DIR/agents.json`, weckt
+  waybar `custom/agents` (`λ 1⚙ 2✓`, Klasse `new` = fertig und noch nicht
+  angesehen) per `SIGRTMIN+11` und schickt ein Pickup, wenn ein Agent fertig
+  wird und sein Fenster nicht sichtbar ist (Klick springt hin). Kein Status
+  "wartet auf Freigabe": Claude meldet nur busy/idle.
 - **Assigns:** VS Code `23:i3`, IntelliJ `24:i4`, KeePassXC `37:o7`, To Do
   `38:o8`, Teams `39:o9`, YouTube `40:o10`.
 - **Fenster:** `workspace_layout tabbed`, Tab-Zeile per Schrift 1 + leerem
@@ -177,17 +195,17 @@ Wer davon abweicht, fragt vorher.
   Rechts daneben `custom/target` (`ws.sh bar`) = Ziel-Monitor fuer Super+Ctrl+N.
   `sway/scratchpad` (≡ N) zaehlt die Fenster im Scratchpad, also die Konsole.
 
-Ein neues Theme uebernimmt `ws.sh`, `sidebar.py`, `clip.sh`, `market.py`, `journal.sh`, `note.py`, `ask.sh`, die
-`format-icons` der waybar (Nummer vor dem Icon) und die Module `custom/wins`, `custom/target` und `custom/market`, die
-Workspace-/Bind-Bloecke und die Konsolen-Regel (`console.py`, `for_window` auf
+Ein neues Theme uebernimmt `ws.sh`, `sidebar.py`, `agents.py`, `clip.sh`, `market.py`, `journal.sh`, `note.py`, `ask.sh`, die
+`format-icons` der waybar (Nummer vor dem Icon) und die Module `custom/wins`, `custom/target`, `custom/market` und `custom/agents`, die
+Workspace-/Bind-Bloecke, den Mode `[ AGENTS ]` und die Konsolen-Regel (`console.py`, `for_window` auf
 cool-retro-term) der sway-Config, die
-eww-Fenster `sidebar`/`info`/`mission` (mit `todo.py`) und Lage/Timeout der swaync-Popups
+eww-Fenster `sidebar`/`info`/`mission`/`agents` (mit `todo.py`) und Lage/Timeout der swaync-Popups
 (`swaync/config.json`) und passt nur Farben und Schrift an: `eww.scss`,
 waybar `style.css`, den Popup-Block in `swaync/style.css` und die
 `-theme-str`-Teile in `clip.sh`, `ask.sh` und `overview()` in `sidebar.py` (die rofi-Theme-Datei liefert den Rest); in
-`eww.scss` auch den Block `.ms-*` (Missionen). In `style.css` muss `button.visible` dieselbe
+`eww.scss` auch die Bloecke `.ms-*` (Missionen) und `.ag-*` (Agenten). In `style.css` muss `button.visible` dieselbe
 Hervorhebung bekommen wie `button.focused`; `#custom-wins` mit den Klassen
-`open`/`idle`/`off`, `#custom-target` und `#custom-market` (Klassen `active`/`idle`/`closed`) umfaerben; `cool-retro-term/profile.json` mit den Farben
+`open`/`idle`/`off`, `#custom-target` und `#custom-market` (Klassen `active`/`idle`/`closed`) und `#custom-agents` (Klassen `busy`/`idle`/`new`/`none`) umfaerben; `cool-retro-term/profile.json` mit den Farben
 des Themes neu einstellen (`fontColor`, `backgroundColor`, Effekte).
 
 **Allgemeine Aenderungen** (Bedienung, Bausteine, Verhalten, nicht nur Farben)
