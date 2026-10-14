@@ -38,6 +38,20 @@ Nicht im Repo, gehoert aber zum Setup: `~/.config/environment.d/50-wayland.conf`
 `~/.config/alacritty/themes/` (fremde Themes, per `.gitignore` draussen),
 `~/.config/i3/` (alte i3-Session als Rollback: am GDM "i3" waehlen).
 
+## Terminal-Navigation (zsh)
+
+Nicht im Repo, steht in `~/.zshrc` (oh-my-zsh): Pakete `zoxide` + `fzf`,
+`plugins=(… fzf)` und **nach** `source $ZSH/oh-my-zsh.sh`
+`eval "$(zoxide init zsh --cmd cd)"`. Kein oh-my-zsh-Plugin `zoxide` dazu,
+das wuerde zoxide doppelt laden (als `z`).
+
+- `cd <stichwort>` springt in den meistbesuchten passenden Ordner
+  (`cd wm` -> `~/Private/wm-backup`), Ordner muss einmal normal besucht sein.
+  `cdi` = Auswahl per fzf, `cd -` = zurueck, echte Pfade gehen wie immer.
+- `Ctrl+R` = Verlauf durchsuchen, `Ctrl+T` = Datei in die Zeile einfuegen,
+  `Alt+C` = Unterordner suchen und hinein.
+- oh-my-zsh: `..` / `...` = hoch, `d` = letzte Ordner, `1`-`9` = dorthin.
+
 ## Themes (Tags)
 
 Format: `<Theme>-v<N>`. Tags werden **nie verschoben**; eine Nachbesserung ist
