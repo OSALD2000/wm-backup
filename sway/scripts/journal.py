@@ -27,6 +27,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 from datetime import datetime
 
 from market import NY, SESSIONS
@@ -258,6 +259,19 @@ def build(mode, typ, date, hhmm, sym, direction, model, tf, res, r, p, st):
     return path, fm, f"\n# {d:%d.%m.%Y} {hhmm} NY – {sym} {direction} {model}\n"
 
 
+def mkdirs_slow(d):
+    """Ordner Ebene fuer Ebene anlegen, mit Pause nach jeder neuen Ebene.
+    Obsidians Datei-Ueberwachung (fs.watch, Linux) haengt sich sonst bei
+    JJJJ/MM/TT + Dateien im selben Moment nicht an die tiefen Ordner: spaetere
+    Bilder dort sieht Obsidian nie ("could not be found") bis zum Neuladen."""
+    # ponytail: Pause statt Pruefen, ob Obsidian schon beobachtet; kostet <=1 s am ersten Eintrag eines Tages
+    if os.path.isdir(d):
+        return
+    mkdirs_slow(os.path.dirname(d))
+    os.mkdir(d)
+    time.sleep(0.3)
+
+
 def save(args):
     p, st = load(PENDING), load(STATE)
     if not p or not os.path.exists(p["tmp"]):
@@ -274,7 +288,7 @@ def save(args):
     except Abort:
         note = ""
     now = datetime.fromisoformat(p["now"])
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    mkdirs_slow(os.path.dirname(path))
     img, n = p["img"], 2
     while os.path.exists(os.path.join(os.path.dirname(path), img)):  # zwei Bilder in einer Sekunde
         img, n = p["img"][:-4] + f"_{n}.png", n + 1
