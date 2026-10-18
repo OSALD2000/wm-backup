@@ -241,9 +241,11 @@
         (label :class "ms-subtitle" :xalign 0 :text "Screenshot ist gemacht. Setup beschreiben."))
       (button :class "ms-action" :tooltip "Verwerfen · Super+Ctrl+j"
         :onclick "~/.config/sway/scripts/journal.py cancel" "✕"))
-    (box :class "ms-tabs" :space-evenly true :spacing 4 :visible {jr_opts.last != ""}
-      (button :class "ms-tab ${jr_mode == 'add' ? 'selected' : ''}" :onclick "eww update jr_mode=add jr_err="
-        (label :limit-width 44 :text "+ ${jr_opts.last}"))
+    ; immer sichtbar, ohne letztes Setup ausgegraut
+    (box :class "ms-tabs" :space-evenly true :spacing 4
+      (button :class "ms-tab ${jr_mode == 'add' ? 'selected' : ''}" :active {jr_opts.last != ""}
+        :tooltip "Weiterer Screenshot zum letzten Setup" :onclick "eww update jr_mode=add jr_err="
+        (label :limit-width 44 :text {jr_opts.last != "" ? "+ zum letzten: ${jr_opts.last}" : "+ zum letzten (noch kein Setup)"}))
       (button :class "ms-tab ${jr_mode == 'new' ? 'selected' : ''}" :onclick "eww update jr_mode=new jr_err=" "Neues Setup"))
     (jr-row :label "ART" :visible {jr_mode == 'new'}
       (jr-chips :items {jr_opts.types} :sel jr_type :var "jr_type"))
