@@ -167,9 +167,10 @@
         (label :class "ms-subtitle" :wrap true :text {mission_tab == 0 ? "Markiere unter Offen bis zu drei Aufgaben mit ☆ Fokus." : "Alle Missionen bleiben gespeichert."}))
       (for m in group (mission-row :m m)))))
 
+; Halbe Waybar-Hoehe (30px) ausgleichen: Mitte des gesamten Bildschirms.
 (defwindow mission
   :monitor "eDP-1"
-  :geometry (geometry :x "24px" :y "48px" :width "560px" :height "640px" :anchor "top right")
+  :geometry (geometry :x "24px" :y "-15px" :width "560px" :height "80%" :anchor "center right")
   :stacking "overlay" :exclusive false :focusable "ondemand"
   (box :class "panel mission" :orientation "v" :space-evenly false :spacing 16
     (box :class "ms-head" :space-evenly false :spacing 14
