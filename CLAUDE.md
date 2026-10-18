@@ -7,6 +7,16 @@ Git-Tag. `~/.config` ist nur das Ziel, in das ein Tag deployt wird.
 Remote: `github.com/OSALD2000/wm-backup` (Branch `master`).
 Sprache in Commits und Kommentaren: Deutsch, Umlaute als ae/oe/ue.
 
+## Codex und Claude Code
+
+Codex liest `AGENTS.md` und die Skills unter `.agents/skills/`;
+Claude Code liest `CLAUDE.md` und `.claude/skills/`.
+Beide Anleitungsdateien bleiben identisch. Die Skill-Kopien unterscheiden
+sich nur durch den jeweiligen Anleitungsnamen und Werkzeugpfad.
+Codex verwendet `S=.agents/skills/theme-switch/scripts/theme.sh`;
+die unten gezeigte Claude-Variante bietet dieselben Befehle.
+Aenderungen an `theme.sh` immer in beiden Kopien nachziehen.
+
 ## Komponenten und wohin sie deployt werden
 
 | Repo-Pfad | Live-Pfad | Was |

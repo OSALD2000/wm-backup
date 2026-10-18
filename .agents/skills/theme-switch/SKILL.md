@@ -10,7 +10,7 @@ exportieren und nach `~/.config` kopieren (nicht auschecken – HEAD und `master
 bleiben, wo sie sind). Das erledigt das Skript:
 
 ```sh
-S=.claude/skills/theme-switch/scripts/theme.sh
+S=.agents/skills/theme-switch/scripts/theme.sh
 ```
 
 ## Ablauf

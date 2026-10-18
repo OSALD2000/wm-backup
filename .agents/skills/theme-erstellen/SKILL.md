@@ -9,7 +9,7 @@ Lies zuerst `AGENTS.md` im Repo-Root: dort steht, welche Datei wofuer da ist
 und wohin sie deployt wird. Das Werkzeug:
 
 ```sh
-S=.claude/skills/theme-switch/scripts/theme.sh
+S=.agents/skills/theme-switch/scripts/theme.sh
 ```
 
 ## Regeln, die das ganze Modell tragen
@@ -32,7 +32,7 @@ S=.claude/skills/theme-switch/scripts/theme.sh
   oder erst verworfen werden sollen.
 - `git status` im Repo sauber, `master` aktuell (`git pull`).
 - Basis festlegen: der neueste Standard-Tag (in der Theme-Tabelle als
-  "Aktueller Standard" markiert, derzeit `HL2-v21`), sonst fehlen dem neuen
+  "Aktueller Standard" markiert), sonst fehlen dem neuen
   Theme Bausteine der Standard-Bedienung. Will der User bewusst auf einem
   aelteren Tag aufbauen (z. B. FirstSetup), erst mit `theme-switch` dorthin
   wechseln und die Bausteine danach nachruesten. Der neue Commit landet trotzdem linear auf
