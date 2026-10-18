@@ -38,7 +38,6 @@
   ],
   "modules-center": ["clock", "custom/market"],
   "modules-right": [
-    "custom/ipv6",
     "network#v4",
     "disk",
     "memory",

@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 """Missionen (Todo-Liste) fuer das eww-Fenster "mission" (Super+m).
 
-Aufruf: todo.py watch | add (Text auf stdin) | done ID | del ID | clear | selftest
+Aufruf: todo.py watch | add (stdin) | new | edit ID | done ID | focus ID | archive ID | note ID | selftest
 Daten:  ~/.local/share/missions/data.json
-Der Text kommt per stdin, nicht als Argument: eww setzt {} ungeschuetzt in die
-Shell-Zeile, ein ' im Text wuerde sie sonst zerbrechen (Heredoc in eww.yuck).
+Freitext kommt aus rofi oder stdin, nie aus einer eww-Shell-Interpolation.
+Archivieren erhaelt alle Eintraege. Obsidian-Notizen werden nur neu angelegt.
 """
 import fcntl
 import json
@@ -12,6 +12,9 @@ import os
 import shutil
 import sys
 import time
+import subprocess
+import urllib.parse
+from pathlib import Path
 from datetime import date
 
 DIR = os.path.expanduser("~/.local/share/missions")
@@ -22,12 +25,27 @@ BACKUPS = os.path.join(DIR, "backups")  # eine Kopie pro Tag, die letzten 30 ble
 def load():
     try:
         with open(DATA) as f:
-            return json.load(f)
+            return validate(json.load(f))
     except FileNotFoundError:
         return {"items": []}
 
 
+def validate(d):
+    if not isinstance(d, dict) or not isinstance(d.get("items"), list):
+        raise ValueError("Ungueltige Missionen-Datei; Original bleibt erhalten.")
+    ids = set()
+    for i in d["items"]:
+        if (not isinstance(i, dict) or type(i.get("id")) is not int or i["id"] < 1
+                or i["id"] in ids or not isinstance(i.get("text"), str)
+                or type(i.get("done")) is not bool
+                or any(k in i and type(i[k]) is not bool for k in ("focus", "archived"))):
+            raise ValueError("Ungueltiger Missionseintrag; Original bleibt erhalten.")
+        ids.add(i["id"])
+    return d
+
+
 def save(d):
+    validate(d)
     os.makedirs(BACKUPS, exist_ok=True)
     target = os.path.join(BACKUPS, f"{date.today()}.json")
     if os.path.exists(DATA) and not os.path.exists(target):
@@ -40,26 +58,116 @@ def save(d):
 
 
 def view(d):
-    """-> eww-JSON: offene Ziele zuerst (nummeriert), erfuellte hinten."""
-    items = sorted(d["items"], key=lambda i: i["done"])
-    return {"open": sum(not i["done"] for i in items),
-            "done": sum(i["done"] for i in items),
-            "items": [{"id": i["id"], "nr": f"{k + 1:02d}", "text": i["text"], "done": i["done"]}
-                      for k, i in enumerate(items)]}
+    items = [{**i, "focus": i.get("focus", False), "archived": i.get("archived", False)}
+             for i in d["items"]]
+    active = [i for i in items if not i["archived"]]
+    pending = [i for i in active if not i["done"]]
+    done = [i for i in active if i["done"]]
+    focus = [i for i in pending if i["focus"]]
+    archive = [i for i in items if i["archived"]]
+    return {"open": len(pending), "done": len(done), "focus": len(focus),
+            "archived": len(archive), "progress": round(100 * len(done) / max(1, len(active))),
+            "groups": [focus, pending, done, archive], "error": ""}
 
 
 def command(d, cmd, arg):
     if cmd == "add":
         if arg:
-            d["items"].append({"id": max([i["id"] for i in d["items"]] + [0]) + 1, "text": arg, "done": False})
-    elif cmd == "done":
+            d["items"].append({"id": max([i["id"] for i in d["items"]] + [0]) + 1,
+                               "text": arg, "done": False})
+        return
+    if cmd == "clear":
         for i in d["items"]:
-            if i["id"] == int(arg):
-                i["done"] = not i["done"]
-    elif cmd == "del":
-        d["items"] = [i for i in d["items"] if i["id"] != int(arg)]
-    elif cmd == "clear":
-        d["items"] = [i for i in d["items"] if not i["done"]]
+            if i["done"]:
+                i["archived"] = True
+        return
+    i = next((i for i in d["items"] if i["id"] == int(arg)), None)
+    if i is None:
+        raise ValueError("Diese Mission wurde nicht gefunden.")
+    if cmd == "done":
+        i["done"] = not i["done"]
+        i["focus"] = False
+    elif cmd == "focus":
+        if i["done"] or i.get("archived"):
+            raise ValueError("Nur offene Missionen koennen im Fokus stehen.")
+        if not i.get("focus") and view(d)["focus"] >= 3:
+            raise ValueError("Drei Missionen reichen fuer jetzt. Erst einen Fokus freigeben.")
+        i["focus"] = not i.get("focus", False)
+    elif cmd in ("archive", "del"):
+        i["archived"] = True if cmd == "del" else not i.get("archived", False)
+        i["focus"] = False
+    else:
+        raise ValueError("Unbekannter Befehl: " + cmd)
+
+
+def prompt(initial=""):
+    result = subprocess.run(["rofi", "-dmenu", "-l", "0", "-p", "Mission",
+                             "-config", os.path.expanduser("~/.config/rofi/config-nord.rasi"),
+                             "-filter", initial], input="", capture_output=True, text=True)
+    return result.stdout.strip() if result.returncode == 0 else ""
+
+
+def note(item, vault):
+    if not vault.is_dir():
+        raise ValueError("Obsidian-Vault nicht gefunden.")
+    folder = vault / "Missionen"
+    folder.mkdir(exist_ok=True)
+    path = folder / f"Mission-{item['id']}.md"
+    # Stabile ID: Umbenennen der Aufgabe trennt ihre Notiz nicht ab.
+    try:
+        with path.open("x") as f:
+            f.write(f"---\nmission_id: {item['id']}\ntags: [mission]\n---\n\n"
+                    f"# {item['text']}\n\n## Ziel\n\n\n## Naechste Schritte\n\n- [ ] \n\n"
+                    "## Notizen & Links\n\n\n"
+                    "> Aufgabenstatus und Titel verwaltest du im Missionen-Panel. "
+                    "Diese Notiz bleibt frei bearbeitbar.\n")
+    except FileExistsError:
+        pass
+    return path
+
+
+def main():
+    cmd = sys.argv[1] if len(sys.argv) > 1 else "watch"
+    if cmd == "selftest":
+        selftest()
+        return
+    os.makedirs(DIR, exist_ok=True)
+    if cmd == "watch":
+        watch()
+        return
+    arg = sys.argv[2] if len(sys.argv) > 2 else None
+    if cmd == "note":
+        with locked():
+            item = next(i for i in load()["items"] if i["id"] == int(arg))
+            path = note(item, Path.home() / "Documents/Obsidian Vault")
+        subprocess.Popen(["sh", "-c", 'xdg-open "$1"; sleep 1; swaymsg "[app_id=obsidian] focus"',
+                          "-", "obsidian://open?path=" + urllib.parse.quote(str(path))],
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return
+    if cmd == "edit":
+        with locked():
+            before = next(i["text"] for i in load()["items"] if i["id"] == int(arg))
+        text = prompt(before)
+        if not text:
+            return
+        with locked():
+            d = load()
+            item = next(i for i in d["items"] if i["id"] == int(arg))
+            if item["text"] != before:
+                raise ValueError("Mission wurde inzwischen bearbeitet. Bitte erneut oeffnen.")
+            item["text"] = text
+            save(d)
+        return
+    if cmd == "new":
+        cmd, arg = "add", prompt()
+    elif cmd == "add":
+        arg = sys.stdin.read().strip()
+    if cmd == "add" and not arg:
+        return
+    with locked():
+        d = load()
+        command(d, cmd, arg)
+        save(d)
 
 
 def watch():
@@ -71,7 +179,12 @@ def watch():
         except FileNotFoundError:
             m = 0
         if m != last:
-            print(json.dumps(view(load()), ensure_ascii=False), flush=True)
+            try:
+                state = view(load())
+            except (ValueError, OSError) as e:
+                state = view({"items": []})
+                state["error"] = str(e)
+            print(json.dumps(state, ensure_ascii=False), flush=True)
             last = m
         time.sleep(0.5)
 
@@ -86,36 +199,52 @@ class locked:
 
 
 def selftest():
-    d = {"items": []}
-    for t in ("Bericht 'Q3'; rm -rf ~", "Steuer", ""):
-        command(d, "add", t)
-    assert [i["text"] for i in d["items"]] == ["Bericht 'Q3'; rm -rf ~", "Steuer"]  # leer = nichts
-    command(d, "done", "1")
-    v = view(d)
-    assert (v["open"], v["done"]) == (1, 1) and [i["id"] for i in v["items"]] == [2, 1], v
-    assert v["items"][0]["nr"] == "01"
-    command(d, "done", "1")
-    assert not d["items"][0]["done"]  # zweiter Klick = wieder offen
-    command(d, "done", "2")
+    import copy
+    import tempfile
+    d = {"items": [{"id": 7, "text": "Bestehend", "done": True}], "extra": "behalten"}
+    original = copy.deepcopy(d)
+    view(d)
+    assert d == original
+    command(d, "add", "Bericht 'Q3'; $(false) λEOF")
+    command(d, "focus", "8")
+    assert view(d)["focus"] == 1
+    command(d, "done", "8")
+    assert view(d)["focus"] == 0 and view(d)["done"] == 2
     command(d, "clear", None)
-    assert [i["id"] for i in d["items"]] == [1]
-    command(d, "add", "neu")
-    assert d["items"][-1]["id"] == 2
-    command(d, "del", "1")
-    assert [i["text"] for i in d["items"]] == ["neu"]
-    print("selftest ok")
+    assert len(d["items"]) == 2 and view(d)["archived"] == 2
+    command(d, "archive", "8")
+    assert d["items"][1]["done"] and not d["items"][1]["archived"]
+    command(d, "del", "8")
+    assert len(d["items"]) == 2
+    for n in range(4):
+        command(d, "add", f"Aufgabe {n}")
+    for n in (9, 10, 11):
+        command(d, "focus", str(n))
+    try:
+        command(d, "focus", "12")
+        raise AssertionError("Fokuslimit fehlt")
+    except ValueError:
+        pass
+    assert d["items"][0]["text"] == original["items"][0]["text"] and d["extra"] == "behalten"
+    for invalid in ({}, {"items": [d["items"][0]] * 2}, {"items": [{"id": "x"}]}):
+        try:
+            validate(invalid)
+            raise AssertionError("Validierung fehlt")
+        except ValueError:
+            pass
+    with tempfile.TemporaryDirectory() as tmp:
+        path = note(d["items"][1], Path(tmp))
+        assert path.parent == Path(tmp) / "Missionen"
+        path.write_text("Meine eigenen Notizen")
+        assert note(d["items"][1], Path(tmp)).read_text() == "Meine eigenen Notizen"
+    print("selftest ok: Bestand, Archiv, Fokuslimit, Validierung, Notizschutz")
 
 
 if __name__ == "__main__":
-    os.makedirs(DIR, exist_ok=True)
-    cmd = sys.argv[1] if len(sys.argv) > 1 else "watch"
-    if cmd == "watch":
-        watch()
-    elif cmd == "selftest":
-        selftest()
-    else:
-        arg = sys.stdin.read().strip() if cmd == "add" else (sys.argv[2] if len(sys.argv) > 2 else None)
-        with locked():
-            d = load()
-            command(d, cmd, arg)
-            save(d)
+    try:
+        main()
+    except (OSError, ValueError, StopIteration) as e:
+        message = str(e) or "Mission nicht gefunden."
+        print(message, file=sys.stderr)
+        subprocess.run(["notify-send", "Missionen", message], check=False)
+        sys.exit(1)

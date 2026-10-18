@@ -92,7 +92,7 @@ tooltip label { padding: 5px 7px; }
   color: @ink;
   background: @fill;
   border-color: rgba(255, 220, 0, 0.50);
-  padding: 0 18px;
+  padding: 0 7px;
   text-shadow: 0 0 5px rgba(255, 220, 0, 0.6);
 }
 #workspaces button.urgent {
@@ -230,3 +230,8 @@ window#waybar.empty #window { padding: 0; }
   color: @on_alert;
 }
 
+
+/* Kurze Rueckmeldung, ohne dass Workspaces ihre Breite aendern. */
+#workspaces button, #custom-launcher, #custom-target, #custom-agents {
+  transition: background-color 140ms ease-out, color 140ms ease-out, border-color 140ms ease-out;
+}

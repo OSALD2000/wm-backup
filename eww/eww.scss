@@ -101,19 +101,39 @@ tooltip { background: rgba(0, 0, 0, 0.85); color: $bright; border: 1px solid $fg
 .key-d   { color: $label; }
 .info .section { margin-top: 8px; }
 
-// ── Missionen (mission, Super+m) — Missionsziel-Tafel im HUD-Gelb ─
-.mission { font-family: "Iosevka Nerd Font", monospace; background: rgba(20, 19, 16, 0.94); }
-.ms-head { border-bottom: 1px solid $fg; padding-bottom: 8px; }
-.ms-lambda { color: $bright; font-size: 34px; font-weight: bold; text-shadow: $glow; margin-right: 12px; }
-.ms-title { color: $bright; font-size: 16px; font-weight: bold; letter-spacing: 3px; text-shadow: $glow; }
-.ms-item { border-left: 3px solid $bright; background: $box_hi; border-radius: 0 6px 6px 0; }
-.ms-item:hover { background: rgba(255, 220, 0, 0.08); }
-.ms-item.done { border-left-color: $fg; }
-.ms-btn { padding: 7px 10px; }
-.ms-check { color: $bright; font-size: 16px; }
-.ms-nr { color: $label; font-size: 10px; font-weight: bold; letter-spacing: 2px; }
-.ms-text { color: $bright; font-size: 13px; font-weight: bold; }
-.ms-item.done .ms-text, .ms-item.done .ms-check { color: $fg; text-decoration-line: line-through; }
+// Mission Control: Fokus in Gelb, Aufgaben als gut lesbarer Fliesstext.
+.mission { background: #141310; padding: 22px; border-radius: 12px; border: 1px solid $fg; }
+.ms-head { padding-bottom: 14px; border-bottom: 1px solid $edge; }
+.ms-lambda { color: $bright; font-size: 40px; font-weight: bold; }
+.ms-title { color: $bright; font-size: 23px; font-weight: bold; }
+.ms-subtitle { color: #b4ac91; font-size: 11px; }
+.ms-summary { color: #eee8d8; font-size: 13px; font-weight: bold; }
+.ms-progress trough { min-height: 3px; background: #343024; border-radius: 3px; }
+.ms-progress progress { min-height: 3px; background: $bright; border-radius: 3px; }
+.ms-tabs { background: #1d1b15; border-radius: 7px; padding: 4px; }
+.ms-tab { padding: 9px 8px; color: #b4ac91; border-radius: 5px; font-size: 12px; }
+.ms-tab.selected { background: #393321; color: $bright; }
+.ms-item { background: #211f18; border: 1px solid #343024; border-left: 3px solid #49422e;
+           border-radius: 7px; padding: 12px; }
+.ms-item.focused { border-left-color: $bright; background: #2b2718; }
+.ms-item.done .ms-text { color: #aaa38e; text-decoration-line: line-through; }
+.ms-text { color: #eee8d8; font-size: 14px; }
+.ms-check { color: $bright; font-size: 23px; min-width: 26px; padding: 0 3px; border-radius: 4px; }
+.ms-actions { margin-left: 35px; }
+.ms-action { color: #b4ac91; font-size: 11px; padding: 5px 6px; border-radius: 4px; }
+.ms-action.selected { color: $bright; }
+.ms-action:hover, .ms-tab:hover, .ms-check:hover { background: #3b3524; color: $bright; }
+.ms-add { background: $bright; color: #141310; padding: 12px; border-radius: 6px; font-size: 13px; font-weight: bold; }
+.ms-add:hover { background: #ffe85b; }
+.ms-foot { border-top: 1px solid $edge; padding-top: 12px; }
+.ms-empty { padding: 36px 12px; }
+.ms-empty-symbol { font-size: 36px; color: $bright; }
+.ms-error { color: #ff9076; }
+.ms-action, .ms-tab, .ms-check, .ms-add, .win, .btn {
+  transition: background-color 140ms ease-out, color 140ms ease-out;
+}
+.mission button:focus { box-shadow: inset 0 0 0 1px $bright; }
+.mission scrollbar slider { background: #49422e; min-width: 4px; border-radius: 3px; }
 
 // ── Agenten (agents, Super+c) — Squad-Status im HUD-Gelb ─────────
 .agents { font-family: "Iosevka Nerd Font", monospace; background: rgba(20, 19, 16, 0.96); }
