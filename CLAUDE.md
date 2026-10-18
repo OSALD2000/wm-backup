@@ -82,14 +82,15 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v19` | wie v18, Schnellnotiz in Obsidian (Super+Ctrl+n): Name eintippen, Notiz aus Vorlage anlegen und oeffnen. |
 | `HL2-v20` | wie v19, ohne Nachtlicht (wlsunset raus). |
 | `HL2-v21` | wie v20, Agenten-Panel (Super+c): laufende Claude-Code-/Codex-Sessions mit Status + Verlauf, Agenten-Tafel mit den Chats live nebeneinander (Super+g), waybar `custom/agents`, Meldung wenn ein Agent fertig ist. |
-| `HL2-v22` | wie v21, Session parken: Super+Ctrl+p schiebt alle Fenster unter einem Namen auf o6, Super+Ctrl+Shift+p holt eine Session zurueck an die alten Plaetze. **Aktueller Standard** fuer neue Themes |
+| `HL2-v22` | wie v21, Session parken: Super+Ctrl+p schiebt alle Fenster unter einem Namen auf o6, Super+Ctrl+Shift+p holt eine Session zurueck an die alten Plaetze. |
+| `HL2-v23` | wie v22, Mausrad kippen rechts/links = naechstes/voriges Fenster der Liste (wie Super+q / Super+Ctrl+q), mit Super = Workspace des Monitors weiter/zurueck. **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v22` (Vorschau,
+Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v23` (Vorschau,
 Zwischenablage, Konsole, Pickup-Popups, Workspace-Nummern und Fensterzahl in waybar,
 Missionen). Alles in dieser Liste gilt fuer
 **jedes** neue Theme, nicht nur fuer HL2: es aendert nur den **Look**
@@ -121,7 +122,9 @@ Wer davon abweicht, fragt vorher.
   `o`. Gespeichert in `$XDG_RUNTIME_DIR/ws-target` (`ws.sh cycle`/`bar`),
   `ws.sh cycle` weckt waybar per `SIGRTMIN+10`.
   `Super+q` / `Super+Ctrl+q` = naechstes / voriges Fenster der Liste links,
-  bleibt auf dem Monitor. `Super+b` = Liste an/aus. `Super+Shift+z` = Hilfe.
+  bleibt auf dem Monitor. Dasselbe per Mausrad kippen (ohne Taste, `button7` =
+  rechts = naechstes, `button6` = links = voriges, `--whole-window`). Mit Super
+  gekippt = belegter Workspace des Monitors weiter / zurueck (`next_on_output`). `Super+b` = Liste an/aus. `Super+Shift+z` = Hilfe.
   `Super+Tab` = alle Fenster aller Monitore als Vorschau-Raster (rofi; Bild =
   letzter sichtbarer Stand, sway kann verdeckte Fenster nicht abfotografieren).
   `Super+m` = Missionen (Todo-Liste). `Super+Print` = OCR: Bereich aufziehen,

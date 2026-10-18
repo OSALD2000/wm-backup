@@ -192,6 +192,14 @@ bindsym $mod+Right  focus right
 # Monitors). Nicht `focus next`: das springt am Ende auf den Nachbarmonitor.
 bindsym $mod+q      exec ~/.config/eww/scripts/sidebar.py next
 bindsym $mod+Ctrl+q exec ~/.config/eww/scripts/sidebar.py prev
+# Mausrad kippen (REL_HWHEEL) = dasselbe ohne Taste: rechts naechstes, links
+# voriges. --whole-window: auch ueber Fenstern, horizontales Scrollen per
+# Kippen geht dafuer in Apps nicht mehr.
+bindsym --whole-window button7 exec ~/.config/eww/scripts/sidebar.py next
+bindsym --whole-window button6 exec ~/.config/eww/scripts/sidebar.py prev
+# Mit Super gekippt = Workspace dieses Monitors weiter/zurueck (nur belegte).
+bindsym --whole-window $mod+button7 workspace next_on_output
+bindsym --whole-window $mod+button6 workspace prev_on_output
 # Fensterliste links an/aus. Nicht Super+Shift_R: das faellt bei jedem
 # Super+Shift+N mit.
 bindsym $mod+b      exec ~/.config/eww/scripts/sidebar.py toggle

@@ -44,7 +44,7 @@ S=.claude/skills/theme-switch/scripts/theme.sh
 
 ### 3. Design festlegen
 Die **Bedienung ist fest** (Abschnitt "Standard-Bedienung" in `CLAUDE.md`:
-Workspaces u/i/o mit 1-10, Ziel-Monitor Super+Esc + Super+Ctrl[+Shift]+N, Super+q/b/Shift+z, Fensterliste links, Hilfe-Panel,
+Workspaces u/i/o mit 1-10, Ziel-Monitor Super+Esc + Super+Ctrl[+Shift]+N, Super+q/b/Shift+z, Mausrad kippen = Super+q (mit Super = Workspace weiter), Fensterliste links, Hilfe-Panel,
 unsichtbare Tab-Zeile, Vorschau Super+Tab (rofi, Entf schliesst), Missionen Super+m, Konsole Super+Shift+Tab (cool-retro-term),
 Zwischenablage Super+Shift+V, Pickup-Popups unten rechts,
 waybar mit Nummer vor dem Icon und hervorgehobenem Workspace auf jedem Monitor, daneben Fensterzahl + Symbol
