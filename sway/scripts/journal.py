@@ -275,11 +275,16 @@ def save(args):
         note = ""
     now = datetime.fromisoformat(p["now"])
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    # move statt replace: $XDG_RUNTIME_DIR ist tmpfs, os.replace scheitert dann (EXDEV)
     img, n = p["img"], 2
     while os.path.exists(os.path.join(os.path.dirname(path), img)):  # zwei Bilder in einer Sekunde
         img, n = p["img"][:-4] + f"_{n}.png", n + 1
-    shutil.move(p["tmp"], os.path.join(os.path.dirname(path), img))
+    # $XDG_RUNTIME_DIR ist tmpfs, os.replace geht nicht direkt (EXDEV). Erst unter
+    # verstecktem Namen kopieren, dann umbenennen: sonst sieht eine offene Notiz in
+    # Obsidian die halb geschriebene PNG und zeigt das Bild als "nicht gefunden".
+    hidden = os.path.join(os.path.dirname(path), f".{img}.tmp")
+    shutil.copyfile(p["tmp"], hidden)
+    os.replace(hidden, os.path.join(os.path.dirname(path), img))
+    os.remove(p["tmp"])
     os.remove(PENDING)
     with open(path + ".tmp", "w") as f:
         f.write(join(fm, body.rstrip("\n") + "\n" + section(tf, now, note, img)))
