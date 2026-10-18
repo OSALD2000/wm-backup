@@ -206,12 +206,13 @@
 ; fokussierten Monitor. Knoepfe schicken nur Werte aus jr_opts (Indizes /
 ; feste Tokens), Speichern erst, wenn Datum/Zeit/R per Regex passen: nichts
 ; Freies landet in der Shell-Zeile. Die Notiz fragt journal.py danach per rofi.
-(defvar jr_opts `{"last":"","last_open":false,"symbols":[],"models":[],"tfs":[],"results":[],"types":[]}`)
+(defvar jr_opts `{"last":"","last_open":false,"symbols":[],"models":[],"tfs":[],"results":[],"types":[],"dirs":[]}`)
 (defvar jr_mode "new")
 (defvar jr_type "live")
 (defvar jr_date "")
 (defvar jr_time "")
 (defvar jr_sym 0)
+(defvar jr_dir "")
 (defvar jr_model 0)
 (defvar jr_tf "5m")
 (defvar jr_res "offen")
@@ -257,6 +258,9 @@
         :width 80 :value jr_time :onchange "eww update jr_time='{}'"))
     (jr-row :label "SYMBOL" :visible {jr_mode == 'new'}
       (jr-chips :items {jr_opts.symbols} :sel jr_sym :var "jr_sym"))
+    (jr-row :label "RICHTUNG" :visible {jr_mode == 'new'}
+      (jr-chips :items {jr_opts.dirs} :sel jr_dir :var "jr_dir")
+      (label :class "ms-error jr-gap" :visible {jr_dir == ""} :text "Pflicht"))
     (jr-row :label "MODEL" :visible {jr_mode == 'new'}
       (jr-chips :items {jr_opts.models} :sel jr_model :var "jr_model"))
     (jr-row :label "TIMEFRAME"
@@ -268,8 +272,8 @@
         :visible {jr_res != 'offen'} :width 60 :value jr_r :onchange "eww update jr_r='{}'"))
     (label :class "ms-error" :visible {jr_err != ""} :xalign 0 :text jr_err)
     (button :class "ms-add" :timeout "10m"
-      :active {(jr_r == '' || jr_r =~ '^-?[0-9]+([.,][0-9]+)?$') && (jr_mode == 'add' || (jr_date =~ '^[0-9][0-9][.][0-9][0-9][.][0-9][0-9][0-9][0-9]$' && jr_time =~ '^[0-9]?[0-9]:?[0-9][0-9]$'))}
-      :onclick "~/.config/sway/scripts/journal.py save ${jr_mode} ${jr_type} ${jr_date} ${jr_time} ${jr_sym} ${jr_model} ${jr_tf} ${jr_res} '${jr_r}'"
+      :active {(jr_r == '' || jr_r =~ '^-?[0-9]+([.,][0-9]+)?$') && (jr_mode == 'add' || (jr_dir != '' && jr_date =~ '^[0-9][0-9][.][0-9][0-9][.][0-9][0-9][0-9][0-9]$' && jr_time =~ '^[0-9]?[0-9]:?[0-9][0-9]$'))}
+      :onclick "~/.config/sway/scripts/journal.py save ${jr_mode} ${jr_type} ${jr_date} ${jr_time} ${jr_sym} ${jr_dir == '' ? '-' : jr_dir} ${jr_model} ${jr_tf} ${jr_res} '${jr_r}'"
       "Speichern  ·  danach Notiz")
     (label :class "ms-subtitle" :xalign 0 :text "Super+Ctrl+j  Verwerfen    ·    Datei je Setup unter Trading/journaling/")))
 
