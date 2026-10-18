@@ -4,21 +4,21 @@ das eww-Panel "journal" auf diesem Monitor (ein Formular statt Abfragen).
 
 Panel: "+ <letztes Setup>" (nur Timeframe/Ergebnis/R) oder "Neu" mit
 live/backtest, Datum TT.MM.JJJJ, Entry-Zeit NY HH:MM (Session wird berechnet),
-Symbol, Model (Ordner in Trading/TradingModels/), Timeframe, Ergebnis, R
-(optional). Vorbelegt: live, heute, jetzt, zuletzt benutztes Symbol/Model/TF.
+Symbol, Long/Short (Pflicht, nicht vorbelegt), Model (Ordner in
+Trading/TradingModels/), Timeframe, Ergebnis, R (optional). Vorbelegt: live, heute, jetzt, zuletzt benutztes Symbol/Model/TF.
 Speichern -> Notiz per ask.sh (rofi, Esc = ohne Notiz) -> Datei. Freitext geht
 nie durch eww (ungeschuetzte Shell-Zeile), das Panel schickt nur Indizes und
 per Regex gepruefte Felder.
 
 Eine Datei je Setup:
-  Trading/journaling/{live-trades,backtesting}/JJJJ/MM/TT/<datum> <HHMM> <Symbol> <Model>.md
+  Trading/journaling/{live-trades,backtesting}/JJJJ/MM/TT/<datum> <HHMM> <Symbol> <Long|Short> <Model>.md
 Bilder daneben (<erfasst>_HHMMSS.png), je Screenshot ein Abschnitt
 "## <TF> · erfasst TT.MM.JJJJ HH:MM". Frontmatter mit Properties und Tags
-(journal/<typ>, session/…, model/…, instrument/…, result/…).
+(journal/<typ>, session/…, direction/…, model/…, instrument/…, result/…).
 Letztes Setup + letzte Wahl in ~/.local/state/journal-last.json, offener
 Screenshot in $XDG_RUNTIME_DIR/journal-pending.json.
 Aufruf: journal.py            Screenshot + Panel (nochmal = abbrechen)
-        journal.py save MODUS TYP DATUM ZEIT SYM MODEL TF ERGEBNIS [R]
+        journal.py save MODUS TYP DATUM ZEIT SYM RICHTUNG MODEL TF ERGEBNIS [R]
         journal.py cancel | selftest
 """
 import json
@@ -39,9 +39,10 @@ SYMBOLS = ["NQ1!", "ES1!"]
 TFS = ["1m", "3m", "5m", "15m", "1h", "4h", "D"]
 RESULTS = ["Win", "Loss", "BE", "offen"]
 NO_MODEL = "kein Model"
+DIRS = ["Long", "Short"]
 STATE = os.path.expanduser("~/.local/state/journal-last.json")
 ASK = os.path.expanduser("~/.config/sway/scripts/ask.sh")
-ORDER = ["date", "time_ny", "session", "type", "instrument", "model", "timeframes",
+ORDER = ["date", "time_ny", "session", "type", "instrument", "direction", "model", "timeframes",
          "result", "r", "captured", "tags"]
 
 
@@ -200,14 +201,15 @@ def start():
             "models": [{"v": i, "l": x} for i, x in enumerate(mods)],
             "tfs": [{"v": x, "l": x} for x in TFS],
             "results": [{"v": x.lower(), "l": x} for x in RESULTS],
-            "types": [{"v": "live", "l": "Live"}, {"v": "backtest", "l": "Backtest"}]}
+            "types": [{"v": "live", "l": "Live"}, {"v": "backtest", "l": "Backtest"}],
+            "dirs": [{"v": x.lower(), "l": x} for x in DIRS]}
     eww("update", "jr_opts=" + json.dumps(opts), "jr_mode=" + ("add" if last else "new"),
         "jr_type=live", f"jr_date={now:%d.%m.%Y}", f"jr_time={datetime.now(NY):%H:%M}",
-        "jr_sym=0", "jr_model=0", "jr_tf=" + st.get("tf", "5m"), "jr_res=offen", "jr_r=", "jr_err=")
+        "jr_sym=0", "jr_dir=", "jr_model=0", "jr_tf=" + st.get("tf", "5m"), "jr_res=offen", "jr_r=", "jr_err=")
     eww("open", "journal", "--screen", mon)
 
 
-def build(mode, typ, date, hhmm, sym, model, tf, res, r, p, st):
+def build(mode, typ, date, hhmm, sym, direction, model, tf, res, r, p, st):
     """Werte aus dem Panel -> (Pfad, Frontmatter, Body) oder Fehlertext."""
     if tf not in TFS:
         return "Timeframe waehlen"
@@ -233,32 +235,35 @@ def build(mode, typ, date, hhmm, sym, model, tf, res, r, p, st):
     if not hhmm:
         return "Zeit HH:MM pruefen"
     typ = typ if typ in FOLDER else "live"
+    direction = direction.capitalize()
+    if direction not in DIRS:
+        return "Long oder Short waehlen"
     try:
         sym, model = p["symbols"][int(sym)], p["models"][int(model)]
     except (ValueError, IndexError, KeyError):
         return "Symbol/Model waehlen"
-    name = re.sub(r'[*"\\/<>:|?^\[\]#]', "", f"{d:%Y-%m-%d} {hhmm.replace(':', '')} {sym} {model}")
+    name = re.sub(r'[*"\\/<>:|?^\[\]#]', "", f"{d:%Y-%m-%d} {hhmm.replace(':', '')} {sym} {direction} {model}")
     folder = os.path.join(ROOT, FOLDER[typ], f"{d:%Y}", f"{d:%m}", f"{d:%d}")
     path, n = os.path.join(folder, name + ".md"), 2
     while os.path.exists(path):
         path, n = os.path.join(folder, f"{name} {n}.md"), n + 1
     ses = session(hhmm)
     fm = {"date": f"{d:%Y-%m-%d}", "time_ny": hhmm, "session": ses, "type": typ,
-          "instrument": sym, "model": model, "timeframes": [tf],
+          "instrument": sym, "direction": direction.lower(), "model": model, "timeframes": [tf],
           "captured": p["now"][:10],
-          "tags": ["trading", "journal", f"journal/{typ}", f"session/{slug(ses)}",
+          "tags": ["trading", "journal", f"journal/{typ}", f"session/{slug(ses)}", f"direction/{direction.lower()}",
                    f"model/{slug(model)}", f"instrument/{slug(sym)}"]}
     set_result(fm, res, r)
     st.update(symbol=sym, model=model)
-    return path, fm, f"\n# {d:%d.%m.%Y} {hhmm} NY – {sym} {model}\n"
+    return path, fm, f"\n# {d:%d.%m.%Y} {hhmm} NY – {sym} {direction} {model}\n"
 
 
 def save(args):
     p, st = load(PENDING), load(STATE)
     if not p or not os.path.exists(p["tmp"]):
         return cancel()
-    args = (args + [""] * 9)[:9]
-    tf = args[6]
+    args = (args + [""] * 10)[:10]
+    tf = args[7]
     out = build(*args, p, st)
     if isinstance(out, str):
         return eww("update", "jr_err=" + out)
@@ -312,16 +317,18 @@ def selftest():
     import tempfile
     ROOT = tempfile.mkdtemp()
     p, st = {"symbols": ["ES1!", "NQ1!"], "models": ["Sakura", NO_MODEL], "now": "2026-10-18T16:34:11"}, {}
-    path, fm, body = build("new", "backtest", "07.01.2025", "9:56", "1", "0", "5m", "offen", "", p, st)
-    assert path == f"{ROOT}/backtesting/2025/01/07/2025-01-07 0956 NQ1! Sakura.md", path
+    path, fm, body = build("new", "backtest", "07.01.2025", "9:56", "1", "short", "0", "5m", "offen", "", p, st)
+    assert path == f"{ROOT}/backtesting/2025/01/07/2025-01-07 0956 NQ1! Short Sakura.md", path
     assert fm["session"] == "NY AM" and fm["result"] == "offen" and "result/offen" in fm["tags"]
-    assert st == {"symbol": "NQ1!", "model": "Sakura"} and "# 07.01.2025 09:56 NY – NQ1! Sakura" in body
-    assert build("new", "live", "31.02.2025", "09:56", "0", "0", "5m", "win", "", p, {}).startswith("Datum")
-    assert build("new", "live", "07.01.2025", "09:56", "0", "0", "5m", "win", "x", p, {}) == "R ist keine Zahl"
+    assert st == {"symbol": "NQ1!", "model": "Sakura"} and "# 07.01.2025 09:56 NY – NQ1! Short Sakura" in body
+    assert fm["direction"] == "short" and "direction/short" in fm["tags"]
+    assert build("new", "live", "31.02.2025", "09:56", "0", "long", "0", "5m", "win", "", p, {}).startswith("Datum")
+    assert build("new", "live", "07.01.2025", "09:56", "0", "long", "0", "5m", "win", "x", p, {}) == "R ist keine Zahl"
+    assert build("new", "live", "07.01.2025", "09:56", "0", "", "0", "5m", "win", "", p, {}) == "Long oder Short waehlen"
     os.makedirs(os.path.dirname(path))
     with open(path, "w") as f:
         f.write(join(fm, body))
-    _, fm2, _ = build("add", "", "", "", "", "", "1m", "loss", "-1", p, {"path": path})
+    _, fm2, _ = build("add", "", "", "", "", "", "", "1m", "loss", "-1", p, {"path": path})
     assert fm2["timeframes"] == ["5m", "1m"] and fm2["result"] == "loss" and fm2["r"] == "-1"
     print("ok")
 

@@ -96,7 +96,7 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v23` | wie v22, Mausrad kippen rechts/links = naechstes/voriges Fenster der Liste (wie Super+q / Super+Ctrl+q), mit Super = Workspace des Monitors weiter/zurueck. |
 | `HL2-v24` | wie v23, Mission Control mit Fokus (max. 3), Offen/Erledigt/Archiv, Bearbeiten und eigenen Obsidian-Notizen; Archiv statt Loeschen, dezente UI-Uebergaenge, stabile Workspace-Breiten, IPv6-Anzeige entfernt. |
 | `HL2-v25` | wie v24, Mission Control mit 80 % Bildschirmhoehe und je 10 % Abstand oben/unten. |
-| `HL2-v26` | wie v25, Trading-Journal als eww-Formular (Super+Ctrl+j): eine Datei je Setup unter `journaling/{live-trades,backtesting}/JJJJ/MM/TT/`, Model/Symbol/Session/Timeframe/Ergebnis/R im Frontmatter + Tags, weitere Screenshots ans letzte Setup, Altes in `legacy/`. **Aktueller Standard** fuer neue Themes |
+| `HL2-v26` | wie v25, Trading-Journal als eww-Formular (Super+Ctrl+j): eine Datei je Setup unter `journaling/{live-trades,backtesting}/JJJJ/MM/TT/`, Model/Symbol/Long-Short/Session/Timeframe/Ergebnis/R im Frontmatter + Tags, weitere Screenshots ans letzte Setup, Altes in `legacy/`. **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
@@ -149,15 +149,15 @@ Wer davon abweicht, fragt vorher.
   `+ <letztes Setup>` (nur Timeframe, Ergebnis solange `offen`, R) oder
   `Neues Setup`: Live/Backtest, Datum `TT.MM.JJJJ` + Entry-Zeit NY `HH:MM`
   (vorbelegt heute/jetzt; Session daraus wie in `market.py`), Symbol (`SYMBOLS`
-  in journal.py), Model (Unterordner von `Trading/TradingModels/` + `kein Model`;
+  in journal.py), Long/Short (Pflicht, nicht vorbelegt), Model (Unterordner von `Trading/TradingModels/` + `kein Model`;
   neuer Ordner = neues Model), Timeframe, Ergebnis Win/Loss/BE/offen, R (optional).
   Zuletzt benutztes Symbol/Model/TF ist vorgewaehlt. Speichern ist gesperrt,
   solange Datum/Zeit/R nicht passen (Regex im yuck, Rand rot); danach fragt
   `ask.sh` die Notiz (Esc = ohne). Knoepfe schicken nur Indizes/feste Werte,
   Freitext nie durch eww. Eine Datei je Setup:
-  `Trading/journaling/{live-trades,backtesting}/JJJJ/MM/TT/<datum> <HHMM> <Symbol> <Model>.md`,
-  Frontmatter `date time_ny session type instrument model timeframes result r captured`
-  + Tags `journal/<typ>`, `session/…`, `model/…`, `instrument/…`, `result/…`;
+  `Trading/journaling/{live-trades,backtesting}/JJJJ/MM/TT/<datum> <HHMM> <Symbol> <Long|Short> <Model>.md`,
+  Frontmatter `date time_ny session type instrument direction model timeframes result r captured`
+  + Tags `journal/<typ>`, `session/…`, `direction/…`, `model/…`, `instrument/…`, `result/…`;
   je Screenshot ein Abschnitt `## <TF> · erfasst TT.MM.JJJJ HH:MM` mit Bild
   `<erfasst>_HHMMSS.png` daneben. Letztes Setup in `~/.local/state/journal-last.json`,
   offener Screenshot in `$XDG_RUNTIME_DIR/journal-pending.json`. Alte Eintraege

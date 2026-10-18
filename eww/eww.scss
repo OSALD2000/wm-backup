@@ -133,6 +133,7 @@ tooltip { background: rgba(0, 0, 0, 0.85); color: $bright; border: 1px solid $fg
 .jr-gap { min-width: 0; margin-left: 10px; }
 .jr-chip { padding: 6px 10px; }
 .ms-tab:disabled { color: #5c5644; }
+.ms-add:disabled { background: #49422e; color: #8a8270; }
 .jr-input { background: #1d1b15; color: $bright; caret-color: $bright; border: 1px solid #49422e;
   border-radius: 6px; padding: 6px 8px; font-size: 13px; }
 .jr-input.bad { border-color: #ff9076; }
