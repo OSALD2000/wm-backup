@@ -94,7 +94,8 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v21` | wie v20, Agenten-Panel (Super+c): laufende Claude-Code-/Codex-Sessions mit Status + Verlauf, Agenten-Tafel mit den Chats live nebeneinander (Super+g), waybar `custom/agents`, Meldung wenn ein Agent fertig ist. |
 | `HL2-v22` | wie v21, Session parken: Super+Ctrl+p schiebt alle Fenster unter einem Namen auf o6, Super+Ctrl+Shift+p holt eine Session zurueck an die alten Plaetze. |
 | `HL2-v23` | wie v22, Mausrad kippen rechts/links = naechstes/voriges Fenster der Liste (wie Super+q / Super+Ctrl+q), mit Super = Workspace des Monitors weiter/zurueck. |
-| `HL2-v24` | wie v23, Mission Control mit Fokus (max. 3), Offen/Erledigt/Archiv, Bearbeiten und eigenen Obsidian-Notizen; Archiv statt Loeschen, dezente UI-Uebergaenge, stabile Workspace-Breiten, IPv6-Anzeige entfernt. **Aktueller Standard** fuer neue Themes |
+| `HL2-v24` | wie v23, Mission Control mit Fokus (max. 3), Offen/Erledigt/Archiv, Bearbeiten und eigenen Obsidian-Notizen; Archiv statt Loeschen, dezente UI-Uebergaenge, stabile Workspace-Breiten, IPv6-Anzeige entfernt. |
+| `HL2-v25` | wie v24, Mission Control mit 80 % Bildschirmhoehe und je 10 % Abstand oben/unten. **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
@@ -187,7 +188,8 @@ Wer davon abweicht, fragt vorher.
   (`kb-custom-1`, `swaymsg kill`), danach geht das Raster neu auf. Bilder macht der Watcher in `snap()`, solange ein Fenster sichtbar ist
   (`$XDG_RUNTIME_DIR/win-shots`, nicht bei Sperre).
 - **Mission Control** (`Super+m`, eww `mission`, `scripts/todo.py`): scrollbares
-  Panel oben rechts auf dem fokussierten Monitor. Reiter Jetzt (bis zu drei
+  Panel rechts auf dem fokussierten Monitor, 80 % Bildschirmhoehe mit je 10 %
+  Abstand oben/unten (30px-Waybar beruecksichtigt). Reiter Jetzt (bis zu drei
   Fokus-Aufgaben), Offen, Erledigt und Archiv. Kreis = erledigen/wieder oeffnen,
   Stern = Fokus, Bearbeiten = rofi mit bestehendem Text, Neue Mission = rofi.
   Archivieren entfernt keine Daten; im Archiv holt Zurueckholen den Eintrag
