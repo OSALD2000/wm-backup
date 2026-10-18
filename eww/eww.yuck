@@ -201,6 +201,76 @@
       (label :class "ms-subtitle" :xalign 0 :text "↗ Notiz verbindet jede Mission mit Obsidian.")
       (label :class "ms-subtitle" :xalign 0 :text "Super+Ctrl+m  Schnell erfassen    ·    Super+m  Schliessen"))))
 
+; Trading-Journal (Super+Ctrl+j): Formular statt Abfragen. journal.py setzt die
+; jr_*-Variablen, macht den Screenshot und oeffnet das Fenster auf dem
+; fokussierten Monitor. Knoepfe schicken nur Werte aus jr_opts (Indizes /
+; feste Tokens), Speichern erst, wenn Datum/Zeit/R per Regex passen: nichts
+; Freies landet in der Shell-Zeile. Die Notiz fragt journal.py danach per rofi.
+(defvar jr_opts `{"last":"","last_open":false,"symbols":[],"models":[],"tfs":[],"results":[],"types":[]}`)
+(defvar jr_mode "new")
+(defvar jr_type "live")
+(defvar jr_date "")
+(defvar jr_time "")
+(defvar jr_sym 0)
+(defvar jr_model 0)
+(defvar jr_tf "5m")
+(defvar jr_res "offen")
+(defvar jr_r "")
+(defvar jr_err "")
+
+(defwidget jr-chips [items sel var]
+  (box :class "ms-tabs" :space-evenly false :spacing 4
+    (for it in items
+      (button :class "ms-tab jr-chip ${sel == it.v ? 'selected' : ''}"
+        :onclick "eww update ${var}=${it.v} jr_err=" {it.l}))))
+
+(defwidget jr-row [label ?visible]
+  (box :space-evenly false :spacing 12 :visible {visible ?: true}
+    (label :class "jr-label" :xalign 0 :text label)
+    (children)))
+
+(defwindow journal
+  :monitor "eDP-1"  ; journal.py setzt --screen auf den fokussierten Monitor
+  :geometry (geometry :anchor "center" :width "640px")
+  :stacking "overlay" :exclusive false :focusable "ondemand"
+  (box :class "panel mission" :orientation "v" :space-evenly false :spacing 14
+    (box :class "ms-head" :space-evenly false :spacing 14
+      (label :class "ms-lambda" :text "λ")
+      (box :orientation "v" :space-evenly false :spacing 3 :hexpand true
+        (label :class "ms-title" :xalign 0 :text "Journal")
+        (label :class "ms-subtitle" :xalign 0 :text "Screenshot ist gemacht. Setup beschreiben."))
+      (button :class "ms-action" :tooltip "Verwerfen · Super+Ctrl+j"
+        :onclick "~/.config/sway/scripts/journal.py cancel" "✕"))
+    (box :class "ms-tabs" :space-evenly true :spacing 4 :visible {jr_opts.last != ""}
+      (button :class "ms-tab ${jr_mode == 'add' ? 'selected' : ''}" :onclick "eww update jr_mode=add jr_err="
+        (label :limit-width 44 :text "+ ${jr_opts.last}"))
+      (button :class "ms-tab ${jr_mode == 'new' ? 'selected' : ''}" :onclick "eww update jr_mode=new jr_err=" "Neues Setup"))
+    (jr-row :label "ART" :visible {jr_mode == 'new'}
+      (jr-chips :items {jr_opts.types} :sel jr_type :var "jr_type"))
+    (jr-row :label "DATUM" :visible {jr_mode == 'new'}
+      (input :class "jr-input ${jr_date =~ '^[0-9][0-9][.][0-9][0-9][.][0-9][0-9][0-9][0-9]$' ? '' : 'bad'}"
+        :width 130 :value jr_date :onchange "eww update jr_date='{}'")
+      (label :class "jr-label jr-gap" :text "ENTRY NY")
+      (input :class "jr-input ${jr_time =~ '^[0-9]?[0-9]:?[0-9][0-9]$' ? '' : 'bad'}"
+        :width 80 :value jr_time :onchange "eww update jr_time='{}'"))
+    (jr-row :label "SYMBOL" :visible {jr_mode == 'new'}
+      (jr-chips :items {jr_opts.symbols} :sel jr_sym :var "jr_sym"))
+    (jr-row :label "MODEL" :visible {jr_mode == 'new'}
+      (jr-chips :items {jr_opts.models} :sel jr_model :var "jr_model"))
+    (jr-row :label "TIMEFRAME"
+      (jr-chips :items {jr_opts.tfs} :sel jr_tf :var "jr_tf"))
+    (jr-row :label "ERGEBNIS" :visible {jr_mode == 'new' || jr_opts.last_open}
+      (jr-chips :items {jr_opts.results} :sel jr_res :var "jr_res")
+      (label :class "jr-label jr-gap" :visible {jr_res != 'offen'} :text "R")
+      (input :class "jr-input ${jr_r == '' || jr_r =~ '^-?[0-9]+([.,][0-9]+)?$' ? '' : 'bad'}"
+        :visible {jr_res != 'offen'} :width 60 :value jr_r :onchange "eww update jr_r='{}'"))
+    (label :class "ms-error" :visible {jr_err != ""} :xalign 0 :text jr_err)
+    (button :class "ms-add" :timeout "10m"
+      :active {(jr_r == '' || jr_r =~ '^-?[0-9]+([.,][0-9]+)?$') && (jr_mode == 'add' || (jr_date =~ '^[0-9][0-9][.][0-9][0-9][.][0-9][0-9][0-9][0-9]$' && jr_time =~ '^[0-9]?[0-9]:?[0-9][0-9]$'))}
+      :onclick "~/.config/sway/scripts/journal.py save ${jr_mode} ${jr_type} ${jr_date} ${jr_time} ${jr_sym} ${jr_model} ${jr_tf} ${jr_res} '${jr_r}'"
+      "Speichern  ·  danach Notiz")
+    (label :class "ms-subtitle" :xalign 0 :text "Super+Ctrl+j  Verwerfen    ·    Datei je Setup unter Trading/journaling/")))
+
 ; Agenten (Super+c): laufende Claude-Code-/Codex-Sessions + Verlauf, nach Ordner.
 ; agents.py watch (exec_always) schreibt den Stand, follow liest ihn nur, solange
 ; das Fenster offen ist. Tasten kommen ueber den sway-Mode "[ AGENTS ]" (eww
@@ -401,7 +471,7 @@
         (key :k "Super+m / Super+Ctrl+m" :d "Mission Control / Mission schnell eintragen")
         (key :k "Super+c" :d "Agenten: Claude/Codex-Sessions (j/k, Enter, Esc)")
         (key :k "Super+g" :d "Agenten-Tafel: Chats live nebeneinander (nur Anzeige)")
-        (key :k "Super+Ctrl+j" :d "Trading-Journal: Screenshot + Notiz (Obsidian)")
+        (key :k "Super+Ctrl+j" :d "Trading-Journal: Screenshot + Setup-Panel (Obsidian)")
         (key :k "Super+Ctrl+n" :d "Schnellnotiz in Obsidian (Name #tag, Ordner/Name)")
         (key :k "Super+Ctrl+p / +Shift" :d "Session parken (alle Fenster auf o6) / zurueck")
         (key :k "Super+Shift+z" :d "diese Hilfe")

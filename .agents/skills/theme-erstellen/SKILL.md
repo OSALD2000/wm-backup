@@ -100,7 +100,7 @@ Konventionen aus den bisherigen Themes, die sich bewaehrt haben:
   wie `button.focused`), `custom/wins` (Klassen `open`/`idle`/`off`), `custom/target`, `custom/market` (Klassen `active`/`idle`/`closed`), `custom/agents` (Klassen `busy`/`idle`/`new`/`none`), die swaync-Popups (Pickups
   unten rechts, Block `.floating-notifications` in `swaync/style.css`), das
   Zwischenablage-Menue `clip.sh`, die Eingabezeile `ask.sh` (Journal, Schnellnotiz, Mission-Schnelleingabe, Session parken), das Vorschau-Raster (rofi, `overview()` in `sidebar.py`), die
-  Mission Control (eww `mission`, `.ms-*`, Fokus/Archiv ohne Loeschen, Obsidian-Notizen pro ID), das Agenten-Panel (eww `agents` + Tafel `agents-board`, `.ag-*`) und die Konsole (cool-retro-term, eigenes `profile.json` in den Farben des
+  Mission Control (eww `mission`, `.ms-*`, Fokus/Archiv ohne Loeschen, Obsidian-Notizen pro ID), das Agenten-Panel (eww `agents` + Tafel `agents-board`, `.ag-*`), das Journal-Panel (eww `journal`, `.jr-*` + `.ms-*`, `sway/scripts/journal.py`) und die Konsole (cool-retro-term, eigenes `profile.json` in den Farben des
   Themes). Nach dem Umbau alle einmal ausprobieren:
   `notify-send`, Super+Shift+V, Super+Tab (Entf schliesst ein Fenster), Super+m (Ziel mit `'` anlegen, Fokus setzen, abhaken, archivieren/zurueckholen, Notiz oeffnen), Super+Shift+Tab, Super+b (Symbol
   in `custom/wins` wechselt, Zahl stimmt mit den Fenstern ueberein), Super+Esc
