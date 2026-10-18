@@ -24,6 +24,7 @@ Aufruf: journal.py            Screenshot + Panel (nochmal = abbrechen)
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from datetime import datetime
@@ -269,10 +270,14 @@ def save(args):
         note = ""
     now = datetime.fromisoformat(p["now"])
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    os.replace(p["tmp"], os.path.join(os.path.dirname(path), p["img"]))
+    # move statt replace: $XDG_RUNTIME_DIR ist tmpfs, os.replace scheitert dann (EXDEV)
+    img, n = p["img"], 2
+    while os.path.exists(os.path.join(os.path.dirname(path), img)):  # zwei Bilder in einer Sekunde
+        img, n = p["img"][:-4] + f"_{n}.png", n + 1
+    shutil.move(p["tmp"], os.path.join(os.path.dirname(path), img))
     os.remove(PENDING)
     with open(path + ".tmp", "w") as f:
-        f.write(join(fm, body.rstrip("\n") + "\n" + section(tf, now, note, p["img"])))
+        f.write(join(fm, body.rstrip("\n") + "\n" + section(tf, now, note, img)))
     os.replace(path + ".tmp", path)
     st.update(path=path, tf=tf)
     os.makedirs(os.path.dirname(STATE), exist_ok=True)
