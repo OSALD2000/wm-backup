@@ -175,6 +175,52 @@ def load(path):
         return {}
 
 
+WHITE = 200        # Grauwert ab dem ein Pixel als heller Chart-Hintergrund zaehlt (auch Zonen)
+WHITE_SHARE = 0.5  # Anteil weisser Pixel, ab dem eine Zeile/Spalte zum Chart gehoert
+GAP = 12           # so viele Zeilen/Spalten darf eine Linie quer durch den Chart unterbrechen
+
+
+def white_share(path, rotate):
+    """Anteil weisser Pixel je Zeile (rotate=True: je Spalte), per ImageMagick als PGM."""
+    out = subprocess.run(["magick", path] + (["-rotate", "90"] if rotate else [])
+                         + ["-colorspace", "Gray", "-depth", "8", "pgm:-"],
+                         capture_output=True, check=True).stdout
+    m = re.match(rb"P5\s+(\d+)\s+(\d+)\s+\d+\s", out)
+    w, h, data = int(m[1]), int(m[2]), out[m.end():]
+    table = bytes(1 if i > WHITE else 0 for i in range(256))
+    return [data[y * w:(y + 1) * w].translate(table).count(1) / w for y in range(h)]
+
+
+def longest_run(shares):
+    """Laengster Bereich mit Anteil >= WHITE_SHARE, Luecken bis GAP ueberbrueckt -> (von, bis) oder None."""
+    best, start, last = None, None, None
+    for i, v in enumerate(shares + [0] * (GAP + 1)):
+        if v >= WHITE_SHARE:
+            start = i if start is None or i - last > GAP else start
+            last = i
+            if best is None or last - start > best[1] - best[0]:
+                best = (start, last)
+    return best
+
+
+def crop_chart(path):
+    """Schneidet den Screenshot auf die weisse Chart-Flaeche (TradingView / FX Replay,
+    helles Theme) samt Achsen zu. Ohne klare Flaeche (< 25 % des Bildes) bleibt er ganz."""
+    try:
+        rows, cols = longest_run(white_share(path, False)), longest_run(white_share(path, True))
+    except (OSError, subprocess.CalledProcessError, TypeError):
+        return False
+    if not rows or not cols:
+        return False
+    h, w = rows[1] - rows[0] + 1, cols[1] - cols[0] + 1
+    size = subprocess.run(["magick", "identify", "-format", "%w %h", path],
+                          capture_output=True, text=True).stdout.split()
+    if h * w < 0.25 * int(size[0]) * int(size[1]):
+        return False
+    subprocess.run(["magick", path, "-crop", f"{w}x{h}+{cols[0]}+{rows[0]}", "+repage", path], check=True)
+    return True
+
+
 def cancel():
     eww("close", "journal")
     p = load(PENDING)
@@ -192,6 +238,7 @@ def start():
     img = f"{now:%Y-%m-%d_%H%M%S}.png"
     tmp = os.path.join(RUN, "journal-" + img)
     subprocess.run(["grim", "-o", mon, tmp], check=True)  # vor dem Panel, sonst ist es mit drauf
+    crop_chart(tmp)
     st = load(STATE)
     last = st.get("path") if st.get("path") and os.path.exists(st["path"]) else ""
     last_open = False
@@ -336,6 +383,17 @@ def selftest():
     # Obsidian-Schreibweise und Inline-Listen werden gelesen
     assert split("---\ntags: [a, b]\nx:\n  - 1\n---\nB")[0] == {"tags": ["a", "b"], "x": ["1"]}
     assert "## 1m · erfasst 18.10.2026 16:34\n\n![[a.png]]" in section("1m", datetime(2026, 10, 18, 16, 34), "", "a.png")
+    # Zuschnitt: dunkler Rahmen, weisser Chart 300x220 bei (50,40), Linie + Zone quer durch
+    import tempfile as tf
+    img = os.path.join(tf.mkdtemp(), "c.png")
+    subprocess.run(["magick", "-size", "400x300", "xc:#141310", "-fill", "white", "-draw", "rectangle 50,40 349,259",
+                    "-fill", "#f0e0f0", "-draw", "rectangle 50,80 349,120", "-fill", "black",
+                    "-draw", "rectangle 0,150 399,155", img], check=True)
+    assert crop_chart(img)
+    assert subprocess.run(["magick", "identify", "-format", "%w %h", img],
+                          capture_output=True, text=True).stdout == "300 220"
+    subprocess.run(["magick", "-size", "400x300", "xc:#141310", img], check=True)
+    assert not crop_chart(img)  # nichts Helles -> Bild bleibt
     # Panel-Werte -> Datei
     global ROOT
     import tempfile
