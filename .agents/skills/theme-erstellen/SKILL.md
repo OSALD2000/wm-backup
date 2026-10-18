@@ -100,11 +100,13 @@ Konventionen aus den bisherigen Themes, die sich bewaehrt haben:
   wie `button.focused`), `custom/wins` (Klassen `open`/`idle`/`off`), `custom/target`, `custom/market` (Klassen `active`/`idle`/`closed`), `custom/agents` (Klassen `busy`/`idle`/`new`/`none`), die swaync-Popups (Pickups
   unten rechts, Block `.floating-notifications` in `swaync/style.css`), das
   Zwischenablage-Menue `clip.sh`, die Eingabezeile `ask.sh` (Journal, Schnellnotiz, Mission-Schnelleingabe, Session parken), das Vorschau-Raster (rofi, `overview()` in `sidebar.py`), die
-  Missionen (eww `mission`, `.ms-*`), das Agenten-Panel (eww `agents` + Tafel `agents-board`, `.ag-*`) und die Konsole (cool-retro-term, eigenes `profile.json` in den Farben des
+  Mission Control (eww `mission`, `.ms-*`, Fokus/Archiv ohne Loeschen, Obsidian-Notizen pro ID), das Agenten-Panel (eww `agents` + Tafel `agents-board`, `.ag-*`) und die Konsole (cool-retro-term, eigenes `profile.json` in den Farben des
   Themes). Nach dem Umbau alle einmal ausprobieren:
-  `notify-send`, Super+Shift+V, Super+Tab (Entf schliesst ein Fenster), Super+m (Ziel mit `'` anlegen, abhaken), Super+Shift+Tab, Super+b (Symbol
+  `notify-send`, Super+Shift+V, Super+Tab (Entf schliesst ein Fenster), Super+m (Ziel mit `'` anlegen, Fokus setzen, abhaken, archivieren/zurueckholen, Notiz oeffnen), Super+Shift+Tab, Super+b (Symbol
   in `custom/wins` wechselt, Zahl stimmt mit den Fenstern ueberein), Super+Esc
   (`custom/target` schaltet weiter) + Super+Ctrl+Shift+N, Super+Ctrl+m, Super+Ctrl+j (Eintrag im Obsidian-Journal, Esc verwirft), Super+Ctrl+n (Notiz geht in Obsidian auf), Super+c (j/k, Enter springt, Esc zu, Mode wieder `default`), Super+g (Chats live nebeneinander, Spalten voll, nichts laeuft unten raus).
+- Seit HL2-v24: IPv6-Modul aus der Leiste lassen, konstante Workspace-Breiten
+  und kurze Farbuebergaenge erhalten; Missionen behalten Ansichts-Ueberblendungen.
 - Aendern sich Binds oder Assigns, das Hilfe-Panel `info` in `eww.yuck`
   mitziehen.
 - Neue Komponente (neuer Ordner, neues Ziel ausserhalb von `~/.config`)?

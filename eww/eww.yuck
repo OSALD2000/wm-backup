@@ -128,56 +128,77 @@
           (image :path {w.icon} :image-width 16 :image-height 16)
           (label :class "win-app" :limit-width 8 :text {w.name}))))))
 
-; Missionen (Super+m): Todo-Liste im Stil der HL2-Missionsziele. todo.py haelt
-; die Daten in ~/.local/share/missions, deflisten meldet jede Aenderung.
-; Text geht per Heredoc an todo.py: eww setzt {} ungeschuetzt ein, ein ' im
-; Text braeche sonst die Shell-Zeile.
+; Mission Control: JSON bleibt die Aufgabenquelle, Obsidian ergaenzt freie Notizen.
 (deflisten missions
-  :initial `{"open":0,"done":0,"items":[]}`
+  :initial `{"open":0,"done":0,"focus":0,"archived":0,"progress":0,"groups":[[],[],[],[]],"error":""}`
   "~/.config/eww/scripts/todo.py watch")
-(defvar new_mission "")
+(defvar mission_tab 1)
+
+(defwidget mission-row [m]
+  (box :class "ms-item ${m.focus ? 'focused' : ''} ${m.done ? 'done' : ''}"
+    :orientation "v" :space-evenly false :spacing 8
+    (box :space-evenly false :spacing 12
+      (button :class "ms-check" :active {!m.archived}
+        :tooltip {m.done ? "Wieder oeffnen" : "Erledigen"}
+        :onclick "~/.config/eww/scripts/todo.py done ${m.id}"
+        {m.done ? "✓" : "○"})
+      (label :class "ms-text" :xalign 0 :yalign 0.5 :hexpand true
+        :wrap true :wrap-mode "wordchar" :width 410 :text {m.text}))
+    (box :class "ms-actions" :space-evenly false :spacing 6
+      (button :class "ms-action ${m.focus ? 'selected' : ''}" :visible {!m.done && !m.archived}
+        :tooltip "Bis zu drei Missionen fuer jetzt auswaehlen"
+        :onclick "~/.config/eww/scripts/todo.py focus ${m.id}"
+        {m.focus ? "★ Im Fokus" : "☆ Fokus"})
+      (button :class "ms-action" :timeout "10m" :visible {!m.archived}
+        :onclick "~/.config/eww/scripts/todo.py edit ${m.id}" "Bearbeiten")
+      (button :class "ms-action" :timeout "5s" :tooltip "Eigene Notiz in Obsidian anlegen oder oeffnen"
+        :onclick "~/.config/eww/scripts/todo.py note ${m.id}" "↗ Notiz")
+      (box :hexpand true)
+      (button :class "ms-action ms-archive" :tooltip "Bleibt gespeichert und kann zurueckgeholt werden"
+        :onclick "~/.config/eww/scripts/todo.py archive ${m.id}"
+        {m.archived ? "↶ Zurueckholen" : "Archivieren"}))))
+
+(defwidget mission-list [group]
+  (scroll :height 330 :vexpand true :hscroll false :vscroll true
+    (box :orientation "v" :space-evenly false :spacing 8
+      (box :class "ms-empty" :visible {arraylength(group) == 0} :orientation "v" :spacing 10
+        (label :class "ms-empty-symbol" :text {mission_tab == 0 ? "◎" : "✓"})
+        (label :class "ms-summary" :wrap true :text {mission_tab == 0 ? "Was ist jetzt wichtig?" : mission_tab == 1 ? "Freier Kopf. Alles erledigt." : mission_tab == 2 ? "Hier sammeln sich deine Erfolge." : "Dein Archiv ist leer."})
+        (label :class "ms-subtitle" :wrap true :text {mission_tab == 0 ? "Markiere unter Offen bis zu drei Aufgaben mit ☆ Fokus." : "Alle Missionen bleiben gespeichert."}))
+      (for m in group (mission-row :m m)))))
 
 (defwindow mission
-  :monitor "eDP-1"  ; Super+m oeffnet es per --screen auf dem fokussierten Monitor
-  :geometry (geometry :x "24px" :y "48px" :width "460px" :anchor "top right")
-  :stacking "overlay"
-  :exclusive false
-  :focusable "ondemand"
-  (box :class "panel mission" :orientation "v" :space-evenly false :spacing 10
-    (box :class "ms-head" :space-evenly false
+  :monitor "eDP-1"
+  :geometry (geometry :x "24px" :y "48px" :width "560px" :height "640px" :anchor "top right")
+  :stacking "overlay" :exclusive false :focusable "ondemand"
+  (box :class "panel mission" :orientation "v" :space-evenly false :spacing 16
+    (box :class "ms-head" :space-evenly false :spacing 14
       (label :class "ms-lambda" :text "λ")
-      (box :orientation "v" :space-evenly false :hexpand true
-        (label :class "ms-title" :xalign 0 :text "MISSIONSZIELE")
-        (label :class "muted small" :xalign 0
-          :text "${missions.open} offen · ${missions.done} erfuellt")))
-    (label :class "muted" :visible {arraylength(missions.items) == 0} :xalign 0
-      :text "Keine Ziele. Unten eins eintragen, Enter.")
-    (box :orientation "v" :space-evenly false :spacing 4
-      (for m in {missions.items}
-        (box :class "ms-item ${m.done ? 'done' : ''}" :space-evenly false
-          (button :class "ms-btn" :hexpand true :tooltip {m.done ? "wieder offen" : "erfuellt"}
-            :onclick "~/.config/eww/scripts/todo.py done ${m.id}"
-            (box :space-evenly false :spacing 12
-              (label :class "ms-check" :text {m.done ? "■" : "□"})
-              (box :orientation "v" :space-evenly false
-                (label :class "ms-nr" :xalign 0 :text "ZIEL ${m.nr}${m.done ? '  ·  ERFUELLT' : ''}")
-                (label :class "ms-text" :xalign 0 :wrap true :text {m.text}))))
-          (button :class "x" :tooltip "loeschen" :onclick "~/.config/eww/scripts/todo.py del ${m.id}" "✕"))))
-    (box :class "new" :space-evenly false :spacing 8
-      (label :class "muted" :text "+")
-      (input :hexpand true :value new_mission
-        :onchange "eww update new_mission=\"$(cat <<'λEOF'
-{}
-λEOF
-)\""
-        :onaccept "~/.config/eww/scripts/todo.py add <<'λEOF'
-{}
-λEOF
-eww update new_mission=''"))
-    (box :class "footer" :space-evenly false
-      (label :class "muted small" :hexpand true :xalign 0 :text "Klick = erfuellt · Super+m schliesst")
-      (button :class "btn ghost small" :visible {missions.done > 0}
-        :onclick "~/.config/eww/scripts/todo.py clear" "Erfuellte entfernen"))))
+      (box :orientation "v" :space-evenly false :spacing 3 :hexpand true
+        (label :class "ms-title" :xalign 0 :text "Mission Control")
+        (label :class "ms-subtitle" :xalign 0 :text "Platz fuer deinen naechsten Schritt."))
+      (button :class "ms-action" :tooltip "Panel schliessen · Super+m"
+        :onclick "eww close mission" "✕"))
+    (box :orientation "v" :space-evenly false :spacing 8
+      (box :space-evenly false
+        (label :class "ms-summary" :hexpand true :xalign 0 :text "${missions.open} offen · ${missions.done} erledigt")
+        (label :class "ms-subtitle" :text "${missions.focus}/3 im Fokus"))
+      (progress :class "ms-progress" :value {missions.progress}))
+    (box :class "ms-tabs" :space-evenly true :spacing 4
+      (button :class "ms-tab ${mission_tab == 0 ? 'selected' : ''}" :onclick "eww update mission_tab=0" "Jetzt")
+      (button :class "ms-tab ${mission_tab == 1 ? 'selected' : ''}" :onclick "eww update mission_tab=1" "Offen")
+      (button :class "ms-tab ${mission_tab == 2 ? 'selected' : ''}" :onclick "eww update mission_tab=2" "Erledigt")
+      (button :class "ms-tab ${mission_tab == 3 ? 'selected' : ''}" :onclick "eww update mission_tab=3" "Archiv"))
+    (label :class "ms-error" :visible {missions.error != ""} :wrap true :text {missions.error})
+    (stack :selected mission_tab :transition "crossfade" :same-size true :vexpand true
+      (mission-list :group {missions.groups[0]})
+      (mission-list :group {missions.groups[1]})
+      (mission-list :group {missions.groups[2]})
+      (mission-list :group {missions.groups[3]}))
+    (button :class "ms-add" :timeout "10m" :onclick "~/.config/eww/scripts/todo.py new" "+ Neue Mission")
+    (box :class "ms-foot" :orientation "v" :space-evenly false :spacing 5
+      (label :class "ms-subtitle" :xalign 0 :text "↗ Notiz verbindet jede Mission mit Obsidian.")
+      (label :class "ms-subtitle" :xalign 0 :text "Super+Ctrl+m  Schnell erfassen    ·    Super+m  Schliessen"))))
 
 ; Agenten (Super+c): laufende Claude-Code-/Codex-Sessions + Verlauf, nach Ordner.
 ; agents.py watch (exec_always) schreibt den Stand, follow liest ihn nur, solange
@@ -376,7 +397,7 @@ eww update new_mission=''"))
         (key :k "Super+Shift+f p v" :d "Dateien, Kalender, Zwischenablage")
       (label :class "section" :xalign 0 :text "SYSTEM")
         (key :k "Super+z" :d "Lern-Timer")
-        (key :k "Super+m / Super+Ctrl+m" :d "Missionen / Mission schnell eintragen")
+        (key :k "Super+m / Super+Ctrl+m" :d "Mission Control / Mission schnell eintragen")
         (key :k "Super+c" :d "Agenten: Claude/Codex-Sessions (j/k, Enter, Esc)")
         (key :k "Super+g" :d "Agenten-Tafel: Chats live nebeneinander (nur Anzeige)")
         (key :k "Super+Ctrl+j" :d "Trading-Journal: Screenshot + Notiz (Obsidian)")

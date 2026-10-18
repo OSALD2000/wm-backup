@@ -93,14 +93,15 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v20` | wie v19, ohne Nachtlicht (wlsunset raus). |
 | `HL2-v21` | wie v20, Agenten-Panel (Super+c): laufende Claude-Code-/Codex-Sessions mit Status + Verlauf, Agenten-Tafel mit den Chats live nebeneinander (Super+g), waybar `custom/agents`, Meldung wenn ein Agent fertig ist. |
 | `HL2-v22` | wie v21, Session parken: Super+Ctrl+p schiebt alle Fenster unter einem Namen auf o6, Super+Ctrl+Shift+p holt eine Session zurueck an die alten Plaetze. |
-| `HL2-v23` | wie v22, Mausrad kippen rechts/links = naechstes/voriges Fenster der Liste (wie Super+q / Super+Ctrl+q), mit Super = Workspace des Monitors weiter/zurueck. **Aktueller Standard** fuer neue Themes |
+| `HL2-v23` | wie v22, Mausrad kippen rechts/links = naechstes/voriges Fenster der Liste (wie Super+q / Super+Ctrl+q), mit Super = Workspace des Monitors weiter/zurueck. |
+| `HL2-v24` | wie v23, Mission Control mit Fokus (max. 3), Offen/Erledigt/Archiv, Bearbeiten und eigenen Obsidian-Notizen; Archiv statt Loeschen, dezente UI-Uebergaenge, stabile Workspace-Breiten, IPv6-Anzeige entfernt. **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v23` (Vorschau,
+Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v24` (Vorschau,
 Zwischenablage, Konsole, Pickup-Popups, Workspace-Nummern und Fensterzahl in waybar,
 Missionen). Alles in dieser Liste gilt fuer
 **jedes** neue Theme, nicht nur fuer HL2: es aendert nur den **Look**
@@ -185,12 +186,21 @@ Wer davon abweicht, fragt vorher.
   + App. Enter fokussiert, **Entf** schliesst das gewaehlte Fenster
   (`kb-custom-1`, `swaymsg kill`), danach geht das Raster neu auf. Bilder macht der Watcher in `snap()`, solange ein Fenster sichtbar ist
   (`$XDG_RUNTIME_DIR/win-shots`, nicht bei Sperre).
-- **Missionen** (`Super+m`, eww `mission`, `scripts/todo.py`): Todo-Liste im
-  Stil der Missionsziele des Themes, oeffnet oben rechts auf dem fokussierten
-  Monitor. Ziel eintippen + Enter, Klick = erfuellt/wieder offen (bleibt
-  durchgestrichen stehen), ✕ = loeschen, "Erfuellte entfernen" raeumt auf.
-  Gespeichert in `~/.local/share/missions/data.json` (atomar, Tagesbackups,
-  30 bleiben); `todo.py watch` meldet jede Aenderung per `deflisten`.
+- **Mission Control** (`Super+m`, eww `mission`, `scripts/todo.py`): scrollbares
+  Panel oben rechts auf dem fokussierten Monitor. Reiter Jetzt (bis zu drei
+  Fokus-Aufgaben), Offen, Erledigt und Archiv. Kreis = erledigen/wieder oeffnen,
+  Stern = Fokus, Bearbeiten = rofi mit bestehendem Text, Neue Mission = rofi.
+  Archivieren entfernt keine Daten; im Archiv holt Zurueckholen den Eintrag
+  samt Erledigt-Status zurueck. Auch die alten CLI-Befehle `del`/`clear`
+  archivieren nur. `Super+Ctrl+m` bleibt die Schnelleingabe.
+  `Notiz` legt bei Bedarf `Missionen/Mission-<id>.md` im Obsidian-Vault an und
+  oeffnet sie per URI. Die stabile ID erhaelt die Verbindung beim Umbenennen.
+  Bestehende Notizen werden nie ueberschrieben; Titel und Aufgabenstatus bleiben
+  im Panel, Notizen/Unteraufgaben in Obsidian (keine Zwei-Wege-Synchronisation).
+  Daten bleiben in `~/.local/share/missions/data.json` (atomar, Tagesbackups,
+  30 bleiben); alte Eintraege brauchen keine Migration. `todo.py watch` meldet
+  Aenderungen und Lesefehler per `deflisten`. Freitext geht ueber rofi/stdin,
+  nicht durch eww-Shell-Interpolation. Ansichtswechsel blenden weich ueber.
 - **Agenten** (`Super+c`, eww `agents`, `scripts/agents.py`): laufende
   Claude-Code- und Codex-Sessions als Karten (Tool, Titel, ⚙ arbeitet / ✓ bereit,
   letzter Prompt, letzte Aktion, Laufzeit, Kontext-Tokens, Workspace), darunter
@@ -234,6 +244,8 @@ Wer davon abweicht, fragt vorher.
   (Spalten = offen, gedimmt = erst ab 2 Fenstern, Vollbild = per Super+b aus),
   Klick schaltet die Liste. Der Watcher schreibt den Stand nach
   `$XDG_RUNTIME_DIR/eww-sidebar.bar` und weckt waybar per `SIGRTMIN+9`.
+  Seit HL2-v24 bleiben Workspace-Breiten beim Wechsel konstant; kurze Farb-
+  uebergaenge geben Rueckmeldung. Die IPv6-Anzeige ist aus der Leiste entfernt.
   Rechts daneben `custom/target` (`ws.sh bar`) = Ziel-Monitor fuer Super+Ctrl+N.
   `sway/scratchpad` (≡ N) zaehlt die Fenster im Scratchpad, also die Konsole.
 
@@ -315,9 +327,10 @@ Skills: `theme-erstellen` (neues Theme bauen und taggen), `theme-switch`
   (`$XDG_RUNTIME_DIR/eww-sidebar.pid`), nicht per `pkill -f` (das traefe die
   `sh -c`-Zeile von sway selbst).
 - eww setzt `{}` (Text aus `input`) **ungeschuetzt** in die Shell-Zeile: ein `'`
-  im Text bricht sie. Freitext deshalb per Heredoc uebergeben (siehe
-  `mission` in `eww.yuck`, `todo.py add` liest stdin), IDs statt Text in
-  `onclick`. Befehle aus `onclick` killt eww nach 200 ms: nur kurze Aufrufe.
+  im Text bricht sie. Freitext deshalb ueber externe Eingabedialoge/stdin uebergeben
+  (`todo.py new` nutzt rofi, `todo.py add` liest stdin), IDs statt Text in
+  `onclick`. Befehle aus `onclick` killt eww standardmaessig nach 200 ms:
+  fuer Eingabedialoge ein explizites `:timeout` setzen (Mission Control: 10m).
 - Aus Python eww/Daemons starten: `stdout=DEVNULL`, nie `capture_output` —
   der Daemon erbt die Pipe und der Aufruf haengt fuer immer.
 - waybar `wlr/taskbar` taugt unter Sway nicht: Fenster hinter Tabs fehlen.

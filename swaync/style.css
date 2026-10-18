@@ -255,3 +255,8 @@ scrollbar slider:hover { background: @tan; }
   text-shadow: 0 0 6px rgba(255, 0, 0, 0.6); }
 .floating-notifications .body { color: @dim; }
 .floating-notifications .time { opacity: 0; }   /* Pickups haben keine Uhrzeit */
+
+/* Dezente Rueckmeldung bei Aktionen im Benachrichtigungs-Panel. */
+.notification-action, .close-button {
+  transition: background-color 140ms ease-out, color 140ms ease-out;
+}
