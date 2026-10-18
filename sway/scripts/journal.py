@@ -44,7 +44,7 @@ DIRS = ["Long", "Short"]
 STATE = os.path.expanduser("~/.local/state/journal-last.json")
 ASK = os.path.expanduser("~/.config/sway/scripts/ask.sh")
 ORDER = ["date", "time_ny", "session", "type", "instrument", "direction", "model", "timeframes",
-         "result", "r", "captured", "tags"]
+         "result", "r", "captured", "cssclasses", "tags"]
 
 
 class Abort(Exception):
@@ -147,6 +147,11 @@ def set_result(fm, result, r):
     fm["result"] = result.lower()
     fm["r"] = r
     fm["tags"] = [t for t in fm.get("tags", []) if not t.startswith("result/")] + [f"result/{slug(result)}"]
+    # Klassen fuer das Obsidian-Snippet lesbar.css (farbige Kante + WIN/LOSS am Titel)
+    cls = fm.get("cssclasses") or []
+    cls = cls if isinstance(cls, list) else [cls]
+    fm["cssclasses"] = ([c for c in cls if c != "journal" and not c.startswith("result-")]
+                        + ["journal", f"result-{slug(result)}"])
 
 
 def section(tf, now, note, img):
@@ -251,7 +256,7 @@ def build(mode, typ, date, hhmm, sym, direction, model, tf, res, r, p, st):
     ses = session(hhmm)
     fm = {"date": f"{d:%Y-%m-%d}", "time_ny": hhmm, "session": ses, "type": typ,
           "instrument": sym, "direction": direction.lower(), "model": model, "timeframes": [tf],
-          "captured": p["now"][:10],
+          "captured": p["now"][:10], "cssclasses": [f"dir-{direction.lower()}"],
           "tags": ["trading", "journal", f"journal/{typ}", f"session/{slug(ses)}", f"direction/{direction.lower()}",
                    f"model/{slug(model)}", f"instrument/{slug(sym)}"]}
     set_result(fm, res, r)
@@ -341,6 +346,7 @@ def selftest():
     assert fm["session"] == "NY AM" and fm["result"] == "offen" and "result/offen" in fm["tags"]
     assert st == {"symbol": "NQ1!", "model": "Sakura"} and "# 07.01.2025 09:56 NY – NQ1! Short Sakura" in body
     assert fm["direction"] == "short" and "direction/short" in fm["tags"]
+    assert fm["cssclasses"] == ["dir-short", "journal", "result-offen"], fm["cssclasses"]
     assert build("new", "live", "31.02.2025", "09:56", "0", "long", "0", "5m", "win", "", p, {}).startswith("Datum")
     assert build("new", "live", "07.01.2025", "09:56", "0", "long", "0", "5m", "win", "x", p, {}) == "R ist keine Zahl"
     assert build("new", "live", "07.01.2025", "09:56", "0", "", "0", "5m", "win", "", p, {}) == "Long oder Short waehlen"
@@ -348,6 +354,7 @@ def selftest():
     with open(path, "w") as f:
         f.write(join(fm, body))
     _, fm2, _ = build("add", "", "", "", "", "", "", "1m", "loss", "-1", p, {"path": path})
+    assert fm2["cssclasses"] == ["dir-short", "journal", "result-loss"]
     assert fm2["timeframes"] == ["5m", "1m"] and fm2["result"] == "loss" and fm2["r"] == "-1"
     print("ok")
 
