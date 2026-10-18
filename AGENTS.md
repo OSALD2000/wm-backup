@@ -144,7 +144,9 @@ Wer davon abweicht, fragt vorher.
   erkannter Text (tesseract, `deu+eng`) landet in der Zwischenablage, Popup bestaetigt.
   `Super+Ctrl+m` = Mission schnell eintragen (nur Eingabezeile `ask.sh`, Panel bleibt zu).
 - **Trading-Journal** (`Super+Ctrl+j`, `sway/scripts/journal.py`, eww `journal`):
-  Screenshot des fokussierten Monitors, dann ein Formular-Panel auf diesem
+  Screenshot des fokussierten Monitors (per `crop_chart()` auf die helle
+  Chart-Flaeche samt Achsen zugeschnitten, ImageMagick; ohne helle Flaeche bleibt
+  er ganz), dann ein Formular-Panel auf diesem
   Monitor (nochmal Super+Ctrl+j oder ✕ = verwerfen, Bild weg). Oben
   `+ <letztes Setup>` (nur Timeframe, Ergebnis solange `offen`, R) oder
   `Neues Setup`: Live/Backtest, Datum `TT.MM.JJJJ` + Entry-Zeit NY `HH:MM`
