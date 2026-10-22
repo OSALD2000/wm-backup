@@ -197,9 +197,14 @@ bindsym $mod+Ctrl+q exec ~/.config/eww/scripts/sidebar.py prev
 # Kippen geht dafuer in Apps nicht mehr.
 bindsym --whole-window button7 exec ~/.config/eww/scripts/sidebar.py next
 bindsym --whole-window button6 exec ~/.config/eww/scripts/sidebar.py prev
-# Mit Super gekippt = Workspace dieses Monitors weiter/zurueck (nur belegte).
-bindsym --whole-window $mod+button7 workspace next_on_output
-bindsym --whole-window $mod+button6 workspace prev_on_output
+# Mit Super links gekippt = Ziel-Monitor weiter (wie Super+Esc). Mit Super
+# rechts gekippt = Mode, danach Nummer = Workspace N des Ziel-Monitors (wie
+# Super+Ctrl+N).
+bindsym --whole-window $mod+button6 exec ~/.config/sway/scripts/ws.sh cycle 1
+# Mit Super+Shift rechts gekippt = Mode, danach Nummer = Fenster auf Workspace N
+# des Ziel-Monitors (wie Super+Ctrl+Shift+N). Kippen im Mode schaltet das Ziel.
+bindsym --whole-window $mod+Shift+button7 mode "[ MOVE → ZIEL ]"
+bindsym --whole-window $mod+button7 mode "[ GO → ZIEL ]"
 # Fensterliste links an/aus. Nicht Super+Shift_R: das faellt bei jedem
 # Super+Shift+N mit.
 bindsym $mod+b      exec ~/.config/eww/scripts/sidebar.py toggle
@@ -445,6 +450,58 @@ set $agents ~/.config/eww/scripts/agents.py
 bindsym $mod+c exec $agents open
 # Agenten-Tafel: Chats der laufenden Sessions live nebeneinander, nur Anzeige
 bindsym $mod+g exec $agents board
+mode "[ GO → ZIEL ]" {
+        bindsym 1 exec ~/.config/sway/scripts/ws.sh tgo 1; mode "default"
+        bindsym $mod+1 exec ~/.config/sway/scripts/ws.sh tgo 1; mode "default"
+        bindsym 2 exec ~/.config/sway/scripts/ws.sh tgo 2; mode "default"
+        bindsym $mod+2 exec ~/.config/sway/scripts/ws.sh tgo 2; mode "default"
+        bindsym 3 exec ~/.config/sway/scripts/ws.sh tgo 3; mode "default"
+        bindsym $mod+3 exec ~/.config/sway/scripts/ws.sh tgo 3; mode "default"
+        bindsym 4 exec ~/.config/sway/scripts/ws.sh tgo 4; mode "default"
+        bindsym $mod+4 exec ~/.config/sway/scripts/ws.sh tgo 4; mode "default"
+        bindsym 5 exec ~/.config/sway/scripts/ws.sh tgo 5; mode "default"
+        bindsym $mod+5 exec ~/.config/sway/scripts/ws.sh tgo 5; mode "default"
+        bindsym 6 exec ~/.config/sway/scripts/ws.sh tgo 6; mode "default"
+        bindsym $mod+6 exec ~/.config/sway/scripts/ws.sh tgo 6; mode "default"
+        bindsym 7 exec ~/.config/sway/scripts/ws.sh tgo 7; mode "default"
+        bindsym $mod+7 exec ~/.config/sway/scripts/ws.sh tgo 7; mode "default"
+        bindsym 8 exec ~/.config/sway/scripts/ws.sh tgo 8; mode "default"
+        bindsym $mod+8 exec ~/.config/sway/scripts/ws.sh tgo 8; mode "default"
+        bindsym 9 exec ~/.config/sway/scripts/ws.sh tgo 9; mode "default"
+        bindsym $mod+9 exec ~/.config/sway/scripts/ws.sh tgo 9; mode "default"
+        bindsym 0 exec ~/.config/sway/scripts/ws.sh tgo 10; mode "default"
+        bindsym $mod+0 exec ~/.config/sway/scripts/ws.sh tgo 10; mode "default"
+        bindsym --whole-window button6 exec ~/.config/sway/scripts/ws.sh cycle 1
+        bindsym Escape mode "default"
+        bindsym Return mode "default"
+}
+
+mode "[ MOVE → ZIEL ]" {
+        bindsym 1 exec ~/.config/sway/scripts/ws.sh tmove 1; mode "default"
+        bindsym $mod+Shift+1 exec ~/.config/sway/scripts/ws.sh tmove 1; mode "default"
+        bindsym 2 exec ~/.config/sway/scripts/ws.sh tmove 2; mode "default"
+        bindsym $mod+Shift+2 exec ~/.config/sway/scripts/ws.sh tmove 2; mode "default"
+        bindsym 3 exec ~/.config/sway/scripts/ws.sh tmove 3; mode "default"
+        bindsym $mod+Shift+3 exec ~/.config/sway/scripts/ws.sh tmove 3; mode "default"
+        bindsym 4 exec ~/.config/sway/scripts/ws.sh tmove 4; mode "default"
+        bindsym $mod+Shift+4 exec ~/.config/sway/scripts/ws.sh tmove 4; mode "default"
+        bindsym 5 exec ~/.config/sway/scripts/ws.sh tmove 5; mode "default"
+        bindsym $mod+Shift+5 exec ~/.config/sway/scripts/ws.sh tmove 5; mode "default"
+        bindsym 6 exec ~/.config/sway/scripts/ws.sh tmove 6; mode "default"
+        bindsym $mod+Shift+6 exec ~/.config/sway/scripts/ws.sh tmove 6; mode "default"
+        bindsym 7 exec ~/.config/sway/scripts/ws.sh tmove 7; mode "default"
+        bindsym $mod+Shift+7 exec ~/.config/sway/scripts/ws.sh tmove 7; mode "default"
+        bindsym 8 exec ~/.config/sway/scripts/ws.sh tmove 8; mode "default"
+        bindsym $mod+Shift+8 exec ~/.config/sway/scripts/ws.sh tmove 8; mode "default"
+        bindsym 9 exec ~/.config/sway/scripts/ws.sh tmove 9; mode "default"
+        bindsym $mod+Shift+9 exec ~/.config/sway/scripts/ws.sh tmove 9; mode "default"
+        bindsym 0 exec ~/.config/sway/scripts/ws.sh tmove 10; mode "default"
+        bindsym $mod+Shift+0 exec ~/.config/sway/scripts/ws.sh tmove 10; mode "default"
+        bindsym --whole-window button6 exec ~/.config/sway/scripts/ws.sh cycle 1
+        bindsym Escape mode "default"
+        bindsym Return mode "default"
+}
+
 mode "[ AGENTS ]" {
         bindsym j exec $agents sel 1
         bindsym k exec $agents sel -1

@@ -148,18 +148,18 @@ Wer davon abweicht, fragt vorher.
   Chart-Flaeche samt Achsen zugeschnitten, ImageMagick; ohne helle Flaeche bleibt
   er ganz), dann ein Formular-Panel auf diesem
   Monitor (nochmal Super+Ctrl+j oder ✕ = verwerfen, Bild weg). Oben
-  `+ <letztes Setup>` (nur Timeframe, Ergebnis solange `offen`, R) oder
-  `Neues Setup`: Live/Backtest, Datum `TT.MM.JJJJ` + Entry-Zeit NY `HH:MM`
-  (vorbelegt heute/jetzt; Session daraus wie in `market.py`), Symbol (`SYMBOLS`
-  in journal.py), Long/Short (Pflicht, nicht vorbelegt), Model (Unterordner von `Trading/TradingModels/` + `kein Model`;
-  neuer Ordner = neues Model), Timeframe, Ergebnis Win/Loss/BE/offen, R (optional).
+  `+ <letztes Setup>` (nur Timeframe; solange `offen` auch Entry-Zeit (setzt Session + HHMM im Namen), Ergebnis, R) oder
+  `Neues Setup`: Live/Backtest, Datum `TT.MM.JJJJ` + Entry-Zeit NY `HH:MM` (darf leer bleiben:
+  dann ohne Zeit/Session im Namen; vorbelegt heute/jetzt; Session daraus wie in `market.py`), Symbol (`SYMBOLS`
+  in journal.py), Long/Short/No Trade (Pflicht, nicht vorbelegt), D-Bias Bullish/Bearish/Neutral (Pflicht, nicht vorbelegt), Model (Unterordner von `Trading/TradingModels/` + `kein Model`;
+  neuer Ordner = neues Model), Timeframe, Ergebnis Win/Loss/BE/offen/No Trade, R (optional, nicht bei offen/No Trade).
   Zuletzt benutztes Symbol/Model/TF ist vorgewaehlt. Speichern ist gesperrt,
   solange Datum/Zeit/R nicht passen (Regex im yuck, Rand rot); danach fragt
   `ask.sh` die Notiz (Esc = ohne). Knoepfe schicken nur Indizes/feste Werte,
   Freitext nie durch eww. Eine Datei je Setup:
-  `Trading/journaling/{live-trades,backtesting}/JJJJ/MM/TT/<datum> <HHMM> <Symbol> <Long|Short> <Model>.md`,
-  Frontmatter `date time_ny session type instrument direction model timeframes result r captured`
-  + Tags `journal/<typ>`, `session/…`, `direction/…`, `model/…`, `instrument/…`, `result/…`;
+  `Trading/journaling/{live-trades,backtesting}/JJJJ/MM/TT/<datum> <HHMM> <Symbol> <Long|Short|No Trade> <Model>.md`,
+  Frontmatter `date time_ny session type instrument direction d_bias model timeframes result r captured`
+  + Tags `journal/<typ>`, `session/…`, `direction/…`, `bias/…`, `model/…`, `instrument/…`, `result/…`;
   je Screenshot ein Abschnitt `## <TF> · erfasst TT.MM.JJJJ HH:MM` mit Bild
   `<erfasst>_HHMMSS.png` daneben. Letztes Setup in `~/.local/state/journal-last.json`,
   offener Screenshot in `$XDG_RUNTIME_DIR/journal-pending.json`. Alte Eintraege
@@ -251,7 +251,7 @@ Wer davon abweicht, fragt vorher.
   geht in Sway nicht). Kein `Super+s` (stacking). Rahmen nur ueber `child_border`.
 - **Fensterliste links** (eww `sidebar`, 58px): Icon + App-Name je Fenster des
   sichtbaren Workspaces, erst ab 2 Fenstern, Klick fokussiert, Mittelklick
-  schliesst. Ebene `bottom`, damit waybar (Ebene top) immer volle Breite hat.
+  schliesst, Mausrad ueber einem Eintrag schiebt das Fenster hoch/runter (`sidebar.py nudge`, swap mit dem Nachbarn; kein Drag&Drop, eww 0.6 nimmt nur Ablagen aus anderen Programmen an). Ebene `bottom`, damit waybar (Ebene top) immer volle Breite hat.
 - **Hilfe-Panel** (eww `info`, `?` neben AMMO): Matrix Monitor x Nummer +
   alle Shortcuts. **Statisch**: bei neuen Binds oder Assigns mitziehen.
 - **waybar oben:** Badge U/I/O (`custom/monitor`) + je Workspace `<Taste> <Icon>`

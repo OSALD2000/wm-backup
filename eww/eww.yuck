@@ -105,7 +105,7 @@
 
 ; Fensterliste links, eine pro Monitor. sidebar.py watch fuellt wins per
 ; `eww update` und oeffnet/schliesst die Fenster (erst ab 2 Fenstern).
-; Fenster des sichtbaren Workspaces; Klick fokussiert, Mittelklick schliesst.
+; Fenster des sichtbaren Workspaces; Klick fokussiert, Mittelklick schliesst, Mausrad sortiert.
 ; Super+q / Super+Ctrl+q laufen durch dieselbe Liste (sidebar.py next/prev).
 (defvar wins "{}")
 
@@ -120,13 +120,16 @@
   :focusable false
   (box :class "sidebar" :orientation "v" :space-evenly false :spacing 3
     (for w in {wins?.[screen] ?: []}
+      ; Mausrad ueber einem Eintrag = Fenster hoch/runter (sidebar.py nudge).
+      ; Kein Drag&Drop: eww 0.6 erlaubt Ablegen nur aus anderen Programmen.
+      (eventbox :onscroll "~/.config/eww/scripts/sidebar.py nudge ${w.id} {}"
       (button :class "win ${w.focused ? 'active' : ''}" :tooltip {w.title}
               :onclick "swaymsg '[con_id=${w.id}] focus'"
               :onmiddleclick "swaymsg '[con_id=${w.id}] kill'"
         ; Icon ueber dem App-Namen, der Fenstertitel steht im Tooltip
         (box :orientation "v" :space-evenly false :spacing 2
           (image :path {w.icon} :image-width 16 :image-height 16)
-          (label :class "win-app" :limit-width 8 :text {w.name}))))))
+          (label :class "win-app" :limit-width 8 :text {w.name})))))))
 
 ; Mission Control: JSON bleibt die Aufgabenquelle, Obsidian ergaenzt freie Notizen.
 (deflisten missions
@@ -206,13 +209,14 @@
 ; fokussierten Monitor. Knoepfe schicken nur Werte aus jr_opts (Indizes /
 ; feste Tokens), Speichern erst, wenn Datum/Zeit/R per Regex passen: nichts
 ; Freies landet in der Shell-Zeile. Die Notiz fragt journal.py danach per rofi.
-(defvar jr_opts `{"last":"","last_open":false,"symbols":[],"models":[],"tfs":[],"results":[],"types":[],"dirs":[]}`)
+(defvar jr_opts `{"last":"","last_open":false,"symbols":[],"models":[],"tfs":[],"results":[],"types":[],"dirs":[],"biases":[]}`)
 (defvar jr_mode "new")
 (defvar jr_type "live")
 (defvar jr_date "")
 (defvar jr_time "")
 (defvar jr_sym 0)
 (defvar jr_dir "")
+(defvar jr_bias "")
 (defvar jr_model 0)
 (defvar jr_tf "5m")
 (defvar jr_res "offen")
@@ -245,35 +249,39 @@
     ; immer sichtbar, ohne letztes Setup ausgegraut
     (box :class "ms-tabs" :space-evenly true :spacing 4
       (button :class "ms-tab ${jr_mode == 'add' ? 'selected' : ''}" :active {jr_opts.last != ""}
-        :tooltip "Weiterer Screenshot zum letzten Setup" :onclick "eww update jr_mode=add jr_err="
+        :tooltip "Weiterer Screenshot zum letzten Setup" :onclick "eww update jr_mode=add jr_time=${jr_opts.last_time} jr_err="
         (label :limit-width 44 :text {jr_opts.last != "" ? "+ zum letzten: ${jr_opts.last}" : "+ zum letzten (noch kein Setup)"}))
-      (button :class "ms-tab ${jr_mode == 'new' ? 'selected' : ''}" :onclick "eww update jr_mode=new jr_err=" "Neues Setup"))
+      (button :class "ms-tab ${jr_mode == 'new' ? 'selected' : ''}" :onclick "eww update jr_mode=new jr_time=${jr_opts.now_ny} jr_err=" "Neues Setup"))
     (jr-row :label "ART" :visible {jr_mode == 'new'}
       (jr-chips :items {jr_opts.types} :sel jr_type :var "jr_type"))
-    (jr-row :label "DATUM" :visible {jr_mode == 'new'}
-      (input :class "jr-input ${jr_date =~ '^[0-9][0-9][.][0-9][0-9][.][0-9][0-9][0-9][0-9]$' ? '' : 'bad'}"
+    ; Entry-Zeit auch beim letzten Setup, solange es offen ist
+    (jr-row :label {jr_mode == 'new' ? "DATUM" : "ENTRY NY"} :visible {jr_mode == 'new' || jr_opts.last_open}
+      (input :visible {jr_mode == 'new'} :class "jr-input ${jr_date =~ '^[0-9][0-9][.][0-9][0-9][.][0-9][0-9][0-9][0-9]$' ? '' : 'bad'}"
         :width 130 :value jr_date :onchange "eww update jr_date='{}'")
-      (label :class "jr-label jr-gap" :text "ENTRY NY")
-      (input :class "jr-input ${jr_time =~ '^[0-9]?[0-9]:?[0-9][0-9]$' ? '' : 'bad'}"
+      (label :class "jr-label jr-gap" :visible {jr_mode == 'new'} :text "ENTRY NY")
+      (input :class "jr-input ${(jr_time == '' || jr_time =~ '^[0-9]?[0-9]:?[0-9][0-9]$') ? '' : 'bad'}"
         :width 80 :value jr_time :onchange "eww update jr_time='{}'"))
     (jr-row :label "SYMBOL" :visible {jr_mode == 'new'}
       (jr-chips :items {jr_opts.symbols} :sel jr_sym :var "jr_sym"))
     (jr-row :label "RICHTUNG" :visible {jr_mode == 'new'}
       (jr-chips :items {jr_opts.dirs} :sel jr_dir :var "jr_dir")
       (label :class "ms-error jr-gap" :visible {jr_dir == ""} :text "Pflicht"))
+    (jr-row :label "D-BIAS" :visible {jr_mode == 'new'}
+      (jr-chips :items {jr_opts.biases} :sel jr_bias :var "jr_bias")
+      (label :class "ms-error jr-gap" :visible {jr_bias == ""} :text "Pflicht"))
     (jr-row :label "MODEL" :visible {jr_mode == 'new'}
       (jr-chips :items {jr_opts.models} :sel jr_model :var "jr_model"))
     (jr-row :label "TIMEFRAME"
       (jr-chips :items {jr_opts.tfs} :sel jr_tf :var "jr_tf"))
     (jr-row :label "ERGEBNIS" :visible {jr_mode == 'new' || jr_opts.last_open}
       (jr-chips :items {jr_opts.results} :sel jr_res :var "jr_res")
-      (label :class "jr-label jr-gap" :visible {jr_res != 'offen'} :text "R")
+      (label :class "jr-label jr-gap" :visible {jr_res != 'offen' && jr_res != 'notrade'} :text "R")
       (input :class "jr-input ${jr_r == '' || jr_r =~ '^-?[0-9]+([.,][0-9]+)?$' ? '' : 'bad'}"
-        :visible {jr_res != 'offen'} :width 60 :value jr_r :onchange "eww update jr_r='{}'"))
+        :visible {jr_res != 'offen' && jr_res != 'notrade'} :width 60 :value jr_r :onchange "eww update jr_r='{}'"))
     (label :class "ms-error" :visible {jr_err != ""} :xalign 0 :text jr_err)
     (button :class "ms-add" :timeout "10m"
-      :active {(jr_r == '' || jr_r =~ '^-?[0-9]+([.,][0-9]+)?$') && (jr_mode == 'add' || (jr_dir != '' && jr_date =~ '^[0-9][0-9][.][0-9][0-9][.][0-9][0-9][0-9][0-9]$' && jr_time =~ '^[0-9]?[0-9]:?[0-9][0-9]$'))}
-      :onclick "~/.config/sway/scripts/journal.py save ${jr_mode} ${jr_type} ${jr_date} ${jr_time} ${jr_sym} ${jr_dir == '' ? '-' : jr_dir} ${jr_model} ${jr_tf} ${jr_res} '${jr_r}'"
+      :active {(jr_r == '' || jr_r =~ '^-?[0-9]+([.,][0-9]+)?$') && (jr_time == '' || jr_time =~ '^[0-9]?[0-9]:?[0-9][0-9]$') && (jr_mode == 'add' || (jr_dir != '' && jr_bias != '' && jr_date =~ '^[0-9][0-9][.][0-9][0-9][.][0-9][0-9][0-9][0-9]$'))}
+      :onclick "~/.config/sway/scripts/journal.py save ${jr_mode} ${jr_type} ${jr_date} '${jr_time}' ${jr_sym} ${jr_dir == '' ? '-' : jr_dir} ${jr_bias == '' ? '-' : jr_bias} ${jr_model} ${jr_tf} ${jr_res} '${jr_r}'"
       "Speichern  ·  danach Notiz")
     (label :class "ms-subtitle" :xalign 0 :text "Super+Ctrl+j  Verwerfen    ·    Datei je Setup unter Trading/journaling/")))
 
@@ -453,7 +461,10 @@
       (label :class "section" :xalign 0 :text "FENSTER")
         (key :k "Super+q / Super+Ctrl+q" :d "naechstes / voriges (Liste links)")
         (key :k "Mausrad kippen → / ←" :d "naechstes / voriges (wie Super+q)")
-        (key :k "Super+Mausrad kippen → / ←" :d "Workspace weiter / zurueck (dieser Monitor)")
+        (key :k "Super+Mausrad kippen ←" :d "Ziel-Monitor weiter (wie Super+Esc)")
+        (key :k "Super+Mausrad →, dann N" :d "Workspace N des Ziel-Monitors (Esc = abbrechen)")
+        (key :k "Super+Shift+Mausrad →, dann N" :d "Fenster auf Workspace N des Ziel-Monitors (Esc = abbrechen)")
+        (key :k "Mausrad ueber Liste links" :d "Fenster hoch / runter sortieren")
         (key :k "Super+b" :d "Liste links an/aus (oder Klick auf Fensterzahl oben)")
         (key :k "Super+j k l ö" :d "Fokus, mit Shift verschieben")
         (key :k "Super+w / e" :d "Tabs / Split umschalten")

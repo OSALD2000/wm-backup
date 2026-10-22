@@ -188,6 +188,18 @@ def cycle(delta):
         subprocess.run(["swaymsg", f"[con_id={wid}] focus"], capture_output=True)
 
 
+def nudge(wid, way):
+    """Fenster wid in der Liste eine Stelle hoch (up) / runter (down)."""
+    tree = swaymsg("-t", "get_tree")
+    wid = int(wid)
+    ids = next((ids for ws in visible_windows(tree, {}).values()
+                if wid in (ids := [w["id"] for w in ws])), [])
+    i = ids.index(wid) if ids else 0
+    j = i + (-1 if way == "up" else 1)
+    if 0 <= j < len(ids):
+        subprocess.run(["swaymsg", f"[con_id={wid}] swap container with con_id {ids[j]}"], capture_output=True)
+
+
 def eww(*args):
     # DEVNULL statt capture_output: startet eww dabei den Daemon, erbt der die
     # Pipe, und capture wartet ewig
@@ -416,5 +428,6 @@ def selftest():
 
 if __name__ == "__main__":
     {"watch": watch, "next": lambda: cycle(1), "prev": lambda: cycle(-1),
+     "nudge": lambda: nudge(sys.argv[2], sys.argv[3]),
      "toggle": toggle, "overview": overview, "bar": bar,
      "selftest": selftest}[sys.argv[1]]()

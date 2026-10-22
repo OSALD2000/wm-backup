@@ -2,23 +2,23 @@
 """Trading-Journal (Super+Ctrl+j): Screenshot vom fokussierten Monitor, dann
 das eww-Panel "journal" auf diesem Monitor (ein Formular statt Abfragen).
 
-Panel: "+ <letztes Setup>" (nur Timeframe/Ergebnis/R) oder "Neu" mit
-live/backtest, Datum TT.MM.JJJJ, Entry-Zeit NY HH:MM (Session wird berechnet),
-Symbol, Long/Short (Pflicht, nicht vorbelegt), Model (Ordner in
+Panel: "+ <letztes Setup>" (nur Timeframe, solange offen auch Entry-Zeit/Ergebnis/R) oder "Neu" mit
+live/backtest, Datum TT.MM.JJJJ, Entry-Zeit NY HH:MM (optional, Session wird berechnet),
+Symbol, Long/Short/No Trade und D-Bias Bullish/Bearish/Neutral (beide Pflicht, nicht vorbelegt), Model (Ordner in
 Trading/TradingModels/), Timeframe, Ergebnis, R (optional). Vorbelegt: live, heute, jetzt, zuletzt benutztes Symbol/Model/TF.
 Speichern -> Notiz per ask.sh (rofi, Esc = ohne Notiz) -> Datei. Freitext geht
 nie durch eww (ungeschuetzte Shell-Zeile), das Panel schickt nur Indizes und
 per Regex gepruefte Felder.
 
 Eine Datei je Setup:
-  Trading/journaling/{live-trades,backtesting}/JJJJ/MM/TT/<datum> <HHMM> <Symbol> <Long|Short> <Model>.md
+  Trading/journaling/{live-trades,backtesting}/JJJJ/MM/TT/<datum> <HHMM> <Symbol> <Long|Short|No Trade> <Model>.md
 Bilder daneben (<erfasst>_HHMMSS.png), je Screenshot ein Abschnitt
 "## <TF> · erfasst TT.MM.JJJJ HH:MM". Frontmatter mit Properties und Tags
-(journal/<typ>, session/…, direction/…, model/…, instrument/…, result/…).
+(journal/<typ>, session/…, direction/…, bias/…, model/…, instrument/…, result/…).
 Letztes Setup + letzte Wahl in ~/.local/state/journal-last.json, offener
 Screenshot in $XDG_RUNTIME_DIR/journal-pending.json.
 Aufruf: journal.py            Screenshot + Panel (nochmal = abbrechen)
-        journal.py save MODUS TYP DATUM ZEIT SYM RICHTUNG MODEL TF ERGEBNIS [R]
+        journal.py save MODUS TYP DATUM ZEIT SYM RICHTUNG BIAS MODEL TF ERGEBNIS [R]
         journal.py cancel | selftest
 """
 import json
@@ -38,12 +38,13 @@ MODELS = os.path.join(VAULT, "Trading", "TradingModels")
 FOLDER = {"live": "live-trades", "backtest": "backtesting"}
 SYMBOLS = ["NQ1!", "ES1!"]
 TFS = ["1m", "3m", "5m", "15m", "1h", "4h", "D"]
-RESULTS = ["Win", "Loss", "BE", "offen"]
+RESULTS = {"win": "Win", "loss": "Loss", "be": "BE", "offen": "offen", "notrade": "No Trade"}  # Wert -> Anzeige
 NO_MODEL = "kein Model"
-DIRS = ["Long", "Short"]
+DIRS = {"long": "Long", "short": "Short", "notrade": "No Trade"}  # Wert -> Anzeige/Dateiname
+BIASES = {"bullish": "Bullish", "bearish": "Bearish", "neutral": "Neutral"}  # Daily Bias
 STATE = os.path.expanduser("~/.local/state/journal-last.json")
 ASK = os.path.expanduser("~/.config/sway/scripts/ask.sh")
-ORDER = ["date", "time_ny", "session", "type", "instrument", "direction", "model", "timeframes",
+ORDER = ["date", "time_ny", "session", "type", "instrument", "direction", "d_bias", "model", "timeframes",
          "result", "r", "captured", "cssclasses", "tags"]
 
 
@@ -154,6 +155,24 @@ def set_result(fm, result, r):
                         + ["journal", f"result-{slug(result)}"])
 
 
+def set_time(path, fm, hhmm):
+    """Entry-Zeit nachtragen/aendern: time_ny, Session + Tag, HHMM im Dateinamen.
+    Gibt den (evtl. neuen) Pfad zurueck; umbenannt wird erst beim Speichern."""
+    old = fm.get("time_ny", "")
+    if not hhmm or hhmm == old:
+        return path
+    ses = session(hhmm)
+    fm.update(time_ny=hhmm, session=ses)
+    fm["tags"] = [t for t in fm.get("tags", []) if not t.startswith("session/")] + [f"session/{slug(ses)}"]
+    base, date = os.path.basename(path)[:-3], fm.get("date", "")
+    if not date or not base.startswith(date + " "):
+        return path
+    rest = base[len(date) + 1:]
+    rest = rest[5:] if old and rest.startswith(old.replace(":", "") + " ") else rest
+    new = os.path.join(os.path.dirname(path), f"{date} {hhmm.replace(':', '')} {rest}.md")
+    return path if os.path.exists(new) else new
+
+
 def section(tf, now, note, img):
     return f"\n## {tf} · erfasst {now:%d.%m.%Y %H:%M}\n\n" + (f"{note}\n\n" if note else "") + f"![[{img}]]\n"
 
@@ -241,74 +260,83 @@ def start():
     crop_chart(tmp)
     st = load(STATE)
     last = st.get("path") if st.get("path") and os.path.exists(st["path"]) else ""
-    last_open = False
+    last_open, last_time = False, ""
     if last:
         with open(last) as f:
-            last_open = split(f.read())[0].get("result", "offen") == "offen"
+            lfm = split(f.read())[0]
+        last_open, last_time = lfm.get("result", "offen") == "offen", lfm.get("time_ny", "")
+    now_ny = f"{datetime.now(NY):%H:%M}"
     syms = first(st.get("symbol"), SYMBOLS)
     mods = first(st.get("model"), models() + [NO_MODEL])
     with open(PENDING, "w") as f:
         json.dump({"tmp": tmp, "img": img, "now": now.isoformat(), "symbols": syms, "models": mods}, f)
     opts = {"last": os.path.basename(last)[:-3] if last else "", "last_open": last_open,
+            "last_time": last_time, "now_ny": now_ny,
             "symbols": [{"v": i, "l": x} for i, x in enumerate(syms)],
             "models": [{"v": i, "l": x} for i, x in enumerate(mods)],
             "tfs": [{"v": x, "l": x} for x in TFS],
-            "results": [{"v": x.lower(), "l": x} for x in RESULTS],
+            "results": [{"v": k, "l": x} for k, x in RESULTS.items()],
             "types": [{"v": "live", "l": "Live"}, {"v": "backtest", "l": "Backtest"}],
-            "dirs": [{"v": x.lower(), "l": x} for x in DIRS]}
+            "dirs": [{"v": k, "l": x} for k, x in DIRS.items()],
+            "biases": [{"v": k, "l": x} for k, x in BIASES.items()]}
     eww("update", "jr_opts=" + json.dumps(opts), "jr_mode=" + ("add" if last else "new"),
-        "jr_type=live", f"jr_date={now:%d.%m.%Y}", f"jr_time={datetime.now(NY):%H:%M}",
-        "jr_sym=0", "jr_dir=", "jr_model=0", "jr_tf=" + st.get("tf", "5m"), "jr_res=offen", "jr_r=", "jr_err=")
+        "jr_type=live", f"jr_date={now:%d.%m.%Y}", "jr_time=" + (last_time if last else now_ny),
+        "jr_sym=0", "jr_dir=", "jr_bias=", "jr_model=0", "jr_tf=" + st.get("tf", "5m"), "jr_res=offen", "jr_r=", "jr_err=")
     eww("open", "journal", "--screen", mon)
 
 
-def build(mode, typ, date, hhmm, sym, direction, model, tf, res, r, p, st):
+def build(mode, typ, date, hhmm, sym, direction, bias, model, tf, res, r, p, st):
     """Werte aus dem Panel -> (Pfad, Frontmatter, Body) oder Fehlertext."""
     if tf not in TFS:
         return "Timeframe waehlen"
     r = parse_r(r)
     if r is None:
         return "R ist keine Zahl"
-    res = res.capitalize() if res.capitalize() in RESULTS else "offen"
+    res = res.lower() if res.lower() in RESULTS else "offen"
+    t = parse_time(hhmm) if hhmm.strip() else ""
+    if t is None:
+        return "Zeit HH:MM pruefen"
     if mode == "add":
         path = st.get("path")
         if not path or not os.path.exists(path):
             return "Letztes Setup nicht gefunden"
         with open(path) as f:
             fm, body = split(f.read())
-        if fm.get("result", "offen") == "offen" and res != "offen":
-            set_result(fm, res, r)
+        if fm.get("result", "offen") == "offen":
+            path = set_time(path, fm, t)
+            if res != "offen":
+                set_result(fm, res, r)
         tfs = fm.get("timeframes") or []
         tfs = tfs if isinstance(tfs, list) else [tfs]
         fm["timeframes"] = tfs + ([] if tf in tfs else [tf])
         return path, fm, body
-    d, hhmm = parse_date(date), parse_time(hhmm)
+    d, hhmm = parse_date(date), t  # Zeit optional
     if not d:
         return "Datum TT.MM.JJJJ pruefen"
-    if not hhmm:
-        return "Zeit HH:MM pruefen"
     typ = typ if typ in FOLDER else "live"
-    direction = direction.capitalize()
     if direction not in DIRS:
-        return "Long oder Short waehlen"
+        return "Long, Short oder No Trade waehlen"
+    dkey, direction = direction, DIRS[direction]
+    if bias not in BIASES:
+        return "D-Bias waehlen"
     try:
         sym, model = p["symbols"][int(sym)], p["models"][int(model)]
     except (ValueError, IndexError, KeyError):
         return "Symbol/Model waehlen"
-    name = re.sub(r'[*"\\/<>:|?^\[\]#]', "", f"{d:%Y-%m-%d} {hhmm.replace(':', '')} {sym} {direction} {model}")
+    name = re.sub(r'[*"\\/<>:|?^\[\]#]', "", " ".join(x for x in (f"{d:%Y-%m-%d}", hhmm.replace(":", ""), sym, direction, model) if x))
     folder = os.path.join(ROOT, FOLDER[typ], f"{d:%Y}", f"{d:%m}", f"{d:%d}")
     path, n = os.path.join(folder, name + ".md"), 2
     while os.path.exists(path):
         path, n = os.path.join(folder, f"{name} {n}.md"), n + 1
-    ses = session(hhmm)
+    ses = session(hhmm) if hhmm else ""
     fm = {"date": f"{d:%Y-%m-%d}", "time_ny": hhmm, "session": ses, "type": typ,
-          "instrument": sym, "direction": direction.lower(), "model": model, "timeframes": [tf],
-          "captured": p["now"][:10], "cssclasses": [f"dir-{direction.lower()}"],
-          "tags": ["trading", "journal", f"journal/{typ}", f"session/{slug(ses)}", f"direction/{direction.lower()}",
-                   f"model/{slug(model)}", f"instrument/{slug(sym)}"]}
+          "instrument": sym, "direction": dkey, "d_bias": bias, "model": model, "timeframes": [tf],
+          "captured": p["now"][:10], "cssclasses": [f"dir-{dkey}"],
+          "tags": ["trading", "journal", f"journal/{typ}", f"direction/{dkey}", f"bias/{bias}",
+                   f"model/{slug(model)}", f"instrument/{slug(sym)}"] + ([f"session/{slug(ses)}"] if ses else [])}
     set_result(fm, res, r)
     st.update(symbol=sym, model=model)
-    return path, fm, f"\n# {d:%d.%m.%Y} {hhmm} NY – {sym} {direction} {model}\n"
+    return path, fm, f"\n# {d:%d.%m.%Y}{f' {hhmm} NY' if hhmm else ''} – {sym} {direction} {model}\n"
 
 
 def mkdirs_slow(d):
@@ -328,8 +356,8 @@ def save(args):
     p, st = load(PENDING), load(STATE)
     if not p or not os.path.exists(p["tmp"]):
         return cancel()
-    args = (args + [""] * 10)[:10]
-    tf = args[7]
+    args = (args + [""] * 11)[:11]
+    tf = args[8]
     out = build(*args, p, st)
     if isinstance(out, str):
         return eww("update", "jr_err=" + out)
@@ -355,6 +383,8 @@ def save(args):
     with open(path + ".tmp", "w") as f:
         f.write(join(fm, body.rstrip("\n") + "\n" + section(tf, now, note, img)))
     os.replace(path + ".tmp", path)
+    if st.get("path") and st["path"] != path and args[0] == "add":  # Entry-Zeit hat den Namen geaendert
+        os.remove(st["path"])
     st.update(path=path, tf=tf)
     os.makedirs(os.path.dirname(STATE), exist_ok=True)
     with open(STATE, "w") as f:
@@ -399,21 +429,38 @@ def selftest():
     import tempfile
     ROOT = tempfile.mkdtemp()
     p, st = {"symbols": ["ES1!", "NQ1!"], "models": ["Sakura", NO_MODEL], "now": "2026-10-18T16:34:11"}, {}
-    path, fm, body = build("new", "backtest", "07.01.2025", "9:56", "1", "short", "0", "5m", "offen", "", p, st)
+    path, fm, body = build("new", "backtest", "07.01.2025", "9:56", "1", "short", "bullish", "0", "5m", "offen", "", p, st)
     assert path == f"{ROOT}/backtesting/2025/01/07/2025-01-07 0956 NQ1! Short Sakura.md", path
     assert fm["session"] == "NY AM" and fm["result"] == "offen" and "result/offen" in fm["tags"]
     assert st == {"symbol": "NQ1!", "model": "Sakura"} and "# 07.01.2025 09:56 NY – NQ1! Short Sakura" in body
     assert fm["direction"] == "short" and "direction/short" in fm["tags"]
+    assert fm["d_bias"] == "bullish" and "bias/bullish" in fm["tags"]
+    assert build("new", "live", "07.01.2025", "09:56", "0", "long", "", "0", "5m", "win", "", p, {}) == "D-Bias waehlen"
     assert fm["cssclasses"] == ["dir-short", "journal", "result-offen"], fm["cssclasses"]
-    assert build("new", "live", "31.02.2025", "09:56", "0", "long", "0", "5m", "win", "", p, {}).startswith("Datum")
-    assert build("new", "live", "07.01.2025", "09:56", "0", "long", "0", "5m", "win", "x", p, {}) == "R ist keine Zahl"
-    assert build("new", "live", "07.01.2025", "09:56", "0", "", "0", "5m", "win", "", p, {}) == "Long oder Short waehlen"
+    assert build("new", "live", "31.02.2025", "09:56", "0", "long", "bullish", "0", "5m", "win", "", p, {}).startswith("Datum")
+    assert build("new", "live", "07.01.2025", "09:56", "0", "long", "bullish", "0", "5m", "win", "x", p, {}) == "R ist keine Zahl"
+    assert build("new", "live", "07.01.2025", "09:56", "0", "", "bullish", "0", "5m", "win", "", p, {}) == "Long, Short oder No Trade waehlen"
+    _, fm3, _ = build("new", "live", "07.01.2025", "09:56", "0", "notrade", "bullish", "1", "5m", "offen", "", p, {})
+    path4, fm4, body4 = build("new", "live", "07.01.2025", "", "0", "long", "bullish", "1", "5m", "offen", "", p, {})
+    assert path4.endswith("/2025-01-07 ES1! Long kein Model.md") and not fm4["session"], path4
+    assert not any(t.startswith("session/") for t in fm4["tags"]) and "# 07.01.2025 – ES1!" in body4
+    assert join(fm4, "").count("time_ny") == 0
+    assert build("new", "live", "07.01.2025", "9:7", "0", "long", "bullish", "0", "5m", "win", "", p, {}) == "Zeit HH:MM pruefen"
+    assert fm3["direction"] == "notrade" and "direction/notrade" in fm3["tags"] and fm3["cssclasses"][0] == "dir-notrade"
     os.makedirs(os.path.dirname(path))
     with open(path, "w") as f:
         f.write(join(fm, body))
-    _, fm2, _ = build("add", "", "", "", "", "", "", "1m", "loss", "-1", p, {"path": path})
+    _, fm2, _ = build("add", "", "", "", "", "", "", "", "1m", "loss", "-1", p, {"path": path})
     assert fm2["cssclasses"] == ["dir-short", "journal", "result-loss"]
+    _, fm5, _ = build("add", "", "", "09:45", "", "", "", "", "1m", "offen", "", p, {"path": path})
+    assert fm5["time_ny"] == "09:45" and "session/ny-am" in fm5["tags"] and fm5["session"] == "NY AM"
+    assert set_time(path, dict(fm), "09:45").endswith("/2025-01-07 0945 NQ1! Short Sakura.md")
+    assert set_time(path, dict(fm), "09:56") == path
+    assert build("add", "", "", "9:7", "", "", "", "", "1m", "offen", "", p, {"path": path}) == "Zeit HH:MM pruefen"
     assert fm2["timeframes"] == ["5m", "1m"] and fm2["result"] == "loss" and fm2["r"] == "-1"
+    set_result(fm2, "notrade", "")
+    assert fm2["result"] == "notrade" and "result/notrade" in fm2["tags"] and fm2["cssclasses"][-1] == "result-notrade"
+    assert build("new", "live", "07.01.2025", "", "0", "long", "bullish", "0", "5m", "notrade", "", p, {})[1]["result"] == "notrade"
     print("ok")
 
 

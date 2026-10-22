@@ -1,7 +1,7 @@
 #!/bin/sh
 # ws.sh go|move N   — Workspace N des fokussierten Monitors.
 # ws.sh tgo|tmove N — Workspace N des Ziel-Monitors (Super+Ctrl[+Shift]+N).
-# ws.sh cycle       — Ziel weiterschalten u -> i -> o (Super+Esc).
+# ws.sh cycle [-1]  — Ziel weiterschalten u -> i -> o (Super+Esc), -1 = zurueck.
 # ws.sh bar         — Ziel fuer waybar custom/target ("→ I", leer bei 1 Monitor).
 # Namen "<nr>:<kuerzel><N>" (u = 11-20, i = 21-30, o = 31-40, siehe sway/config).
 # Der Monitor ergibt sich aus der Nummer des fokussierten Workspaces; ohne
@@ -15,6 +15,14 @@ have=$(echo oiu | cut -c1-"$n")
 t=$(cat "$f" 2>/dev/null)
 case $t in [uio]) case $have in *$t*) ;; *) t=o ;; esac ;; *) t=o ;; esac
 
+# Nachbar von Kuerzel $1 in Richtung $2 (+1 = rechts) unter u i o, nur
+# vorhandene, rundum.
+step() {
+    l=$(echo uio | tr -cd "$have")
+    i=$(( ($(expr index "$l" "$1") - 1 + $2 + ${#l}) % ${#l} + 1 ))
+    echo "$l" | cut -c"$i"
+}
+
 base() { case $1 in u) echo 10 ;; i) echo 20 ;; *) echo 30 ;; esac; }
 
 case $1 in
@@ -23,11 +31,7 @@ case $1 in
         case $(( (num - 1) / 10 )) in 1) k=u ;; 2) k=i ;; *) k=o ;; esac ;;
     tgo|tmove) k=$t ;;
     cycle)
-        case $t in
-            u) t=i ;;
-            i) t=o ;;
-            o) case $have in *u*) t=u ;; *i*) t=i ;; esac ;;
-        esac
+        t=$(step "$t" "${2:-1}")
         echo "$t" > "$f"
         pkill -RTMIN+10 -x waybar  # = "signal" von custom/target
         exit ;;
