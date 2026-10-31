@@ -156,6 +156,11 @@ Wer davon abweicht, fragt vorher.
   wird vor dem Oeffnen festgehalten. Aendert sich die Bildschirmzuordnung waehrend
   der Auswahl, wird abgebrochen. Das bestehende interne u/i/o-Schema und die
   Direktkuerzel bleiben erhalten (bis zu drei Bildschirme).
+  Raster und Direktkuerzel bedienen dieselben Workspaces; Assigns, Waybar,
+  Fensterliste, Session-Parken und `collapse()` verwenden weiter diese Namen.
+  Die gemerkten Raster-Ziele sind unabhaengig vom Ziel-Monitor in `ws-target`
+  (`Super+Esc`, waybar `custom/target`): Eine Raster-Auswahl aendert den Pfeil
+  nicht. Das gilt fuer jedes neue Theme.
 - **Trading-Journal** (`Super+Ctrl+j`, `sway/scripts/journal.py`, eww `journal`):
   Screenshot des fokussierten Monitors (per `crop_chart()` auf die helle
   Chart-Flaeche samt Achsen zugeschnitten, ImageMagick; ohne helle Flaeche bleibt

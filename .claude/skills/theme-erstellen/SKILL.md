@@ -96,6 +96,8 @@ Konventionen aus den bisherigen Themes, die sich bewaehrt haben:
   dort eintragen, keine zweite `eww open`-Zeile (zwei Starts = zwei Daemons).
   Der Watcher klappt auch Workspaces ohne eigenen Monitor ein (`collapse()`,
   1 Monitor = nur o, 2 = o+i) und benennt Workspaces mit fremdem Kuerzel um: `sidebar.py` unveraendert uebernehmen.
+- Workspace-Raster und Direktkuerzel gemeinsam uebernehmen; Kompatibilitaet
+  und getrennte Ziel-Speicher stehen unter "Workspace-Raster" in `CLAUDE.md`.
 - Die Bausteine der Standard-Bedienung mit umfaerben, nicht weglassen:
   `sidebar`, `info`, die waybar-Workspaces (Nummer + Icon, `button.visible`
   wie `button.focused`), `custom/wins` (Klassen `open`/`idle`/`off`), `custom/target`, `custom/market` (Klassen `active`/`idle`/`closed`), `custom/agents` (Klassen `busy`/`idle`/`new`/`none`), die swaync-Popups (Pickups
