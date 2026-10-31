@@ -453,6 +453,8 @@
       (label :class "muted small" :xalign 0 :text "Gelb = App landet dort automatisch (assign). Klick schliesst."))
     (box :orientation "v" :space-evenly false :spacing 3
       (label :class "section" :xalign 0 :text "WORKSPACES")
+        (key :k "Super+u / Super+Shift+u" :d "Workspace-Raster: wechseln / Fenster verschieben")
+        (key :k "im Raster: h j k l / Pfeile" :d "waehlen, Enter/Klick bestaetigt, Esc zu; letztes Ziel gemerkt")
         (key :k "Super+1…0" :d "Workspace N auf diesem Monitor")
         (key :k "Super+Shift+1…0" :d "Fenster dorthin schieben")
         (key :k "Super+Esc" :d "Ziel-Monitor weiter u / i / o (oben → U/I/O, Start o)")
