@@ -77,15 +77,6 @@ tooltip { background: rgba(0, 0, 0, 0.85); color: $bright; border: 1px solid $fg
 .new { background: $box_hi; border-radius: 8px; padding: 7px 10px; border: 1px solid $fg; }
 .new entry { color: $bright; caret-color: $bright; }
 
-// ── Fensterliste links (sidebar.py) — Kaesten wie die Workspaces in waybar ─
-.sidebar { background: rgba(22, 20, 13, 0.88); border-right: 1px solid $edge; padding: 3px;
-           font-family: "Iosevka Nerd Font", monospace; font-weight: bold; }
-.win { background: $box; border: 1px solid $edge; border-radius: 4px; padding: 4px 2px; }
-.win:hover { background: rgba(255, 220, 0, 0.08); }
-.win-app   { color: rgba(255, 220, 0, 0.70); font-size: 7px; }
-.win.active { background: rgba(255, 220, 0, 0.16); border-color: rgba(255, 220, 0, 0.50); }
-.win.active .win-app { color: $bright; }
-
 // ── Hilfe (info) ─────────────────────────────────────────────────
 .info { font-family: "Iosevka Nerd Font", monospace; font-size: 11px; background: rgba(20, 19, 16, 0.96); }
 .info-btn .hud-num { min-width: 20px; }

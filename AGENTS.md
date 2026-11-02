@@ -26,11 +26,12 @@ Aenderungen an `theme.sh` immer in beiden Kopien nachziehen.
 | `hypr/` | `~/.config/hypr/` | **nur hyprlock** (Sperrbildschirm) + `loading.sh` (Ladebalken). Hyprland selbst wird nicht benutzt |
 | `waybar/` | `~/.config/waybar/` | obere Leiste (`config.jsonc`, `style.css`): Monitor-Badge U/I/O + Workspaces als `<Taste> <Icon>`, sichtbarer Workspace je Monitor hervorgehoben, `custom/wins` = Fensterzahl + Fensterliste offen/zu, `custom/target` = Ziel-Monitor `→ U/I/O`, `custom/agents` = Claude/Codex-Status |
 | `rofi/` | `~/.config/rofi/` | Launcher. Sway ruft `rofi -config ~/.config/rofi/config-nord.rasi` auf; der Name "nord" ist historisch, das aktive Theme steht per `@theme` darin (HL2: `hl2-menu.rasi`). `config.rasi` gehoert zu i3 |
-| `eww/` | `~/.config/eww/` | Desktop-Widgets. HL2: `hud-left`/`hud-right` + Lern-Panel `learn` (Super+Z), Hilfe `info` (Super+Shift+Z), Fensterliste `sidebar` je Monitor, Missionen `mission` (Super+m), Trading-Journal `journal` (Super+Ctrl+j, Formular von `sway/scripts/journal.py`). `scripts/learn.py` = Lern-Timer, Daten in `~/.local/share/learn-timer/`; `scripts/sidebar.py` = Watcher fuer die Fensterliste + Super+q/b + Workspace-Raster Super[+Shift]+u + Vorschau-Raster Super+Tab (`overview`, rofi) + Stand fuer waybar `custom/wins` (`bar`); `scripts/todo.py` = Missionen (Todo-Liste), Daten in `~/.local/share/missions/`; `scripts/agents.py` = Agenten-Panel `agents` (Super+c) + Tafel `agents-board` (Super+g) + waybar `custom/agents` |
+| `eww/` | `~/.config/eww/` | Desktop-Widgets. HL2: `hud-left`/`hud-right` + Lern-Panel `learn` (Super+Z), Hilfe `info` (Super+Shift+Z), Missionen `mission` (Super+m), Trading-Journal `journal` (Super+Ctrl+j, Formular von `sway/scripts/journal.py`). `scripts/learn.py` = Lern-Timer, Daten in `~/.local/share/learn-timer/`; `scripts/sidebar.py` = Watcher fuer die Fensterliste (schreibt `$XDG_RUNTIME_DIR/sidebar.json`, startet Quickshell) + Super+q/b + Workspace-Raster Super[+Shift]+u + Vorschau-Raster Super+Tab (`overview`, rofi) + Stand fuer waybar `custom/wins` (`bar`); `scripts/todo.py` = Missionen (Todo-Liste), Daten in `~/.local/share/missions/`; `scripts/agents.py` = Agenten-Panel `agents` (Super+c) + Tafel `agents-board` (Super+g) + waybar `custom/agents` |
 | `swaync/` | `~/.config/swaync/` | Benachrichtigungen (Popups als Pickups unten rechts) + Panel hinter der Glocke |
 | `swaylock/` | `~/.config/swaylock/` | Fallback-Sperre |
 | `alacritty/` | `~/.config/alacritty/` | Terminal. `alacritty.toml` importiert die Farbdatei (`hl2.toml`, `nord.toml`), `lambda.txt` = Begruessung |
 | `cool-retro-term/` | `~/.config/cool-retro-term/` | Look der Konsole: `profile.json` (Farben, CRT-Effekte, Schrift), traegt `console.py` vor jedem Start ein |
+| `quickshell/` | `~/.config/quickshell/` | Fensterliste links (`shell.qml`): je Monitor eine animierte Leiste, liest `sidebar.json`. Binary `~/.local/bin/quickshell` selbst gebaut (siehe Stolperfallen) |
 | `wallpaper.jpg` | `~/Private/wallpaper.jpg` | von `output * bg` in der sway-Config benutzt |
 | `browser/chrome-hl2-theme/` | `~/.config/chrome-hl2-theme/` | entpacktes Chrome-Theme (in Chrome ueber "Entpackte Erweiterung laden") |
 | `browser/firefox/*.css` | `~/snap/firefox/common/.mozilla/firefox/h5d4ltr7.default/chrome/` | Firefox (Snap) userChrome/userContent |
@@ -97,14 +98,15 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v24` | wie v23, Mission Control mit Fokus (max. 3), Offen/Erledigt/Archiv, Bearbeiten und eigenen Obsidian-Notizen; Archiv statt Loeschen, dezente UI-Uebergaenge, stabile Workspace-Breiten, IPv6-Anzeige entfernt. |
 | `HL2-v25` | wie v24, Mission Control mit 80 % Bildschirmhoehe und je 10 % Abstand oben/unten. |
 | `HL2-v26` | wie v25, Trading-Journal als eww-Formular (Super+Ctrl+j): eine Datei je Setup unter `journaling/{live-trades,backtesting}/JJJJ/MM/TT/`, Model/Symbol/Long-Short/Session/Timeframe/Ergebnis/R im Frontmatter + Tags, weitere Screenshots ans letzte Setup, Altes in `legacy/`. |
-| `HL2-v27` | wie v26, Workspace-Raster (Super+u wechseln, Super+Shift+u verschieben): eine Zeile je Bildschirm, zehn Felder, Maus/hjkl/Pfeile, letztes Ziel je Aktion gespeichert. **Aktueller Standard** fuer neue Themes |
+| `HL2-v27` | wie v26, Workspace-Raster (Super+u wechseln, Super+Shift+u verschieben): eine Zeile je Bildschirm, zehn Felder, Maus/hjkl/Pfeile, letztes Ziel je Aktion gespeichert. |
+| `HL2-v28` | wie v27, Fensterliste links mit Quickshell statt eww: animiert (einfahren, Eintraege ploppen rein/raus, leuchtende Markierung gleitet federnd zum aktiven Fenster, Icon huepft), Look wie die waybar-Workspaces, Fenstertitel als Popout. **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v27` (Vorschau,
+Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v28` (Vorschau,
 Zwischenablage, Konsole, Pickup-Popups, Workspace-Nummern und Fensterzahl in waybar,
 Missionen). Alles in dieser Liste gilt fuer
 **jedes** neue Theme, nicht nur fuer HL2: es aendert nur den **Look**
@@ -267,9 +269,9 @@ Wer davon abweicht, fragt vorher.
 - **Fenster:** `workspace_layout tabbed`, Tab-Zeile per Schrift 1 + leerem
   `title_format` + Titelbar-Farben = Hintergrund auf ~3px geschrumpft (ganz weg
   geht in Sway nicht). Kein `Super+s` (stacking). Rahmen nur ueber `child_border`.
-- **Fensterliste links** (eww `sidebar`, 58px): Icon + App-Name je Fenster des
+- **Fensterliste links** (Quickshell `quickshell/shell.qml`, 60px, volle Hoehe, reserviert Platz, Kaesten wie die waybar-Workspaces): Icon + App-Name je Fenster des
   sichtbaren Workspaces, erst ab 2 Fenstern, Klick fokussiert, Mittelklick
-  schliesst, Mausrad ueber einem Eintrag schiebt das Fenster hoch/runter (`sidebar.py nudge`, swap mit dem Nachbarn; kein Drag&Drop, eww 0.6 nimmt nur Ablagen aus anderen Programmen an). Ebene `bottom`, damit waybar (Ebene top) immer volle Breite hat.
+  schliesst, Mausrad ueber einem Eintrag schiebt das Fenster hoch/runter (`sidebar.py nudge`, swap mit dem Nachbarn), Hover = Fenstertitel als Popout (deckend, ohne Ausblenden: halbtransparent gab Geisterbilder). Animiert: Leiste faehrt ein, Eintraege ploppen rein/raus, leuchtende Markierung gleitet federnd zum zuletzt fokussierten Fenster des Workspaces (`active` in `sidebar.json`, auch ohne Tastaturfokus). Ebene `bottom`, damit waybar (Ebene top) immer volle Breite hat. Daten: `sidebar.py watch` schreibt `{"wins", "show"}` atomar, Quickshell liest per `FileView` mit `watchChanges`; der Watcher startet Quickshell (vorher `pkill -x quickshell`). Fehler: `quickshell log`.
 - **Hilfe-Panel** (eww `info`, `?` neben AMMO): Matrix Monitor x Nummer +
   alle Shortcuts. **Statisch**: bei neuen Binds oder Assigns mitziehen.
 - **waybar oben:** Badge U/I/O (`custom/monitor`) + je Workspace `<Taste> <Icon>`
@@ -290,8 +292,8 @@ Ein neues Theme uebernimmt `ws.sh`, `sidebar.py`, `agents.py`, `clip.sh`, `marke
 `format-icons` der waybar (Nummer vor dem Icon) und die Module `custom/wins`, `custom/target`, `custom/market` und `custom/agents`, die
 Workspace-/Bind-Bloecke, den Mode `[ AGENTS ]` und die Konsolen-Regel (`console.py`, `for_window` auf
 cool-retro-term) der sway-Config, die
-eww-Fenster `sidebar`/`info`/`mission`/`agents`/`agents-board`/`journal` (mit `todo.py`) und Lage/Timeout der swaync-Popups
-(`swaync/config.json`) und passt nur Farben und Schrift an: `eww.scss`,
+Fensterliste `quickshell/shell.qml`, die eww-Fenster `info`/`mission`/`agents`/`agents-board`/`journal` (mit `todo.py`) und Lage/Timeout der swaync-Popups
+(`swaync/config.json`) und passt nur Farben und Schrift an: `eww.scss`, die Farb-Properties oben in `quickshell/shell.qml`,
 waybar `style.css`, den Popup-Block in `swaync/style.css` und die
 `-theme-str`-Teile in `clip.sh`, `ask.sh` und `overview()`/`workspace_grid()` in `sidebar.py` (die rofi-Theme-Datei liefert den Rest); in
 `eww.scss` auch die Bloecke `.ms-*` (Missionen, auch vom Journal-Panel benutzt), `.jr-*` (Journal) und `.ag-*` (Agenten). In `style.css` muss `button.visible` dieselbe
@@ -326,8 +328,8 @@ $S sync-back             # live -> Repo (beim Bauen eines Themes)
 `switch` kopiert per rsync **ohne --delete**: Dateien, die der Ziel-Tag nicht
 kennt, bleiben liegen und stoeren nicht. Bei ungesicherten Live-Aenderungen
 bricht es ab (`-f` ueberschreibt). Neu geladen wird mit `swaymsg reload`, das
-waybar, swaync, screens.py und `sidebar.py watch` (startet eww) ueber
-`exec_always` neu startet. eww wird vor dem Reload beendet; aeltere Tags, die
+waybar, swaync, screens.py und `sidebar.py watch` (startet eww und Quickshell) ueber
+`exec_always` neu startet. eww und Quickshell werden vor dem Reload beendet; aeltere Tags, die
 eww per `exec … eww open` starten, bekommen diese Zeile danach nachgereicht.
 swayidle (traegt den Lock-Befehl) wird mit seiner `exec`-Zeile neu gestartet.
 Firefox und Chrome brauchen einen Neustart, die Konsole auch (schliessen,
@@ -354,6 +356,7 @@ Skills: `theme-erstellen` (neues Theme bauen und taggen), `theme-switch`
   Rechtsklick -> Settings speichert es erst beim Beenden in seine Datenbank;
   `console.py dump` holt sie danach nach `profile.json`. Nur `--profile`
   (lang) wirkt, `-p` erkennt die QML-Seite nicht.
+- Quickshell ist **selbst gebaut** (`~/.cache/build/quickshell`, `cmake -GNinja -B build -DCMAKE_INSTALL_PREFIX=~/.local -DCRASH_HANDLER=OFF -DSERVICE_PIPEWIRE=OFF -DSERVICE_PAM=OFF -DSERVICE_POLKIT=OFF -DX11=OFF -DHYPRLAND=OFF -DSCREENCOPY=OFF`, dann `cmake --build build && cmake --install build`). Nutzt private Qt-APIs: nach jedem Qt-Update aus apt **neu bauen**, sonst Absturz. Build-Pakete: `qt6-{base,declarative,shadertools,svg,wayland}-dev` (+ `-private-dev`), `spirv-tools libcli11-dev ninja-build libjemalloc-dev qml6-module-qtquick-effects`.
 - Mod-Taste ist Super; Richtungen `j k l ö` (i3-Stil), Caps = Escape, Layout `de`.
 - `workspace_layout tabbed` gilt nur fuer **neu angelegte** Workspaces. Alte
   (oder nach `Super+h/v/e`) oeffnen Apps wieder nebeneinander: `Super+w`.

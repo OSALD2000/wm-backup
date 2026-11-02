@@ -1,15 +1,16 @@
 #!/usr/bin/python3
-"""Fensterliste links (eww-Fenster "sidebar"), eine pro Monitor.
+"""Fensterliste links (Quickshell, quickshell/shell.qml), eine pro Monitor.
 
 Zeigt die Fenster des sichtbaren Workspaces dieses Monitors, in Baum-Reihenfolge,
 erst ab MIN_WINDOWS Fenstern (sonst ist das eww-Fenster zu und gibt den Platz frei).
 Super+q / Super+Ctrl+q laufen mit next/prev genau durch diese Liste im Kreis und
 verlassen den Monitor nie (sways `focus next` springt am Ende raus).
 
-Aufruf: sidebar.py watch       eww neu starten (HUD oeffnen), dann bei jeder
-                               Aenderung `eww update wins=...` und Sidebars
-                               oeffnen/schliessen. Laeuft per exec_always, ein
-                               neuer Start beendet den alten (PIDFILE).
+Aufruf: sidebar.py watch       eww (HUD) und Quickshell neu starten, dann bei
+                               jeder Aenderung STATE schreiben (Fenster + welche
+                               Leisten offen sind), Quickshell liest die Datei.
+                               Laeuft per exec_always, ein neuer Start beendet
+                               den alten (PIDFILE).
         sidebar.py next|prev   naechstes/vorheriges Fenster der Liste fokussieren
         sidebar.py toggle      Sidebar an/aus (Super+b)
         sidebar.py bar         waybar-Modul custom/wins: Fensterzahl des
@@ -40,12 +41,13 @@ ICON_DIRS = [os.path.expanduser("~/.local/share/icons"), "/usr/share/icons/hicol
              "/usr/share/pixmaps", "/var/lib/snapd/desktop/icons",
              "/var/lib/flatpak/exports/share/icons", "/usr/share/icons/Yaru",
              "/usr/share/icons/Adwaita", "/usr/share/icons/HighContrast"]
-WAYBAR_HEIGHT = 30  # = "height" in waybar/config.jsonc
 MIN_WINDOWS = 2     # darunter keine Sidebar
 RUN = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
 PIDFILE = os.path.join(RUN, "eww-sidebar.pid")
 OFF = os.path.join(RUN, "eww-sidebar.off")  # existiert = Sidebar per Super+b aus
 BAR = os.path.join(RUN, "eww-sidebar.bar")  # Stand fuer waybar, schreibt der Watcher
+STATE = os.path.join(RUN, "sidebar.json")  # {"wins": {output: [...]}, "show": [outputs]} fuer Quickshell
+QS = os.path.expanduser("~/.local/bin/quickshell")
 BAR_SIGNAL = 9  # = "signal" von custom/wins in waybar/config.jsonc
 # Vorschaubilder fuer overview. Sway kann nur Monitore abfotografieren, und
 # Fenster hinter Tabs/auf unsichtbaren Workspaces malt es gar nicht -> der
@@ -130,6 +132,15 @@ def visible_windows(tree, apps, index=None):
         for ws in o.get("nodes", []):
             if ws.get("name") == o.get("current_workspace"):
                 collect(ws, acc)
+                # zuletzt fokussiertes Fenster des Workspaces (Fokus-Stack hinab),
+                # damit die Leiste auch ohne Tastaturfokus eins markiert
+                node = ws
+                while node.get("focus"):
+                    fid = node["focus"][0]
+                    node = next((c for c in node.get("nodes", []) + node.get("floating_nodes", [])
+                                 if c["id"] == fid), {})
+                for w in acc:
+                    w["active"] = w["id"] == node.get("id")
     return out
 
 
@@ -428,8 +439,10 @@ def watch():
     # verloren hat (zwei gleichzeitige Starts), zeigt seine Fenster weiter an
     # und ist per eww nicht mehr erreichbar -> doppelte Sidebar.
     subprocess.run(["pkill", "-x", "eww"])
+    subprocess.run(["pkill", "-x", "quickshell"])
     time.sleep(0.3)
     eww("open-many", "hud-left", "hud-right")
+    subprocess.Popen([QS], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
     apps, index = desktop_apps(), icon_index()  # ponytail: nur beim Start; neue Apps nach Super+Shift+C
     events = subprocess.Popen(["swaymsg", "-m", "-t", "subscribe", '["window","workspace","output","tick"]'],
                               stdout=subprocess.PIPE, text=True)
@@ -442,20 +455,13 @@ def watch():
             tree = swaymsg("-t", "get_tree")
         snap(tree, taken)
         wins = visible_windows(tree, apps, index)
-        cur = json.dumps(wins)
+        shown = set() if os.path.exists(OFF) else {o for o, w in wins.items() if len(w) >= MIN_WINDOWS}
+        cur = json.dumps({"wins": wins, "show": sorted(shown)})
         if cur != last:
-            eww("update", "wins=" + cur)
+            with open(STATE + ".tmp", "w") as f:
+                f.write(cur)
+            os.replace(STATE + ".tmp", STATE)  # atomar: Quickshell liest nie halbe Dateien
             last = cur
-        want = set() if os.path.exists(OFF) else {o for o, w in wins.items() if len(w) >= MIN_WINDOWS}
-        if want != shown:
-            heights = {o["name"]: o["rect"]["height"] for o in swaymsg("-t", "get_outputs")}
-            for o in shown - want:
-                eww("close", "sidebar-" + o)
-            for o in want - shown:
-                # "100%" wuerde unter die waybar reichen
-                eww("open", "sidebar", "--id", "sidebar-" + o, "--arg", "screen=" + o,
-                    "--arg", f"height={heights.get(o, 1080) - WAYBAR_HEIGHT}px")
-            shown = want
         st = {o: [len(w), o in shown] for o, w in wins.items()}
         cur = json.dumps(st) + str(os.path.exists(OFF))  # OFF aendert das Symbol
         if cur != barstate:

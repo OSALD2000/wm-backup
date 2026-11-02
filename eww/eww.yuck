@@ -103,34 +103,6 @@
       (button :class "btn ghost small" :visible {learn.has_last} :tooltip "Letzte gespeicherte Session löschen"
         :onclick "~/.config/eww/scripts/learn.py undo" "↶ Letzte Session"))))
 
-; Fensterliste links, eine pro Monitor. sidebar.py watch fuellt wins per
-; `eww update` und oeffnet/schliesst die Fenster (erst ab 2 Fenstern).
-; Fenster des sichtbaren Workspaces; Klick fokussiert, Mittelklick schliesst, Mausrad sortiert.
-; Super+q / Super+Ctrl+q laufen durch dieselbe Liste (sidebar.py next/prev).
-(defvar wins "{}")
-
-; stacking "bottom": Sway ordnet die exklusiven Flaechen Ebene fuer Ebene an,
-; die waybar (Ebene top) also immer vor der Sidebar -> volle Breite oben, die
-; Sidebar beginnt darunter. Auf "fg" gewinnt, wer zuerst startet.
-(defwindow sidebar [screen height]
-  :monitor screen
-  :geometry (geometry :width "58px" :height height :anchor "center left")
-  :stacking "bottom"
-  :exclusive true
-  :focusable false
-  (box :class "sidebar" :orientation "v" :space-evenly false :spacing 3
-    (for w in {wins?.[screen] ?: []}
-      ; Mausrad ueber einem Eintrag = Fenster hoch/runter (sidebar.py nudge).
-      ; Kein Drag&Drop: eww 0.6 erlaubt Ablegen nur aus anderen Programmen.
-      (eventbox :onscroll "~/.config/eww/scripts/sidebar.py nudge ${w.id} {}"
-      (button :class "win ${w.focused ? 'active' : ''}" :tooltip {w.title}
-              :onclick "swaymsg '[con_id=${w.id}] focus'"
-              :onmiddleclick "swaymsg '[con_id=${w.id}] kill'"
-        ; Icon ueber dem App-Namen, der Fenstertitel steht im Tooltip
-        (box :orientation "v" :space-evenly false :spacing 2
-          (image :path {w.icon} :image-width 16 :image-height 16)
-          (label :class "win-app" :limit-width 8 :text {w.name})))))))
-
 ; Mission Control: JSON bleibt die Aufgabenquelle, Obsidian ergaenzt freie Notizen.
 (deflisten missions
   :initial `{"open":0,"done":0,"focus":0,"archived":0,"progress":0,"groups":[[],[],[],[]],"error":""}`

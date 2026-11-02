@@ -18,7 +18,7 @@ set -eu
 REPO=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 STATE=${XDG_STATE_HOME:-$HOME/.local/state}/wm-theme
 FFP=$HOME/snap/firefox/common/.mozilla/firefox/h5d4ltr7.default
-DIRS="sway hypr waybar rofi eww swaync swaylock alacritty cool-retro-term"
+DIRS="sway hypr waybar rofi eww swaync swaylock alacritty cool-retro-term quickshell"
 # Muell in den Live-Ordnern, der nie ins Repo gehoert
 EXCL="--exclude=.git --exclude=__pycache__ --exclude=*.bak* --exclude=themes/ --exclude=*.pak"
 
@@ -104,6 +104,9 @@ switch)
         # eww vor dem Reload beenden: neuere Themes oeffnen ihre eww-Fenster per
         # exec_always (sidebar.py watch), aeltere per exec -> unten.
         command -v eww >/dev/null && { eww kill >/dev/null 2>&1 || true; }
+        # Quickshell (Fensterliste ab HL2-v28) auch: aeltere Tags haben die eww-Sidebar
+        # und wuerden sonst zwei Leisten zeigen; neuere starten es im Watcher neu.
+        pkill -x quickshell || true
         swaymsg reload >/dev/null
         # exec-Zeile zu $1 aus der sway-Config, \-Fortsetzungen zusammengefuegt
         execline() {
