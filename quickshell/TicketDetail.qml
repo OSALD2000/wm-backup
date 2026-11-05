@@ -1,5 +1,6 @@
 // Detail-Popup im Ticket-Board: Felder als Chips (Klick wirkt wie die Taste),
 // darunter der Notiztext als Markdown. Der Text wird nur in Obsidian bearbeitet.
+// Unter STATUS und PRIO gleitet ein Leuchtstrich zur gewaehlten Stufe.
 import QtQuick
 
 Rectangle {
@@ -10,46 +11,18 @@ Rectangle {
     readonly property real titleY: body.y + title.y
     implicitHeight: body.y + body.height + md.implicitHeight + foot.height + 64
     // MarkdownText faerbt Links mit der App-Palette (blau, unlesbar): Links, <url> und
-    // nackte URLs als HTML-Anker in Theme-Farbe. ponytail: trifft auch URLs in Code-Spans.
+    // nackte URLs als HTML-Anker in Theme-Farbe. Bilder ![alt](url) bleiben, wie sie sind.
+    // ponytail: trifft auch URLs in Code-Spans.
     function links(md) {
-        return md.replace(/\[([^\]]+)\]\(([^)\s]+)\)|<(https?:\/\/[^>\s]+)>|(https?:\/\/[^\s<>)\]]*[^\s<>)\].,;:!?])/g,
-                          (m, label, url, auto, bare) => `<a href="${url || auto || bare}" style="color: ${shell.hud}">${label || auto || bare}</a>`)
+        return md.replace(/(!?)\[([^\]]*)\]\(([^)\s]+)\)|<(https?:\/\/[^>\s]+)>|(https?:\/\/[^\s<>)\]]*[^\s<>)\].,;:!?])/g,
+                          (m, img, label, url, auto, bare) => img ? m
+                              : `<a href="${url || auto || bare}" style="color: ${shell.hud}">${label || url || auto || bare}</a>`)
     }
     signal setField(string field, string value)
     signal edit(string field)  // title | labels | project
     signal openNote()
     signal closed()
 
-    // Chip: Kasten wie die waybar-Workspaces, `on` = gewaehlt. Auch der Kopf des Boards nutzt ihn.
-    component Chip: Rectangle {
-        id: chip
-        required property var shell
-        property string label
-        property bool on: false
-        property color ink: on ? shell.hud : Qt.alpha(shell.hud, 0.7)
-        signal hit()
-        implicitWidth: txt.implicitWidth + 20
-        implicitHeight: 26
-        radius: 3
-        color: on ? shell.fill : area.containsMouse ? shell.hover : shell.box
-        border.width: 1
-        border.color: on ? shell.hud : area.containsMouse ? Qt.alpha(shell.hud, 0.35) : shell.edge
-        Behavior on color { ColorAnimation { duration: 150 } }
-        Text {
-            id: txt
-            anchors.centerIn: parent
-            text: chip.label
-            font { family: chip.shell.font; pixelSize: 12; bold: true }
-            color: chip.ink
-        }
-        MouseArea {
-            id: area
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: chip.hit()
-        }
-    }
     component Caption: Text {
         required property var shell
         height: 26
@@ -106,34 +79,54 @@ Rectangle {
             Chip { shell: dlg.shell; label: dlg.t.project; onHit: dlg.edit("project") }
 
             Caption { shell: dlg.shell; text: "STATUS" }
-            Row {
-                spacing: 6
-                Repeater {
-                    model: ["backlog", "todo", "in-arbeit", "review", "fertig"]
-                    Chip {
-                        required property string modelData
-                        shell: dlg.shell
-                        label: modelData.toUpperCase().replace("-", " ")
-                        on: dlg.t.status === modelData
-                        onHit: dlg.setField("status", modelData)
+            Item {
+                width: statusRow.width; height: statusRow.height
+                Row {
+                    id: statusRow
+                    spacing: 6
+                    Repeater {
+                        id: statusRep
+                        model: ["backlog", "todo", "in-arbeit", "review", "fertig"]
+                        Chip {
+                            required property string modelData
+                            shell: dlg.shell
+                            label: modelData.toUpperCase().replace("-", " ")
+                            on: dlg.t.status === modelData
+                            onHit: dlg.setField("status", modelData)
+                        }
                     }
+                }
+                Chip.Glide {
+                    shell: dlg.shell
+                    row: statusRow
+                    to: statusRep.count ? statusRep.itemAt(["backlog", "todo", "in-arbeit", "review", "fertig"].indexOf(dlg.t.status)) : null
                 }
             }
 
             Caption { shell: dlg.shell; text: "PRIO" }
-            Row {
-                spacing: 6
-                Repeater {
-                    model: [["hoch", "▲"], ["mittel", "●"], ["niedrig", "▼"]]
-                    Chip {
-                        required property var modelData
-                        shell: dlg.shell
-                        label: modelData[1] + " " + modelData[0].toUpperCase()
-                        on: dlg.t.prio === modelData[0]
-                        ink: modelData[0] === "hoch" ? dlg.shell.warn
-                             : on || modelData[0] === "mittel" ? dlg.shell.hud : Qt.alpha(dlg.shell.hud, 0.55)
-                        onHit: dlg.setField("prio", modelData[0])
+            Item {
+                width: prioRow.width; height: prioRow.height
+                Row {
+                    id: prioRow
+                    spacing: 6
+                    Repeater {
+                        id: prioRep
+                        model: [["hoch", "▲"], ["mittel", "●"], ["niedrig", "▼"]]
+                        Chip {
+                            required property var modelData
+                            shell: dlg.shell
+                            label: modelData[1] + " " + modelData[0].toUpperCase()
+                            on: dlg.t.prio === modelData[0]
+                            ink: modelData[0] === "hoch" ? dlg.shell.warn
+                                 : on || modelData[0] === "mittel" ? dlg.shell.hud : Qt.alpha(dlg.shell.hud, 0.55)
+                            onHit: dlg.setField("prio", modelData[0])
+                        }
                     }
+                }
+                Chip.Glide {
+                    shell: dlg.shell
+                    row: prioRow
+                    to: prioRep.count ? prioRep.itemAt(["hoch", "mittel", "niedrig"].indexOf(dlg.t.prio)) : null
                 }
             }
 
@@ -185,8 +178,6 @@ Rectangle {
             font { family: dlg.shell.font; pixelSize: 14 }
             color: dlg.shell.hud
             lineHeight: 1.2
-            linkColor: dlg.shell.hud
-            palette.link: dlg.shell.hud  // MarkdownText nimmt die Linkfarbe aus der Palette
             onLinkActivated: link => Qt.openUrlExternally(link)
         }
     }
