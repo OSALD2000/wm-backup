@@ -9,6 +9,7 @@ Datei:  <Vault>/Tickets/<PROJ>/<PROJ>-<N> <Titel>.md, Frontmatter status prio cr
 Nur dieses Skript schreibt Ticket-Dateien: atomar (.tmp + os.replace) unter flock.
 """
 import fcntl
+import json
 import os
 import re
 import sys
@@ -100,7 +101,7 @@ def parse_fm(lines):
         k, v = m.group(1), m.group(2).strip()
         j = _block_end(lines, i)
         if v.startswith("[") and v.endswith("]"):
-            out[k] = [_unq(x) for x in v[1:-1].split(",") if x.strip()]
+            out[k] = [_unq(x) for x in re.findall(r'"[^"]*"|\'[^\']*\'|[^,]+', v[1:-1]) if x.strip()]
         elif v == "":
             out[k] = [_unq(l.strip()[1:]) for l in lines[i + 1:j] if l.strip().startswith("-")]
         else:
@@ -109,11 +110,18 @@ def parse_fm(lines):
     return out
 
 
+def _q(x):
+    """Listeneintrag quoten, wenn Komma, Doppelpunkt usw. ihn sonst zerlegen wuerden."""
+    if re.search(r"[,:\[\]{}#&*!|>'\"%@`]", x) or x != x.strip():
+        return json.dumps(x, ensure_ascii=False)
+    return x
+
+
 def set_fm(lines, updates):
     """Ersetzt nur die Bloecke der genannten Schluessel; None entfernt, Fehlende werden angehaengt."""
     lines = list(lines)
     for k, v in updates.items():
-        new = [] if v is None else [f"{k}: [{', '.join(v)}]" if isinstance(v, (list, tuple)) else f"{k}: {v}"]
+        new = [] if v is None else [f"{k}: [{', '.join(_q(x) for x in v)}]" if isinstance(v, (list, tuple)) else f"{k}: {v}"]
         for i, l in enumerate(lines):
             m = KEY_RE.match(l)
             if m and m.group(1) == k:
@@ -228,6 +236,11 @@ def find(key, tickets):
 
 def next_num(project, tickets):
     pre, n = project.upper() + "-", 0
+    # auch unlesbare/verirrte Dateien zaehlen: ihre Nummer wird nie neu vergeben
+    for f in ROOT.glob("*/*.md"):
+        m = FILE_RE.match(f.name)
+        if m and m.group(1) == project.upper():
+            n = max(n, int(m.group(2)))
     for t in tickets:
         for k in [t["key"], *t["aliases"]]:
             m = re.fullmatch(re.escape(pre) + r"(\d+)", k.upper())
@@ -256,7 +269,7 @@ def write(t, fields, title=None, project=None):
     if project and project != proj:
         proj = project
         key = f"{proj}-{next_num(proj, scan()['tickets'])}"
-    name = clean_title(title) if title else t["title"]
+    name = clean_title(title) if title is not None else t["title"]
     fields = dict(fields)
     labels = fields.pop("labels", t["labels"])
     status, prio = fields.get("status", t["status"]), fields.get("prio", t["prio"])
@@ -269,9 +282,9 @@ def write(t, fields, title=None, project=None):
     if new != p and new.exists():
         raise ValueError(f"{new.name} gibt es schon.")
     new.parent.mkdir(parents=True, exist_ok=True)
-    _atomic(new, "---\n" + "\n".join(set_fm(lines, upd) + ["---"]) + "\n" + body)
+    _atomic(p, "---\n" + "\n".join(set_fm(lines, upd) + ["---"]) + "\n" + body)
     if new != p:
-        p.unlink()
+        os.replace(p, new)  # eine atomare Umbenennung, nie zwei Dateien gleichzeitig
     return read(new)
 
 
@@ -309,6 +322,8 @@ def new(project, title, prio="mittel", labels=(), status="todo"):
                             "aliases": [key],
                             "tags": _tags(project, status, prio, clean_labels(labels))})
         path = ROOT / project / f"{key} {title}.md"
+        if path.exists():
+            raise ValueError(f"{path.name} gibt es schon.")
         path.parent.mkdir(parents=True, exist_ok=True)
         _atomic(path, "---\n" + "\n".join(lines + ["---"]) + "\n\n" + body)
         LAST.parent.mkdir(parents=True, exist_ok=True)
@@ -441,6 +456,23 @@ def selftest():
             set_field("WORK-5", "project", "1x"); raise AssertionError("Projektname")
         except ValueError as e:
             assert "A-Z" in str(e)
+        # Fix-Runde 1: Regressionen
+        t = find("WORK-5", scan()["tickets"]); wp = Path(t["path"]); wtxt = wp.read_text()
+        wp.write_text("---\nstatus: todo\nWICHTIGER TEXT")
+        k = new("WORK", "Foo")
+        assert k == "WORK-6" and wp.read_text() == "---\nstatus: todo\nWICHTIGER TEXT"
+        wp.write_text(wtxt)
+        (ROOT / "AURORA" / "WORK-9 verirrt.md").write_text("x")
+        assert new("WORK", "Bar") == "WORK-10"
+        try:
+            set_field("WORK-5", "title", ""); raise AssertionError("leerer Titel")
+        except ValueError as e:
+            assert "Titel ist leer." in str(e)
+        wp.write_text('---\nstatus: todo\naliases:\n  - "Bericht, Q3"\n  - "Ziel: Q3"\n---\n')
+        set_field("WORK-5", "prio", "hoch")
+        assert find("WORK-5", scan()["tickets"])["aliases"] == ["Bericht, Q3", "Ziel: Q3", "WORK-5"]
+        set_field("WORK-5", "title", "Neu")
+        assert not wp.exists() and (ROOT / "WORK" / "WORK-5 Neu.md").exists()
         # (spaetere Tasks haengen hier weitere Asserts an; WORK-5 und AURORA-1 existieren)
     print("selftest ok: Kern (new/set/list/find, WIP, Projektwechsel, Frontmatter)")
 
