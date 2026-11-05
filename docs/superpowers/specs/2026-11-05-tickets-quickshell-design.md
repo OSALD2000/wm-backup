@@ -33,7 +33,8 @@ Viele Mikroanimationen wie in Fensterliste und Workspace-Raster.
 | Datei | Aenderung |
 |---|---|
 | `sway/scripts/ticket.py` | neu: einzige Stelle, die Ticket-Dateien schreibt (CLI, `watch`, `migrate`, `selftest`) |
-| `quickshell/Tickets.qml` | neu: Board, Detail-Popup, Tasten, Drag & Drop, Animationen |
+| `quickshell/Tickets.qml` | neu: Board (Daten, IPC, Fenster, Spalten, Tasten, Drag & Drop, Animationen) |
+| `quickshell/TicketCard.qml`, `quickshell/TicketDetail.qml` | neu: Karte und Detail-Popup (eigene Dateien, damit `Tickets.qml` lesbar bleibt) |
 | `quickshell/shell.qml` | `Tickets { shell: root }` einbinden; Farben bleiben oben in `shell.qml` |
 | `sway/config` | `$mod+m` -> `quickshell ipc call tickets toggle`; `$mod+Ctrl+m` -> `ask.sh "NEUES TICKET" \| ticket.py quick` |
 | `eww/eww.yuck` | `info`: Zeile Super+m / Super+Ctrl+m nachziehen; Mission-Teile (`deflisten missions`, `defvar mission_tab`, `mission-row`, `mission-list`, `defwindow mission`) raus |
@@ -83,7 +84,9 @@ tags: [ticket, projekt/work, status/todo, prio/mittel, mcp, docs]
   Zeichen, die Obsidian im Dateinamen nicht mag (`/ \ : * ? " < > | # ^ [ ]`), werden
   durch Leerzeichen ersetzt, Leerzeichenfolgen zusammengezogen, hoechstens 80 Zeichen
   (an Wortgrenze gekuerzt).
-- **Nummer** = hoechste Nummer im Projektordner + 1 (archivierte zaehlen mit).
+- **Nummer** = hoechste Nummer dieses Projekts + 1, gezaehlt ueber alle Dateinamen und
+  alle `aliases` in allen Projektordnern (archivierte zaehlen mit). Eine Nummer, die ein
+  Ticket beim Projektwechsel mitnimmt (als Alias), wird nie neu vergeben.
 - **Felder**: `status` in `backlog | todo | in-arbeit | review | fertig`,
   `prio` in `hoch | mittel | niedrig` (Standard `mittel`), `created` (Datum),
   `archived: true` nur wenn wahr, `aliases` enthaelt die aktuelle und alle frueheren
@@ -139,13 +142,17 @@ ticket.py selftest
 
 ### `watch`
 
-Prueft jede Sekunde die mtimes unter `Tickets/*/` und liest nur geaenderte Dateien neu.
-Bei Aenderung eine Zeile:
+Prueft jede Sekunde Pfade und mtimes unter `Tickets/*/` (neue, geaenderte, umbenannte und
+geloeschte Dateien) und liest nur geaenderte Dateien neu. Laesst sich eine zuvor gueltige
+Datei gerade nicht lesen (Obsidian speichert noch), bleibt ihr letzter guter Stand stehen.
+`watch` schreibt nie und beendet sich, wenn sein Elternprozess weg ist (`os.getppid()`
+aendert sich), damit kein verwaister Watcher den Vault abfragt. Fehlt `Tickets/`, ist der
+Stand leer. Bei Aenderung eine Zeile:
 
 ```json
 {"projects": ["AURORA", "WORK"],
  "tickets": [{"key": "WORK-3", "project": "WORK", "num": 3, "title": "Atlas MCP anpassen",
-              "status": "todo", "prio": "mittel", "labels": ["mcp"], "archived": false,
+              "status": "todo", "prio": "mittel", "labels": ["mcp"], "archived": false, "aliases": ["WORK-3"],
               "check": [2, 5], "created": "2026-11-05", "mtime": 1793900000,
               "path": "/home/osa/Private/obsidian-vault/Tickets/WORK/WORK-3 Atlas MCP anpassen.md",
               "body": "## Ziel\n…", "bad": ""}],
@@ -167,10 +174,15 @@ Bei Aenderung eine Zeile:
   (oben Waybar beruecksichtigt).
 - Ein `Process` mit `ticket.py watch` laeuft dauerhaft (Daten sind beim Oeffnen da),
   `stdout: SplitParser`. Endet er, nach 2 s neu starten.
-- Aktionen per `Process` mit Argument-Array (`ticket.py set KEY FELD WERT` usw.).
-  stderr eines fehlgeschlagenen Aufrufs -> Fehlerzeile.
+- Aktionen: je Aufruf ein eigener `Process` (per `Component.createObject`, Argument-Array,
+  stderr ueber `StdioCollector`), danach zerstoert. Schnelle Folgen (`L L`) laufen so
+  parallel, `flock` in `ticket.py` ordnet sie. Exit-Code != 0 -> stderr in die Fehlerzeile.
 - Gemerkt, solange Quickshell laeuft: aktiver Projekt-Reiter, gewaehlte Karte,
   Archiv-Schalter, Label-Filter.
+- IPC fuer Tests ohne Tastatur-Injektion (kein wtype/ydotool installiert):
+  `press(key)` schickt eine Taste durch denselben Handler wie die Tastatur
+  (Namen wie `j`, `L`, `Return`, `Escape`, `Tab`), `type(text)` setzt den Text des
+  offenen Eingabefelds, `info()` gibt `{open, tab, col, key, detail, editing, err}` als JSON zurueck.
 
 ### Inhalt
 
@@ -287,7 +299,7 @@ wieder die Wahrheit (Karte springt zurueck).
 
 - Liest `~/.local/share/missions/data.json`. Bricht ab, wenn `Tickets/WORK/` schon
   Tickets enthaelt.
-- Jede Mission wird `WORK-<n>`, nummeriert in Reihenfolge der Missions-ID (ab 1).
+- Mission `<id>` wird `WORK-<id>` (Nummer = Missions-ID, passt zu `Mission-<id>.md`).
 - Status: Fokus -> `in-arbeit`, offen -> `todo`, erledigt -> `fertig`. Archivierte
   behalten den Status und bekommen `archived: true`. `prio: mittel`, `created` =
   Migrationsdatum, keine Labels.
