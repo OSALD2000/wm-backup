@@ -2,7 +2,8 @@
 """Tickets als Markdown-Dateien im Obsidian-Vault (Quelle der Wahrheit).
 
 Aufruf: ticket.py list [PROJ] [STATUS] | show KEY | new PROJ TITEL [-p PRIO] [-l LABEL]... [-s STATUS]
-        | set KEY FELD WERT | selftest
+        | set KEY FELD WERT
+        | quick [STATUS TEXT] | open KEY | watch | selftest
 FELD:   status | prio | title | project | labels | archived (ja|nein)
 Datei:  <Vault>/Tickets/<PROJ>/<PROJ>-<N> <Titel>.md, Frontmatter status prio created
         archived aliases tags. Fremde Frontmatter-Zeilen und der Text bleiben byte-gleich.
@@ -12,9 +13,12 @@ import fcntl
 import json
 import os
 import re
+import subprocess
 import sys
+import time
 from datetime import date
 from pathlib import Path
+from urllib.parse import quote
 
 STATUSES = ("backlog", "todo", "in-arbeit", "review", "fertig")
 PRIOS = ("hoch", "mittel", "niedrig")
@@ -196,31 +200,79 @@ def read(path):
             "path": str(path), "body": body, "bad": "; ".join(bad)}
 
 
-def scan():
-    """Alle Projekte und Tickets; Probleme einzeln in `error` (nie schreiben)."""
-    projects, tickets, errs, seen = [], [], [], set()
+def _load(f, proj):
+    """Eine Datei lesen -> (Ticket | None, Fehlertext | None)."""
+    m = FILE_RE.match(f.name)
+    if not m or m.group(1) != proj:
+        return None, f"{proj}/{f.name}: keine Kennung {proj}-<N>"
+    try:
+        return read(f), None
+    except (ValueError, OSError, UnicodeDecodeError) as e:
+        return None, f"{proj}/{f.name}: {e}"
+
+
+def _state(projects, entries):
+    """entries: [(Ticket | None, Fehlertext | None)] -> Stand wie scan()."""
+    tickets, errs, seen = [], [], set()
+    for t, err in entries:
+        if err:
+            errs.append(err)
+        if t:
+            if t["key"] in seen:
+                errs.append(f"doppelte Kennung {t['key']}")
+            seen.add(t["key"])
+            if t["bad"]:
+                errs.append(f"{t['key']}: {t['bad']}")
+            tickets.append(t)
+    wip = sum(t["status"] == "in-arbeit" and not t["archived"] for t in tickets)
+    return {"projects": projects, "tickets": tickets, "wip": wip, "error": "; ".join(errs)}
+
+
+def _files():
+    """([Projekte], [(Datei, Projekt)]) in fester Reihenfolge."""
+    projects, files = [], []
     if ROOT.is_dir():
         for d in sorted(ROOT.iterdir()):
             if d.is_dir() and PROJ_RE.match(d.name):
                 projects.append(d.name)
-                for f in sorted(d.glob("*.md")):
-                    m = FILE_RE.match(f.name)
-                    if not m or m.group(1) != d.name:
-                        errs.append(f"{d.name}/{f.name}: keine Kennung {d.name}-<N>")
-                        continue
-                    try:
-                        t = read(f)
-                    except (ValueError, OSError, UnicodeDecodeError) as e:
-                        errs.append(f"{d.name}/{f.name}: {e}")
-                        continue
-                    if t["key"] in seen:
-                        errs.append(f"doppelte Kennung {t['key']}")
-                    seen.add(t["key"])
-                    if t["bad"]:
-                        errs.append(f"{t['key']}: {t['bad']}")
-                    tickets.append(t)
-    wip = sum(t["status"] == "in-arbeit" and not t["archived"] for t in tickets)
-    return {"projects": projects, "tickets": tickets, "wip": wip, "error": "; ".join(errs)}
+                files += [(f, d.name) for f in sorted(d.glob("*.md"))]
+    return projects, files
+
+
+def scan():
+    """Alle Projekte und Tickets; Probleme einzeln in `error` (nie schreiben)."""
+    projects, files = _files()
+    return _state(projects, [_load(f, p) for f, p in files])
+
+
+class Watcher:
+    """poll() liefert den Stand nur bei neuem Pfad/neuer mtime; liest nur Geaendertes."""
+    def __init__(self):
+        self.cache, self.sig = {}, None
+
+    def poll(self):
+        projects, files = _files()
+        cache, sig = {}, []
+        for f, proj in files:
+            try:
+                mt = f.stat().st_mtime_ns
+            except OSError:
+                mt = -1
+            sig.append((str(f), mt))
+            old = self.cache.get(str(f))
+            if old and old[0] == mt:
+                cache[str(f)] = old
+                continue
+            t, err = _load(f, proj)
+            if t is None and old and old[1]:  # unlesbar: letzter guter Stand bleibt
+                t = old[1]
+            cache[str(f)] = (mt, t, err)
+        sig = (tuple(projects), tuple(sig))
+        self.cache = cache
+        if sig == self.sig:
+            return None
+        self.sig = sig
+        return _state(projects, [(t, e) for _, t, e in cache.values()])
 
 
 def find(key, tickets):
@@ -370,6 +422,36 @@ def list_lines(project=None, status=None):
             + "".join(" #" + l for l in t["labels"]) for t in ts]
 
 
+def parse_quick(text, last):
+    """'PROJ: Titel #label !prio' -> (Projekt, Titel, Labels, Prio)."""
+    text, proj = text.strip(), last or "WORK"
+    m = re.match(r"^([A-Za-z][A-Za-z0-9]*):\s*", text)
+    if m:
+        proj, text = m.group(1).upper(), text[m.end():]
+    labels = re.findall(r"(?<!\S)#(\S+)", text)
+    pr = re.findall(r"(?<!\S)!(hoch|mittel|niedrig)(?!\S)", text)
+    text = re.sub(r"(?<!\S)(#\S+|!(?:hoch|mittel|niedrig))(?!\S)", " ", text)
+    title = " ".join(text.split())
+    if not title:
+        raise ValueError("Titel ist leer.")
+    return proj, title, labels, pr[-1] if pr else "mittel"
+
+
+def quick(status, text):
+    last = LAST.read_text().strip() if LAST.exists() else None
+    proj, title, labels, prio = parse_quick(text, last)
+    return new(proj, title, prio, labels, status)
+
+
+def watch():
+    ppid, w = os.getppid(), Watcher()
+    while os.getppid() == ppid:
+        st = w.poll()
+        if st is not None:
+            print(json.dumps(st, ensure_ascii=False), flush=True)
+        time.sleep(1)
+
+
 def main(argv):
     import argparse
     ap = argparse.ArgumentParser(prog="ticket.py")
@@ -388,6 +470,10 @@ def main(argv):
     s.add_argument("key")
     s.add_argument("field")
     s.add_argument("value")
+    s = sub.add_parser("quick")
+    s.add_argument("args", nargs="*", help="[STATUS TEXT]; ohne: Text von stdin, Status todo")
+    sub.add_parser("open").add_argument("key")
+    sub.add_parser("watch")
     sub.add_parser("selftest")
     a = ap.parse_args(argv)
     if a.cmd == "list":
@@ -399,6 +485,22 @@ def main(argv):
         print(new(a.project, a.title, a.prio, a.label, a.status))
     elif a.cmd == "set":
         print(set_field(a.key, a.field, a.value))
+    elif a.cmd == "quick":
+        if a.args:
+            print(quick(a.args[0], " ".join(a.args[1:])))
+        else:
+            try:
+                print(quick("todo", sys.stdin.read()))
+            except ValueError as e:
+                subprocess.run(["notify-send", "Tickets", str(e)])
+                raise
+    elif a.cmd == "open":
+        t = find(a.key, scan()["tickets"])
+        subprocess.Popen(["sh", "-c", 'xdg-open "$1"; sleep 1; swaymsg "[app_id=obsidian] focus"', "-",
+                          "obsidian://open?path=" + quote(t["path"])],
+                         stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    elif a.cmd == "watch":
+        watch()
     else:
         selftest()
 
@@ -473,7 +575,31 @@ def selftest():
         assert find("WORK-5", scan()["tickets"])["aliases"] == ["Bericht, Q3", "Ziel: Q3", "WORK-5"]
         set_field("WORK-5", "title", "Neu")
         assert not wp.exists() and (ROOT / "WORK" / "WORK-5 Neu.md").exists()
-        # (spaetere Tasks haengen hier weitere Asserts an; WORK-5 und AURORA-1 existieren)
+        # Task 2: quick / Watcher
+        assert parse_quick("aurora: Docs fixen #mcp !hoch", "WORK") == ("AURORA", "Docs fixen", ["mcp"], "hoch")
+        assert parse_quick("Nur Titel", None) == ("WORK", "Nur Titel", [], "mittel")
+        assert parse_quick("Nur Titel", "AURORA")[0] == "AURORA"
+        for bad in ("#nurlabel", "AURORA:  !hoch", "   "):
+            try:
+                parse_quick(bad, None); raise AssertionError("leer")
+            except ValueError:
+                pass
+        w = Watcher()
+        first = w.poll(); assert first is not None and w.poll() is None          # unveraendert -> nichts
+        p = Path(find("WORK-5", first["tickets"])["path"])
+        p.rename(p.with_name("WORK-5 Umbenannt.md"))                              # Review Focus 2
+        s = w.poll(); assert [t["title"] for t in s["tickets"] if t["key"] == "WORK-5"] == ["Umbenannt"]
+        good = p.with_name("WORK-5 Umbenannt.md").read_text()
+        p.with_name("WORK-5 Umbenannt.md").write_text("---\nstatus: todo\n")     # halb gespeichert, Review Focus 4
+        os.utime(p.with_name("WORK-5 Umbenannt.md"), (time.time() + 5,) * 2)
+        s = w.poll(); assert any(t["key"] == "WORK-5" for t in s["tickets"]) and "WORK-5" in s["error"]
+        p.with_name("WORK-5 Umbenannt.md").unlink()
+        s = w.poll(); assert not any(t["key"] == "WORK-5" for t in s["tickets"])
+        main(["quick", "review", "AURORA: Aus dem Board #ui"])
+        assert find("AURORA-2", scan()["tickets"])["status"] == "review"
+        use_vault(Path(tmp) / "leer", Path(tmp) / "last2")
+        assert Watcher().poll() == {"projects": [], "tickets": [], "wip": 0, "error": ""}
+        # (spaetere Tasks haengen hier weitere Asserts an)
     print("selftest ok: Kern (new/set/list/find, WIP, Projektwechsel, Frontmatter)")
 
 
