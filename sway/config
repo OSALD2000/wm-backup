@@ -180,8 +180,9 @@ bindsym $mod+Return      exec alacritty
 bindsym $mod+Shift+q     kill
 bindsym $mod+d           exec "rofi -config ~/.config/rofi/config-nord.rasi -modi drun,run -show drun"
 
-bindsym $mod+$left  focus left
-bindsym $mod+$down  focus down
+# j/k = Bildschirm links/rechts (statt Fokus links/unten; dafuer bleiben die Pfeile)
+bindsym $mod+$left  focus output left
+bindsym $mod+$down  focus output right
 bindsym $mod+$up    focus up
 bindsym $mod+$right focus right
 bindsym $mod+Left   focus left

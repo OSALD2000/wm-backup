@@ -45,7 +45,7 @@ S=.claude/skills/theme-switch/scripts/theme.sh
 ### 3. Design festlegen
 Die **Bedienung ist fest** (Abschnitt "Standard-Bedienung" in `CLAUDE.md`:
 Workspaces u/i/o mit 1-10, Ziel-Monitor Super+Esc + Super+Ctrl[+Shift]+N, Super+q/b/Shift+z, Mausrad kippen = Super+q (mit Super = Workspace weiter), Fensterliste links (Quickshell, `quickshell/shell.qml`: nur Farben/Schrift anpassen), Hilfe-Panel,
-Workspace-Raster Super+u / Super+Shift+u (Maus/hjkl/Pfeile, letztes Ziel je Aktion; `sidebar.py workspaces go|move`),
+Workspace-Raster Super+u / Super+Shift+u (Quickshell-Overlay `grid` in `shell.qml`, live mit App-Icons, hjkl/Pfeile, u/i/o + Nummer ins Eingabefeld je Zeile, Tab = Modus, letztes Ziel je Aktion; `sidebar.py workspaces go|move|apply`),
 unsichtbare Tab-Zeile, Vorschau Super+Tab (rofi, Entf schliesst), Missionen Super+m, Konsole Super+Shift+Tab (cool-retro-term),
 Zwischenablage Super+Shift+V, Pickup-Popups unten rechts,
 waybar mit Nummer vor dem Icon und hervorgehobenem Workspace auf jedem Monitor, daneben Fensterzahl + Symbol
@@ -102,10 +102,10 @@ Konventionen aus den bisherigen Themes, die sich bewaehrt haben:
   `sidebar`, `info`, die waybar-Workspaces (Nummer + Icon, `button.visible`
   wie `button.focused`), `custom/wins` (Klassen `open`/`idle`/`off`), `custom/target`, `custom/market` (Klassen `active`/`idle`/`closed`), `custom/agents` (Klassen `busy`/`idle`/`new`/`none`), die swaync-Popups (Pickups
   unten rechts, Block `.floating-notifications` in `swaync/style.css`), das
-  Zwischenablage-Menue `clip.sh`, die Eingabezeile `ask.sh` (Journal, Schnellnotiz, Mission-Schnelleingabe, Session parken), das Vorschau-Raster (rofi, `overview()` in `sidebar.py`), das Workspace-Raster (`workspace_grid()` in `sidebar.py`), die
+  Zwischenablage-Menue `clip.sh`, die Eingabezeile `ask.sh` (Journal, Schnellnotiz, Mission-Schnelleingabe, Session parken), das Vorschau-Raster (rofi, `overview()` in `sidebar.py`), das Workspace-Raster (Quickshell, Farben oben in `shell.qml`), die
   Mission Control (eww `mission`, `.ms-*`, Fokus/Archiv ohne Loeschen, Obsidian-Notizen pro ID), das Agenten-Panel (eww `agents` + Tafel `agents-board`, `.ag-*`), das Journal-Panel (eww `journal`, `.jr-*` + `.ms-*`, `sway/scripts/journal.py`) und die Konsole (cool-retro-term, eigenes `profile.json` in den Farben des
   Themes). Nach dem Umbau alle einmal ausprobieren:
-  `notify-send`, Super+u / Super+Shift+u (Maus/hjkl/Pfeile, Enter/Klick bestaetigt, Esc verwirft, letztes Ziel bleibt je Aktion), Super+Shift+V, Super+Tab (Entf schliesst ein Fenster), Super+m (Ziel mit `'` anlegen, Fokus setzen, abhaken, archivieren/zurueckholen, Notiz oeffnen), Super+Shift+Tab, Super+b (Symbol
+  `notify-send`, Super+u / Super+Shift+u (Icons live, hjkl/Pfeile, u/i/o + Nummer ins Eingabefeld je Zeile, Tab = Modus, Enter/Klick bestaetigt, Klick auf Icon springt, Esc verwirft, letztes Ziel bleibt je Aktion), Super+Shift+V, Super+Tab (Entf schliesst ein Fenster), Super+m (Ziel mit `'` anlegen, Fokus setzen, abhaken, archivieren/zurueckholen, Notiz oeffnen), Super+Shift+Tab, Super+b (Symbol
   in `custom/wins` wechselt, Zahl stimmt mit den Fenstern ueberein), Super+Esc
   (`custom/target` schaltet weiter) + Super+Ctrl+Shift+N, Super+Ctrl+m, Super+Ctrl+j (Eintrag im Obsidian-Journal, Esc verwirft), Super+Ctrl+n (Notiz geht in Obsidian auf), Super+c (j/k, Enter springt, Esc zu, Mode wieder `default`), Super+g (Chats live nebeneinander, Spalten voll, nichts laeuft unten raus).
 - Seit HL2-v24: IPv6-Modul aus der Leiste lassen, konstante Workspace-Breiten

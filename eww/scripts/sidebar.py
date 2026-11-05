@@ -17,7 +17,9 @@ Aufruf: sidebar.py watch       eww (HUD) und Quickshell neu starten, dann bei
                                sichtbaren Workspaces + ob die Liste offen ist
         sidebar.py overview    alle Fenster aller Monitore als Vorschau-Raster
                                (rofi, Super+Tab), Enter fokussiert
-        sidebar.py workspaces go|move  Workspace-Raster (Super[+Shift]+u)
+        sidebar.py workspaces go|move  Workspace-Raster (Super[+Shift]+u) in
+                               Quickshell oeffnen; das ruft nach der Auswahl
+        sidebar.py workspaces apply go|move OUTPUT N CON
         sidebar.py selftest
 """
 import configparser
@@ -46,7 +48,7 @@ RUN = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
 PIDFILE = os.path.join(RUN, "eww-sidebar.pid")
 OFF = os.path.join(RUN, "eww-sidebar.off")  # existiert = Sidebar per Super+b aus
 BAR = os.path.join(RUN, "eww-sidebar.bar")  # Stand fuer waybar, schreibt der Watcher
-STATE = os.path.join(RUN, "sidebar.json")  # {"wins": {output: [...]}, "show": [outputs]} fuer Quickshell
+STATE = os.path.join(RUN, "sidebar.json")  # {"wins": {output: [...]}, "show": [outputs], "grid": [...]} fuer Quickshell
 QS = os.path.expanduser("~/.local/bin/quickshell")
 BAR_SIGNAL = 9  # = "signal" von custom/wins in waybar/config.jsonc
 # Vorschaubilder fuer overview. Sway kann nur Monitore abfotografieren, und
@@ -110,6 +112,14 @@ def resolve(icon, index):
     return index.get(icon) or index.get(FALLBACK, "")
 
 
+def win_entry(node, apps, index=None):
+    """-> {id, name, title, focused, icon} fuer Fensterliste und Workspace-Raster."""
+    app = node.get("app_id") or (node.get("window_properties") or {}).get("class") or "?"
+    icon, name = apps.get(app.lower(), (FALLBACK, ""))
+    return {"id": node["id"], "name": name or app, "title": node.get("name") or app,
+            "focused": node.get("focused", False), "icon": resolve(icon, index or {})}
+
+
 def visible_windows(tree, apps, index=None):
     """-> {output: [{id, name, title, focused, icon}]}: nur der sichtbare
     Workspace je Output (current_workspace), Floating-Fenster hinten dran."""
@@ -117,11 +127,7 @@ def visible_windows(tree, apps, index=None):
 
     def collect(node, acc):
         if node.get("pid") and node.get("type") in ("con", "floating_con"):
-            app = node.get("app_id") or (node.get("window_properties") or {}).get("class") or "?"
-            icon, name = apps.get(app.lower(), (FALLBACK, ""))
-            acc.append({"id": node["id"], "name": name or app, "title": node.get("name") or app,
-                        "focused": node.get("focused", False),
-                        "icon": resolve(icon, index or {})})
+            acc.append(win_entry(node, apps, index))
         for child in node.get("nodes", []) + node.get("floating_nodes", []):
             collect(child, acc)
 
@@ -293,8 +299,10 @@ def overview():
         time.sleep(0.3)  # ponytail: Apps mit Rueckfrage (ungespeichert) bleiben stehen, Raster zeigt sie wieder
 
 
-def workspace_entries(tree):
-    """Zehn Felder je Monitor, zeilenweise von links nach rechts wie collapse()."""
+def workspace_entries(tree, apps={}, index=None):
+    """Zehn Felder je Monitor, zeilenweise von links nach rechts wie collapse().
+    Mit den Fenstern je Feld; der Watcher schreibt das als "grid" nach STATE,
+    das Raster in Quickshell zeigt es live."""
     outs = sorted((o for o in tree.get("nodes", []) if o.get("active")),
                   key=lambda o: o["rect"]["x"])
     # shortcut: Das vorhandene Workspace-Schema hat drei Monitore, bei mehr zuerst ws.sh/collapse erweitern.
@@ -306,85 +314,73 @@ def workspace_entries(tree):
         for number, area in enumerate(AREAS, 1):
             name = f"{BASE[letter] + number}:{letter}{number}"
             ws = workspaces.get(name, {})
-            visible = name == o.get("current_workspace")
-            count = sum(1 for _ in windows(ws))
-            entries.append({"output": o["name"], "number": number, "name": name,
-                            "visible": visible, "focused": has_focus(ws),
-                            "label": f'{"● " if visible else ""}{number}  {area}\n'
-                                     f'{o["name"]}\n{count} Fenster'})
+            entries.append({"output": o["name"], "letter": letter, "number": number,
+                            "name": name, "area": area,
+                            "visible": name == o.get("current_workspace"),
+                            "focused": bool(has_focus(ws)),
+                            "wins": [win_entry(w, apps, index) for w in windows(ws)]})
     return entries
 
 
+def grid_statefile():
+    return os.path.join(os.environ.get("XDG_STATE_HOME", os.path.expanduser("~/.local/state")),
+                        "workspace-grid.json")
+
+
+def load_grid_state():
+    try:
+        with open(grid_statefile()) as f:
+            state = json.load(f)
+        return state if isinstance(state, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
 def workspace_grid(action):
-    """Rofi uebernimmt Maus und Raster-Navigation; bestaetigte Ziele bleiben gespeichert."""
+    """Super[+Shift]+u: Startfeld (letztes Ziel je Aktion, sonst der aktuelle
+    Workspace) und das aktive Fenster hier festhalten, dann das Raster in
+    Quickshell auf dem fokussierten Monitor oeffnen. Quickshell ruft apply()."""
     if action not in ("go", "move"):
         raise ValueError("workspaces erwartet go oder move")
     tree = swaymsg("-t", "get_tree")
     entries = workspace_entries(tree)
     if not entries:
         return
-    con = next((w["id"] for w in windows(tree) if w.get("focused")), None)
-    if action == "move" and con is None:
+    con = next((w["id"] for w in windows(tree) if w.get("focused")), 0)
+    if action == "move" and not con:
         raise ValueError("Kein aktives Fenster zum Verschieben.")
-    statefile = os.path.join(os.environ.get("XDG_STATE_HOME", os.path.expanduser("~/.local/state")),
-                             "workspace-grid.json")
-    try:
-        with open(statefile) as f:
-            state = json.load(f)
-        if not isinstance(state, dict):
-            state = {}
-    except (OSError, ValueError):
-        state = {}
+    state = load_grid_state()
     current = next((i for i, e in enumerate(entries) if e["focused"]), 0)
     row = next((i for i, e in enumerate(entries)
                 if state.get(action) == [e["output"], e["number"]]), current)
-    title = "WORKSPACE WECHSELN" if action == "go" else "FENSTER VERSCHIEBEN"
-    r = subprocess.run(
-        ["rofi", "-dmenu", "-sync", "-sep", "|", "-eh", "3", "-no-custom", "-no-sort", "-format", "i",
-         "-no-show-icons", "-monitor", "-1", "-selected-row", str(row),
-         "-a", ",".join(str(i) for i, e in enumerate(entries) if e["visible"]),
-         "-kb-move-char-back", "", "-kb-move-char-forward", "",
-         "-kb-row-left", "h,Left", "-kb-row-right", "l,Right",
-         "-kb-row-up", "k,Up", "-kb-row-down", "j,Down",
-         "-me-select-entry", "", "-me-accept-entry", "MousePrimary",
-         "-config", os.path.expanduser("~/.config/rofi/config-nord.rasi"),
-         "-theme-str", f'''mainbox {{ padding: 12% 3% 0 3%; spacing: 20px;
-                                      children: [ textbox-title, message, listview ]; }}
-             textbox-title {{
-                 str: "λ  {title}";
-                 font: "Verdana Bold 26";
-             }}
-             listview {{ columns: 10; lines: {len(entries) // 10}; fixed-columns: true;
-                         flow: horizontal; spacing: 8px; }}
-             element {{ padding: 18px 6px; border: 2px; border-color: #FFDC0033; }}
-             element-text {{ font: "Verdana Bold 10"; horizontal-align: 0.5; }}
-             element selected normal, element selected active {{
-                 background-color: #FFDC0026; border-color: @hud; }}''',
-         "-mesg", "h/j/k/l oder Pfeile · Enter oder Klick = bestaetigen · Esc = abbrechen\n"
-                  "● = sichtbar · Start = letztes Ziel (je Aktion)"],
-        input="|".join(e["label"] for e in entries), capture_output=True, text=True)
-    if r.returncode == 1:
-        return
+    r = subprocess.run([QS, "ipc", "call", "grid", "open", action, str(row), str(con),
+                        focused_output(tree) or entries[current]["output"]],
+                       capture_output=True, text=True)
     if r.returncode != 0:
-        raise RuntimeError(r.stderr.strip() or "Workspace-Auswahl fehlgeschlagen.")
-    row = int(r.stdout.strip())
-    if not 0 <= row < len(entries):
-        raise ValueError("Ungueltige Workspace-Auswahl.")
-    target = entries[row]
-    live = workspace_entries(swaymsg("-t", "get_tree"))
-    if not any(e["output"] == target["output"] and e["name"] == target["name"] for e in live):
+        raise RuntimeError(r.stderr.strip() or "Quickshell nicht erreichbar (quickshell log).")
+
+
+def apply(action, output, number, con):
+    """Bestaetigte Auswahl aus dem Raster ausfuehren und als letztes Ziel merken."""
+    if action not in ("go", "move"):
+        raise ValueError("apply erwartet go oder move")
+    target = next((e for e in workspace_entries(swaymsg("-t", "get_tree"))
+                   if e["output"] == output and e["number"] == int(number)), None)
+    if target is None:
         raise ValueError("Bildschirme haben sich geaendert. Bitte das Raster neu oeffnen.")
     name = json.dumps(target["name"])
     # Neue Workspaces auch bei ausgeschaltetem Laptop auf dem gewaehlten Monitor anlegen.
-    commands = [f'workspace {name} output {json.dumps(target["output"])}',
+    commands = [f'workspace {name} output {json.dumps(output)}',
                 f"workspace --no-auto-back-and-forth {name}" if action == "go" else
-                f"[con_id={con}] move container to workspace {name}"]
+                f"[con_id={int(con)}] move container to workspace {name}"]
     for command in commands:
         result = swaymsg(command)
         if not all(item.get("success") for item in result):
             raise RuntimeError("; ".join(item.get("error", "Sway-Befehl fehlgeschlagen")
                                          for item in result if not item.get("success")))
-    state[action] = [target["output"], target["number"]]
+    state = load_grid_state()
+    state[action] = [output, int(number)]
+    statefile = grid_statefile()
     os.makedirs(os.path.dirname(statefile), exist_ok=True)
     with open(statefile + ".tmp", "w") as f:
         json.dump(state, f)
@@ -456,7 +452,11 @@ def watch():
         snap(tree, taken)
         wins = visible_windows(tree, apps, index)
         shown = set() if os.path.exists(OFF) else {o for o, w in wins.items() if len(w) >= MIN_WINDOWS}
-        cur = json.dumps({"wins": wins, "show": sorted(shown)})
+        try:
+            grid = workspace_entries(tree, apps, index)
+        except ValueError:  # mehr als drei Monitore: kein Raster, Liste laeuft weiter
+            grid = []
+        cur = json.dumps({"wins": wins, "show": sorted(shown), "grid": grid})
         if cur != last:
             with open(STATE + ".tmp", "w") as f:
                 f.write(cur)
@@ -537,41 +537,40 @@ def selftest():
                 "floating_nodes": [con(2, "b")]})
     solo["nodes"][1]["current_workspace"] = "31:o1"
     assert len(workspace_entries(solo)) == 10
-    assert workspace_entries(solo)[0]["label"] == "● 1  TERMINAL\neDP-1\n2 Fenster"
-    assert workspace_entries(solo)[0]["focused"]
-    assert workspace_entries(solo)[-1]["label"].endswith("0 Fenster")
+    cell = workspace_entries(solo, apps, index)[0]
+    assert (cell["name"], cell["area"], cell["visible"], cell["focused"]) == ("31:o1", "TERMINAL", True, True)
+    assert [w["id"] for w in cell["wins"]] == [1, 2]
+    assert workspace_entries(solo)[-1]["wins"] == []
     assert workspace_entries({"nodes": []}) == []
-    # Nur der bei Oeffnung aktive Container wird verschoben; Abbruch merkt kein neues Ziel.
     import tempfile
     from unittest.mock import patch
     solo["nodes"][1]["nodes"][0]["nodes"][0]["focused"] = True
     with tempfile.TemporaryDirectory() as state_dir, \
          patch.dict(os.environ, {"XDG_STATE_HOME": state_dir}):
         statefile = os.path.join(state_dir, "workspace-grid.json")
-        with patch(__name__ + ".swaymsg", side_effect=[solo, solo, [{"success": True}],
-                                                       [{"success": True}]]) as ipc, \
-             patch("subprocess.run", return_value=subprocess.CompletedProcess([], 0, "4\n", "")) as menu:
+        ok = [{"success": True}]
+        # Oeffnen: Startfeld = aktueller Workspace, Fenster-ID wird mitgegeben
+        with patch(__name__ + ".swaymsg", return_value=solo), \
+             patch("subprocess.run", return_value=subprocess.CompletedProcess([], 0, "", "")) as qs:
             workspace_grid("move")
+            assert qs.call_args.args[0][1:] == ["ipc", "call", "grid", "open", "move", "0", "1", "eDP-1"]
+        with patch(__name__ + ".swaymsg", side_effect=[solo, ok, ok]) as ipc:
+            apply("move", "eDP-1", "5", "1")
             assert ipc.call_args.args == ('[con_id=1] move container to workspace "35:o5"',)
-            assert "-selected-row" in menu.call_args.args[0]
         with open(statefile) as f:
             assert json.load(f) == {"move": ["eDP-1", 5]}
-        with patch(__name__ + ".swaymsg", return_value=solo) as ipc, \
-             patch("subprocess.run", return_value=subprocess.CompletedProcess([], 1, "", "")) as menu:
+        with patch(__name__ + ".swaymsg", return_value=solo), \
+             patch("subprocess.run", return_value=subprocess.CompletedProcess([], 0, "", "")) as qs:
             workspace_grid("move")
-            args = menu.call_args.args[0]
-            assert args[args.index("-selected-row") + 1] == "4"
-            assert ipc.call_count == 1
+            assert qs.call_args.args[0][6] == "4"  # letztes Ziel je Aktion
             workspace_grid("go")
-            args = menu.call_args.args[0]
-            assert args[args.index("-selected-row") + 1] == "0"
+            assert qs.call_args.args[0][6] == "0"
         # Ein abgezogener Monitor und ein Sway-Fehler duerfen weder bewegen noch speichern.
-        for replies, error in [([solo, {"nodes": []}], ValueError),
-                               ([solo, solo, [{"success": False, "error": "test"}]], RuntimeError)]:
-            with patch(__name__ + ".swaymsg", side_effect=replies), \
-                 patch("subprocess.run", return_value=subprocess.CompletedProcess([], 0, "7\n", "")):
+        for replies, error in [([{"nodes": []}], ValueError),
+                               ([solo, [{"success": False, "error": "test"}]], RuntimeError)]:
+            with patch(__name__ + ".swaymsg", side_effect=replies):
                 try:
-                    workspace_grid("move")
+                    apply("move", "eDP-1", "7", "1")
                 except error:
                     pass
                 else:
@@ -584,7 +583,10 @@ def selftest():
 if __name__ == "__main__":
     if sys.argv[1] == "workspaces":
         try:
-            workspace_grid(sys.argv[2])
+            if sys.argv[2] == "apply":
+                apply(*sys.argv[3:7])
+            else:
+                workspace_grid(sys.argv[2])
         except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as error:
             subprocess.run(["notify-send", "Workspace-Raster", str(error)])
             sys.exit(str(error))

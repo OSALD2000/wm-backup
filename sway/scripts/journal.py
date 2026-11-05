@@ -32,7 +32,7 @@ from datetime import datetime
 
 from market import NY, SESSIONS
 
-VAULT = os.path.expanduser("~/Documents/Obsidian Vault")
+VAULT = os.path.expanduser("~/Private/obsidian-vault")
 ROOT = os.path.join(VAULT, "Trading", "journaling")
 MODELS = os.path.join(VAULT, "Trading", "TradingModels")
 FOLDER = {"live": "live-trades", "backtest": "backtesting"}

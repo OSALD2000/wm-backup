@@ -31,7 +31,7 @@ Aenderungen an `theme.sh` immer in beiden Kopien nachziehen.
 | `swaylock/` | `~/.config/swaylock/` | Fallback-Sperre |
 | `alacritty/` | `~/.config/alacritty/` | Terminal. `alacritty.toml` importiert die Farbdatei (`hl2.toml`, `nord.toml`), `lambda.txt` = Begruessung |
 | `cool-retro-term/` | `~/.config/cool-retro-term/` | Look der Konsole: `profile.json` (Farben, CRT-Effekte, Schrift), traegt `console.py` vor jedem Start ein |
-| `quickshell/` | `~/.config/quickshell/` | Fensterliste links (`shell.qml`): je Monitor eine animierte Leiste, liest `sidebar.json`. Binary `~/.local/bin/quickshell` selbst gebaut (siehe Stolperfallen) |
+| `quickshell/` | `~/.config/quickshell/` | Fensterliste links (`shell.qml`): je Monitor eine animierte Leiste, liest `sidebar.json`. Dazu das Workspace-Raster Super+u (`grid`, per `quickshell ipc` geoeffnet). Binary `~/.local/bin/quickshell` selbst gebaut (siehe Stolperfallen) |
 | `wallpaper.jpg` | `~/Private/wallpaper.jpg` | von `output * bg` in der sway-Config benutzt |
 | `browser/chrome-hl2-theme/` | `~/.config/chrome-hl2-theme/` | entpacktes Chrome-Theme (in Chrome ueber "Entpackte Erweiterung laden") |
 | `browser/firefox/*.css` | `~/snap/firefox/common/.mozilla/firefox/h5d4ltr7.default/chrome/` | Firefox (Snap) userChrome/userContent |
@@ -44,7 +44,7 @@ nur dort eintragen.
 Nicht im Repo, gehoert aber zum Setup: `~/.config/environment.d/50-wayland.conf`
 (Wayland-Variablen), `~/.local/bin/shot-wl` (Screenshots), Pakete `tesseract-ocr` +
 `tesseract-ocr-deu` (OCR auf Super+Print),
-`~/Documents/Obsidian Vault/Trading/journaling/` (Ziel des Trading-Journals),
+`~/Private/obsidian-vault/` (Obsidian-Vault fuer Trading-Journal, Schnellnotiz und Missionen-Notizen; bis HL2-v28 `~/Documents/Obsidian Vault`),
 `~/Private/shell_scripts/` (Lautstaerke-OSD), `~/.config/rofi/themes/` und
 `~/.config/alacritty/themes/` (fremde Themes, per `.gitignore` draussen),
 `~/.config/i3/` (alte i3-Session als Rollback: am GDM "i3" waehlen).
@@ -99,14 +99,15 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v25` | wie v24, Mission Control mit 80 % Bildschirmhoehe und je 10 % Abstand oben/unten. |
 | `HL2-v26` | wie v25, Trading-Journal als eww-Formular (Super+Ctrl+j): eine Datei je Setup unter `journaling/{live-trades,backtesting}/JJJJ/MM/TT/`, Model/Symbol/Long-Short/Session/Timeframe/Ergebnis/R im Frontmatter + Tags, weitere Screenshots ans letzte Setup, Altes in `legacy/`. |
 | `HL2-v27` | wie v26, Workspace-Raster (Super+u wechseln, Super+Shift+u verschieben): eine Zeile je Bildschirm, zehn Felder, Maus/hjkl/Pfeile, letztes Ziel je Aktion gespeichert. |
-| `HL2-v28` | wie v27, Fensterliste links mit Quickshell statt eww: animiert (einfahren, Eintraege ploppen rein/raus, leuchtende Markierung gleitet federnd zum aktiven Fenster, Icon huepft), Look wie die waybar-Workspaces, Fenstertitel als Popout. **Aktueller Standard** fuer neue Themes |
+| `HL2-v28` | wie v27, Fensterliste links mit Quickshell statt eww: animiert (einfahren, Eintraege ploppen rein/raus, leuchtende Markierung gleitet federnd zum aktiven Fenster, Icon huepft), Look wie die waybar-Workspaces, Fenstertitel als Popout. |
+| `HL2-v29` | wie v28, Workspace-Raster (Super+u / Super+Shift+u) als Quickshell-Overlay: live mit App-Icons je Feld, Eingabefeld je Bildschirm fuer die Nummer, Tab = Wechseln/Verschieben, Klick auf Icon springt zum Fenster; Super+j / Super+k = Bildschirm links / rechts; Obsidian-Vault jetzt `~/Private/obsidian-vault`. **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v28` (Vorschau,
+Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v29` (Vorschau,
 Zwischenablage, Konsole, Pickup-Popups, Workspace-Nummern und Fensterzahl in waybar,
 Missionen). Alles in dieser Liste gilt fuer
 **jedes** neue Theme, nicht nur fuer HL2: es aendert nur den **Look**
@@ -137,6 +138,8 @@ Wer davon abweicht, fragt vorher.
   stehen, bis man es aendert; Start (und Rueckfall, wenn der Schirm fehlt) ist
   `o`. Gespeichert in `$XDG_RUNTIME_DIR/ws-target` (`ws.sh cycle`/`bar`),
   `ws.sh cycle` weckt waybar per `SIGRTMIN+10`.
+  `Super+j` / `Super+k` = Fokus auf den Bildschirm links / rechts (`focus output`,
+  ohne Umlauf); Fokus innerhalb des Monitors per `Super+l/ö` und Pfeile.
   `Super+q` / `Super+Ctrl+q` = naechstes / voriges Fenster der Liste links,
   bleibt auf dem Monitor. Dasselbe per Mausrad kippen (ohne Taste, `button7` =
   rechts = naechstes, `button6` = links = voriges, `--whole-window`). Mit Super
@@ -147,17 +150,27 @@ Wer davon abweicht, fragt vorher.
   erkannter Text (tesseract, `deu+eng`) landet in der Zwischenablage, Popup bestaetigt.
   `Super+Ctrl+m` = Mission schnell eintragen (nur Eingabezeile `ask.sh`, Panel bleibt zu).
 - **Workspace-Raster** (`Super+u` wechseln, `Super+Shift+u` aktives Fenster
-  verschieben; `sidebar.py workspaces go|move`): Rofi zeigt eine Zeile je
-  aktivem Bildschirm von links nach rechts und zehn Spalten (1-10), auch leere
-  Workspaces. Die Felder nennen Bereich, Anschluss und Fensterzahl; sichtbare
-  Workspaces sind mit einem Punkt und Farbe markiert. Maus oder `h/j/k/l` und
-  Pfeile waehlen, Enter oder einfacher Klick bestaetigt, Esc verwirft.
+  verschieben; `sidebar.py workspaces go|move`): Overlay in Quickshell
+  (`grid` in `quickshell/shell.qml`) auf dem fokussierten Monitor, eine Zeile je
+  aktivem Bildschirm von links nach rechts (Kopf `U/I/O` + Anschluss) und zehn
+  Felder (1-10), auch leere Workspaces. **Live**: der Watcher schreibt alle Felder
+  samt Fenstern als `"grid"` nach `sidebar.json`, jedes Feld zeigt die App-Icons
+  (bis 4, dann `+N`); sichtbare Workspaces gefuellt mit Punkt, fokussierter mit
+  hellem Rand, die Auswahl gleitet federnd. Darunter Kuerzel, Anschluss und die
+  Apps des gewaehlten Felds. Tasten: `h/j/k/l` oder Pfeile, `u/i/o` = Zeile,
+  Nummer tippen = landet im Eingabefeld unter dem Zeilenkopf der aktuellen Zeile
+  (Klick aufs Feld waehlt die Zeile): `2`-`9`, `0` und `10` bestaetigen sofort,
+  `1` wartet 0,7 s auf eine `0`, Backspace leert; Enter = bestaetigen, Tab = zwischen
+  Wechseln und Verschieben umschalten, Esc oder Klick daneben = abbrechen. Maus:
+  Hover waehlt, Klick aufs Feld bestaetigt, Klick auf ein Icon springt direkt zu
+  dem Fenster. `sidebar.py` haelt beim Oeffnen Startfeld und Fenster-ID fest und
+  ruft `quickshell ipc call grid open ACTION FELD CON OUTPUT`; bestaetigt wird ueber
+  `sidebar.py workspaces apply ACTION OUTPUT N CON`.
   Letztes bestaetigtes Ziel je Aktion in `~/.local/state/workspace-grid.json`
   (Anschluss + Nummer); fehlt der Bildschirm, startet die Auswahl beim aktuellen
-  Workspace. Beim Verschieben bleibt der Fokus am bisherigen Ort; die Fenster-ID
-  wird vor dem Oeffnen festgehalten. Aendert sich die Bildschirmzuordnung waehrend
-  der Auswahl, wird abgebrochen. Das bestehende interne u/i/o-Schema und die
-  Direktkuerzel bleiben erhalten (bis zu drei Bildschirme).
+  Workspace. Beim Verschieben bleibt der Fokus am bisherigen Ort. Aendert sich die
+  Bildschirmzuordnung waehrend der Auswahl, wird abgebrochen. Das bestehende
+  interne u/i/o-Schema und die Direktkuerzel bleiben erhalten (bis zu drei Bildschirme).
   Raster und Direktkuerzel bedienen dieselben Workspaces; Assigns, Waybar,
   Fensterliste, Session-Parken und `collapse()` verwenden weiter diese Namen.
   Die gemerkten Raster-Ziele sind unabhaengig vom Ziel-Monitor in `ws-target`
@@ -293,9 +306,9 @@ Ein neues Theme uebernimmt `ws.sh`, `sidebar.py`, `agents.py`, `clip.sh`, `marke
 Workspace-/Bind-Bloecke, den Mode `[ AGENTS ]` und die Konsolen-Regel (`console.py`, `for_window` auf
 cool-retro-term) der sway-Config, die
 Fensterliste `quickshell/shell.qml`, die eww-Fenster `info`/`mission`/`agents`/`agents-board`/`journal` (mit `todo.py`) und Lage/Timeout der swaync-Popups
-(`swaync/config.json`) und passt nur Farben und Schrift an: `eww.scss`, die Farb-Properties oben in `quickshell/shell.qml`,
+(`swaync/config.json`) und passt nur Farben und Schrift an: `eww.scss`, die Farb-Properties oben in `quickshell/shell.qml` (gelten auch fuer das Workspace-Raster),
 waybar `style.css`, den Popup-Block in `swaync/style.css` und die
-`-theme-str`-Teile in `clip.sh`, `ask.sh` und `overview()`/`workspace_grid()` in `sidebar.py` (die rofi-Theme-Datei liefert den Rest); in
+`-theme-str`-Teile in `clip.sh`, `ask.sh` und `overview()` in `sidebar.py` (die rofi-Theme-Datei liefert den Rest); in
 `eww.scss` auch die Bloecke `.ms-*` (Missionen, auch vom Journal-Panel benutzt), `.jr-*` (Journal) und `.ag-*` (Agenten). In `style.css` muss `button.visible` dieselbe
 Hervorhebung bekommen wie `button.focused`; `#custom-wins` mit den Klassen
 `open`/`idle`/`off`, `#custom-target` und `#custom-market` (Klassen `active`/`idle`/`closed`) und `#custom-agents` (Klassen `busy`/`idle`/`new`/`none`) umfaerben; `cool-retro-term/profile.json` mit den Farben
@@ -357,7 +370,7 @@ Skills: `theme-erstellen` (neues Theme bauen und taggen), `theme-switch`
   `console.py dump` holt sie danach nach `profile.json`. Nur `--profile`
   (lang) wirkt, `-p` erkennt die QML-Seite nicht.
 - Quickshell ist **selbst gebaut** (`~/.cache/build/quickshell`, `cmake -GNinja -B build -DCMAKE_INSTALL_PREFIX=~/.local -DCRASH_HANDLER=OFF -DSERVICE_PIPEWIRE=OFF -DSERVICE_PAM=OFF -DSERVICE_POLKIT=OFF -DX11=OFF -DHYPRLAND=OFF -DSCREENCOPY=OFF`, dann `cmake --build build && cmake --install build`). Nutzt private Qt-APIs: nach jedem Qt-Update aus apt **neu bauen**, sonst Absturz. Build-Pakete: `qt6-{base,declarative,shadertools,svg,wayland}-dev` (+ `-private-dev`), `spirv-tools libcli11-dev ninja-build libjemalloc-dev qml6-module-qtquick-effects`.
-- Mod-Taste ist Super; Richtungen `j k l ö` (i3-Stil), Caps = Escape, Layout `de`.
+- Mod-Taste ist Super; Richtungen `j k l ö` (i3-Stil), aber `Super+j/k` = Bildschirm wechseln (nur mit Shift = verschieben), Caps = Escape, Layout `de`.
 - `workspace_layout tabbed` gilt nur fuer **neu angelegte** Workspaces. Alte
   (oder nach `Super+h/v/e`) oeffnen Apps wieder nebeneinander: `Super+w`.
 - eww nie mehrfach gleichzeitig starten: zwei Starts = zwei Daemons, einer

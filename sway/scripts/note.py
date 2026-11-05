@@ -18,7 +18,7 @@ import sys
 import urllib.parse
 from datetime import datetime
 
-VAULT = os.path.expanduser("~/Documents/Obsidian Vault")
+VAULT = os.path.expanduser("~/Private/obsidian-vault")
 INBOX = "Notizen"  # Ziel ohne Ordner in der Eingabe
 TEMPLATE = os.path.join(VAULT, "Templates", "Schnellnotiz.md")
 DEFAULT = """---

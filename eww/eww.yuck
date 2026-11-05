@@ -425,7 +425,7 @@
       (label :class "muted small" :xalign 0 :text "Gelb = App landet dort automatisch (assign). Klick schliesst."))
     (box :orientation "v" :space-evenly false :spacing 3
       (label :class "section" :xalign 0 :text "WORKSPACES")
-        (key :k "Super+u / Super+Shift+u" :d "Workspace-Raster: wechseln / Fenster verschieben")
+        (key :k "Super+u / Super+Shift+u" :d "Workspace-Raster: wechseln / verschieben (u/i/o + 1-0, Tab)")
         (key :k "im Raster: h j k l / Pfeile" :d "waehlen, Enter/Klick bestaetigt, Esc zu; letztes Ziel gemerkt")
         (key :k "Super+1…0" :d "Workspace N auf diesem Monitor")
         (key :k "Super+Shift+1…0" :d "Fenster dorthin schieben")
@@ -440,7 +440,8 @@
         (key :k "Super+Shift+Mausrad →, dann N" :d "Fenster auf Workspace N des Ziel-Monitors (Esc = abbrechen)")
         (key :k "Mausrad ueber Liste links" :d "Fenster hoch / runter sortieren")
         (key :k "Super+b" :d "Liste links an/aus (oder Klick auf Fensterzahl oben)")
-        (key :k "Super+j k l ö" :d "Fokus, mit Shift verschieben")
+        (key :k "Super+j / k" :d "Bildschirm links / rechts")
+        (key :k "Super+l ö / Pfeile" :d "Fokus, mit Shift (auch j k) verschieben")
         (key :k "Super+w / e" :d "Tabs / Split umschalten")
         (key :k "Super+h / v" :d "teilen waagrecht / senkrecht")
         (key :k "Super+f" :d "Vollbild")

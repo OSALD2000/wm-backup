@@ -139,7 +139,7 @@ def main():
     if cmd == "note":
         with locked():
             item = next(i for i in load()["items"] if i["id"] == int(arg))
-            path = note(item, Path.home() / "Documents/Obsidian Vault")
+            path = note(item, Path.home() / "Private/obsidian-vault")
         subprocess.Popen(["sh", "-c", 'xdg-open "$1"; sleep 1; swaymsg "[app_id=obsidian] focus"',
                           "-", "obsidian://open?path=" + urllib.parse.quote(str(path))],
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
