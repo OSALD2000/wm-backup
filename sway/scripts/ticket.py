@@ -3,7 +3,7 @@
 
 Aufruf: ticket.py list [PROJ] [STATUS] | show KEY | new PROJ TITEL [-p PRIO] [-l LABEL]... [-s STATUS]
         | set KEY FELD WERT
-        | quick [STATUS TEXT] | open KEY | watch | selftest
+        | quick [STATUS TEXT] | open KEY | watch | migrate | selftest
 FELD:   status | prio | title | project | labels | archived (ja|nein)
 Datei:  <Vault>/Tickets/<PROJ>/<PROJ>-<N> <Titel>.md, Frontmatter status prio created
         archived aliases tags. Fremde Frontmatter-Zeilen und der Text bleiben byte-gleich.
@@ -347,6 +347,13 @@ def _template_body():
     return split(TEMPLATE.read_text())[1]
 
 
+def _fm_lines(project, key, status, prio, labels, archived=False):
+    """Frontmatter eines neuen Tickets (gemeinsam fuer new und migrate)."""
+    return set_fm([], {"status": status, "prio": prio, "created": date.today().isoformat(),
+                       "archived": "true" if archived else None, "aliases": [key],
+                       "tags": _tags(project, status, prio, labels)})
+
+
 def _check_wip(tickets, me=None):
     full = sorted((t for t in tickets if t["status"] == "in-arbeit" and not t["archived"]
                    and t["key"] != me), key=lambda t: (t["project"], t["num"]))
@@ -370,9 +377,7 @@ def new(project, title, prio="mittel", labels=(), status="todo"):
             _check_wip(tickets)
         key = f"{project}-{next_num(project, tickets)}"
         body = _template_body()
-        lines = set_fm([], {"status": status, "prio": prio, "created": date.today().isoformat(),
-                            "aliases": [key],
-                            "tags": _tags(project, status, prio, clean_labels(labels))})
+        lines = _fm_lines(project, key, status, prio, clean_labels(labels))
         path = ROOT / project / f"{key} {title}.md"
         if path.exists():
             raise ValueError(f"{path.name} gibt es schon.")
@@ -381,6 +386,37 @@ def new(project, title, prio="mittel", labels=(), status="todo"):
         LAST.parent.mkdir(parents=True, exist_ok=True)
         LAST.write_text(project + "\n")
     return key
+
+
+def migrate(data, missions):
+    """Einmaliger Import der Missionen als WORK-<id>; kein WIP-Limit, kein LAST."""
+    items = json.loads(Path(data).read_text())["items"]
+    made = []
+    with locked():
+        folder = ROOT / "WORK"
+        if any(folder.glob("*.md")):
+            raise ValueError("Tickets/WORK enthaelt schon Tickets; Migration abgebrochen.")
+        folder.mkdir(parents=True, exist_ok=True)
+        for it in items:
+            key, text = f"WORK-{it['id']}", it["text"]
+            try:
+                title = clean_title(text)
+            except ValueError:
+                title, text = f"Mission {it['id']}", " ".join(text.split()) or ""
+            body, note = DEFAULT_BODY, Path(missions) / f"Mission-{it['id']}.md"
+            if note.exists():
+                src = note.read_text()
+                i = src.find("## Ziel")
+                if i >= 0:
+                    body = "".join(l for l in src[i:].splitlines(True)
+                                   if not l.startswith("> Aufgabenstatus und Titel"))
+            if text and title != " ".join(text.split()):  # gekuerzt/bereinigt: voller Text bleibt
+                body = body.replace("## Ziel\n", "## Ziel\n" + text + "\n", 1)
+            status = "fertig" if it.get("done") else "in-arbeit" if it.get("focus") else "todo"
+            lines = _fm_lines("WORK", key, status, "mittel", [], bool(it.get("archived")))
+            _atomic(folder / f"{key} {title}.md", "---\n" + "\n".join(lines + ["---"]) + "\n" + body)
+            made.append(key)
+    return made
 
 
 def set_field(key, field, value):
@@ -474,6 +510,7 @@ def main(argv):
     s.add_argument("args", nargs="*", help="[STATUS TEXT]; ohne: Text von stdin, Status todo")
     sub.add_parser("open").add_argument("key")
     sub.add_parser("watch")
+    sub.add_parser("migrate")
     sub.add_parser("selftest")
     a = ap.parse_args(argv)
     if a.cmd == "list":
@@ -501,6 +538,8 @@ def main(argv):
                          stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     elif a.cmd == "watch":
         watch()
+    elif a.cmd == "migrate":
+        print(" ".join(migrate(Path.home() / ".local/share/missions/data.json", VAULT / "Missionen")))
     else:
         selftest()
 
@@ -599,7 +638,37 @@ def selftest():
         assert find("AURORA-2", scan()["tickets"])["status"] == "review"
         use_vault(Path(tmp) / "leer", Path(tmp) / "last2")
         assert Watcher().poll() == {"projects": [], "tickets": [], "wip": 0, "error": ""}
-        # (spaetere Tasks haengen hier weitere Asserts an)
+    # Task 3: migrate (eigener Vault)
+    with tempfile.TemporaryDirectory() as tmp:
+        use_vault(Path(tmp), Path(tmp) / "last")
+        src = Path(tmp) / "data.json"
+        src.write_text(json.dumps({"items": [
+            {"id": 3, "text": "Atlas MCP anpassen", "done": False},
+            {"id": 9, "text": "MCP Debuging " + "sehr lang " * 15, "done": False, "focus": True},
+            {"id": 11, "text": "Reto Skill", "done": True},
+            {"id": 17, "text": "ENET grill-me", "done": False, "archived": True}]}))
+        ms = Path(tmp) / "Missionen"; ms.mkdir()
+        (ms / "Mission-3.md").write_text("---\nmission_id: 3\n---\n\n# Atlas MCP anpassen\n\n## Ziel\nEigenes Ziel\n\n> Aufgabenstatus und Titel verwaltest du im Missionen-Panel. Diese Notiz bleibt frei bearbeitbar.\n")
+        assert migrate(src, ms) == ["WORK-3", "WORK-9", "WORK-11", "WORK-17"]
+        ts = {t["key"]: t for t in scan()["tickets"]}
+        assert ts["WORK-3"]["body"].startswith("## Ziel\nEigenes Ziel") and "Aufgabenstatus" not in ts["WORK-3"]["body"]
+        assert ts["WORK-9"]["status"] == "in-arbeit" and len(ts["WORK-9"]["title"]) <= 80
+        assert ts["WORK-9"]["body"].startswith("## Ziel\nMCP Debuging sehr lang")
+        assert ts["WORK-11"]["status"] == "fertig" and ts["WORK-17"]["archived"] and ts["WORK-17"]["status"] == "todo"
+        assert new("WORK", "Neu") == "WORK-18"
+        try:
+            migrate(src, ms); raise AssertionError("zweiter Lauf")
+        except ValueError:
+            pass
+        # nur Sonderzeichen: Titel "Mission <id>", voller Text unter ## Ziel; kein LAST, kein WIP-Limit
+        for f in (ROOT / "WORK").glob("*.md"):
+            f.unlink()
+        LAST.unlink()
+        src.write_text(json.dumps({"items": [{"id": n, "text": "???" if n == 5 else f"F{n}", "done": False, "focus": True}
+                                             for n in (5, 6, 7, 8)]}))
+        assert migrate(src, ms) == ["WORK-5", "WORK-6", "WORK-7", "WORK-8"] and not LAST.exists()
+        ts = {t["key"]: t for t in scan()["tickets"]}
+        assert ts["WORK-5"]["title"] == "Mission 5" and ts["WORK-5"]["body"].startswith("## Ziel\n???\n")
     print("selftest ok: Kern (new/set/list/find, WIP, Projektwechsel, Frontmatter)")
 
 
