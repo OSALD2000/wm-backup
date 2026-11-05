@@ -354,6 +354,11 @@ def _fm_lines(project, key, status, prio, labels, archived=False):
                        "tags": _tags(project, status, prio, labels)})
 
 
+def _file_text(lines, body):
+    """Dateitext eines neuen Tickets (gemeinsam fuer new und migrate)."""
+    return "---\n" + "\n".join(lines + ["---"]) + "\n\n" + body
+
+
 def _check_wip(tickets, me=None):
     full = sorted((t for t in tickets if t["status"] == "in-arbeit" and not t["archived"]
                    and t["key"] != me), key=lambda t: (t["project"], t["num"]))
@@ -382,7 +387,7 @@ def new(project, title, prio="mittel", labels=(), status="todo"):
         if path.exists():
             raise ValueError(f"{path.name} gibt es schon.")
         path.parent.mkdir(parents=True, exist_ok=True)
-        _atomic(path, "---\n" + "\n".join(lines + ["---"]) + "\n\n" + body)
+        _atomic(path, _file_text(lines, body))
         LAST.parent.mkdir(parents=True, exist_ok=True)
         LAST.write_text(project + "\n")
     return key
@@ -414,7 +419,7 @@ def migrate(data, missions):
                 body = body.replace("## Ziel\n", "## Ziel\n" + text + "\n", 1)
             status = "fertig" if it.get("done") else "in-arbeit" if it.get("focus") else "todo"
             lines = _fm_lines("WORK", key, status, "mittel", [], bool(it.get("archived")))
-            _atomic(folder / f"{key} {title}.md", "---\n" + "\n".join(lines + ["---"]) + "\n" + body)
+            _atomic(folder / f"{key} {title}.md", _file_text(lines, body))
             made.append(key)
     return made
 
@@ -651,9 +656,9 @@ def selftest():
         (ms / "Mission-3.md").write_text("---\nmission_id: 3\n---\n\n# Atlas MCP anpassen\n\n## Ziel\nEigenes Ziel\n\n> Aufgabenstatus und Titel verwaltest du im Missionen-Panel. Diese Notiz bleibt frei bearbeitbar.\n")
         assert migrate(src, ms) == ["WORK-3", "WORK-9", "WORK-11", "WORK-17"]
         ts = {t["key"]: t for t in scan()["tickets"]}
-        assert ts["WORK-3"]["body"].startswith("## Ziel\nEigenes Ziel") and "Aufgabenstatus" not in ts["WORK-3"]["body"]
+        assert ts["WORK-3"]["body"].lstrip("\n").startswith("## Ziel\nEigenes Ziel") and "Aufgabenstatus" not in ts["WORK-3"]["body"]
         assert ts["WORK-9"]["status"] == "in-arbeit" and len(ts["WORK-9"]["title"]) <= 80
-        assert ts["WORK-9"]["body"].startswith("## Ziel\nMCP Debuging sehr lang")
+        assert ts["WORK-9"]["body"].lstrip("\n").startswith("## Ziel\nMCP Debuging sehr lang")
         assert ts["WORK-11"]["status"] == "fertig" and ts["WORK-17"]["archived"] and ts["WORK-17"]["status"] == "todo"
         assert new("WORK", "Neu") == "WORK-18"
         try:
@@ -668,7 +673,9 @@ def selftest():
                                              for n in (5, 6, 7, 8)]}))
         assert migrate(src, ms) == ["WORK-5", "WORK-6", "WORK-7", "WORK-8"] and not LAST.exists()
         ts = {t["key"]: t for t in scan()["tickets"]}
-        assert ts["WORK-5"]["title"] == "Mission 5" and ts["WORK-5"]["body"].startswith("## Ziel\n???\n")
+        assert ts["WORK-5"]["title"] == "Mission 5" and ts["WORK-5"]["body"].lstrip("\n").startswith("## Ziel\n???\n")
+        assert ts["WORK-5"]["body"].startswith("\n## Ziel") and new("WORK", "Gleich") == "WORK-9"
+        assert find("WORK-9", scan()["tickets"])["body"].startswith("\n## Ziel")  # gleiches Layout wie migrate
     print("selftest ok: Kern (new/set/list/find, WIP, Projektwechsel, Frontmatter)")
 
 
