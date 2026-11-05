@@ -36,6 +36,7 @@ Scope {
     property bool detail: false
     property string editing: ""      // "" | new | title | labels | project | filter
     property string text: ""         // Inhalt des offenen Eingabefelds
+    property string target: ""       // Karte, fuer die e/t/P gestartet wurde
     property string err: ""
     property Item selItem: null      // Karte unter dem Auswahlrahmen
     property var pointer: null       // letzte Mausposition (Szene)
@@ -71,9 +72,14 @@ Scope {
     function fix() {
         const t = key ? state.tickets.find(x => x.key === key) || state.tickets.find(x => x.aliases.includes(key)) : null
         if (t && cards(t.status).some(x => x.key === t.key)) return select(statuses.indexOf(t.status), t.key)
+        // gewaehlte Karte ist weg: Popup und Eingabe zu dieser Karte schliessen,
+        // sonst zeigen/aendern sie still den Nachbarn
+        if (key) {
+            detail = false
+            if (editing !== "new" && editing !== "filter") editing = ""
+        }
         const list = cards(statuses[col])
         key = list.length ? list[Math.min(row, list.length - 1)].key : ""
-        if (!key) detail = false
     }
     function moveCol(d) {
         col = Math.max(0, Math.min(4, col + d))
@@ -90,7 +96,7 @@ Scope {
         run(["set", t.key, "status", statuses[c]])
         col = c
     }
-    function edit(mode, value) { text = value; editing = mode }
+    function edit(mode, value) { text = value; target = key; editing = mode }
     function submit() {
         const mode = editing, v = text.trim()
         editing = ""
@@ -98,7 +104,7 @@ Scope {
         else if (mode === "new") {
             if (v) run(["quick", statuses[col], (tab && !/^[A-Za-z][A-Za-z0-9]*:/.test(v) ? tab + ": " : "") + v],
                        k => tix.key = k)
-        } else if (key && (v || mode === "labels")) run(["set", key, mode, v], k => tix.key = k)
+        } else if (target && (v || mode === "labels")) run(["set", target, mode, v], k => tix.key = k)
     }
     // ein Process je Aufruf; done(stdout) bei Erfolg
     function run(args, done) {
