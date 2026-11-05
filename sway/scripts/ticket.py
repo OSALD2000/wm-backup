@@ -190,7 +190,8 @@ def read(path):
         prio = "mittel"
     labels = [t for t in _list(d.get("tags", [])) if t != "ticket"
               and not t.startswith(("projekt/", "status/", "prio/"))]
-    check = re.findall(r"^\s*- \[( |x|X)\]", body, re.M)
+    # nur Punkte mit Text: das leere "- [ ]" der Vorlage zaehlt nicht
+    check = re.findall(r"^\s*- \[( |x|X)\][ \t]+\S", body, re.M)
     return {"key": f"{m.group(1)}-{m.group(2)}", "project": m.group(1), "num": int(m.group(2)),
             "title": m.group(3), "status": status, "prio": prio, "labels": labels,
             "archived": str(d.get("archived", "")).lower() in ("true", "ja", "yes"),
@@ -590,6 +591,8 @@ def selftest():
         assert find("WORK-1", scan()["tickets"])["labels"] == ["docs", "ki"]
         p.write_text("---\nstatus: todo\ntags:\n---\n" + body)
         assert find("WORK-1", scan()["tickets"])["labels"] == []
+        p.write_text("---\nstatus: todo\n---\n- [ ]\n- [ ] x\n- [x] y\n")   # leerer Punkt zaehlt nicht
+        assert find("WORK-1", scan()["tickets"])["check"] == [1, 2]
         # Ungueltig + Hinweise
         p.write_text("---\nstatus: erledigt\n---\n" + body)
         t = find("WORK-1", scan()["tickets"])
