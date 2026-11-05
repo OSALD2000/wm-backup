@@ -6,6 +6,7 @@
 // Look = waybar (waybar/style.css): eckige Kaesten wie die Workspaces, Leiste buendig
 // in voller Hoehe; der aktive Eintrag ist gefuellt wie der aktive Workspace.
 // Dazu das Workspace-Raster (Super+u / Super+Shift+u), siehe unten bei `grid`.
+// Dazu das Ticket-Board (Super+m), siehe Tickets.qml.
 import QtQuick
 import QtQuick.Effects
 import Quickshell
@@ -25,6 +26,7 @@ ShellRoot {
     readonly property color box: Qt.rgba(40 / 255, 36 / 255, 24 / 255, 0.55)
     readonly property color fill: Qt.rgba(1, 0.86, 0, 0.16)
     readonly property color hover: Qt.rgba(1, 0.86, 0, 0.08)
+    readonly property color warn: "#FF5A3C"  // = @warn: Fehler, Prio hoch, ungueltige Tickets
     readonly property string sidebar: Quickshell.env("HOME") + "/.config/eww/scripts/sidebar.py"
     property var state: ({ wins: {}, show: [], grid: [] })
 
@@ -563,4 +565,6 @@ ShellRoot {
             }
         }
     }
+
+    Tickets { shell: root }
 }
