@@ -103,79 +103,6 @@
       (button :class "btn ghost small" :visible {learn.has_last} :tooltip "Letzte gespeicherte Session löschen"
         :onclick "~/.config/eww/scripts/learn.py undo" "↶ Letzte Session"))))
 
-; Mission Control: JSON bleibt die Aufgabenquelle, Obsidian ergaenzt freie Notizen.
-(deflisten missions
-  :initial `{"open":0,"done":0,"focus":0,"archived":0,"progress":0,"groups":[[],[],[],[]],"error":""}`
-  "~/.config/eww/scripts/todo.py watch")
-(defvar mission_tab 1)
-
-(defwidget mission-row [m]
-  (box :class "ms-item ${m.focus ? 'focused' : ''} ${m.done ? 'done' : ''}"
-    :orientation "v" :space-evenly false :spacing 8
-    (box :space-evenly false :spacing 12
-      (button :class "ms-check" :active {!m.archived}
-        :tooltip {m.done ? "Wieder oeffnen" : "Erledigen"}
-        :onclick "~/.config/eww/scripts/todo.py done ${m.id}"
-        {m.done ? "✓" : "○"})
-      (label :class "ms-text" :xalign 0 :yalign 0.5 :hexpand true
-        :wrap true :wrap-mode "wordchar" :width 410 :text {m.text}))
-    (box :class "ms-actions" :space-evenly false :spacing 6
-      (button :class "ms-action ${m.focus ? 'selected' : ''}" :visible {!m.done && !m.archived}
-        :tooltip "Bis zu drei Missionen fuer jetzt auswaehlen"
-        :onclick "~/.config/eww/scripts/todo.py focus ${m.id}"
-        {m.focus ? "★ Im Fokus" : "☆ Fokus"})
-      (button :class "ms-action" :timeout "10m" :visible {!m.archived}
-        :onclick "~/.config/eww/scripts/todo.py edit ${m.id}" "Bearbeiten")
-      (button :class "ms-action" :timeout "5s" :tooltip "Eigene Notiz in Obsidian anlegen oder oeffnen"
-        :onclick "~/.config/eww/scripts/todo.py note ${m.id}" "↗ Notiz")
-      (box :hexpand true)
-      (button :class "ms-action ms-archive" :tooltip "Bleibt gespeichert und kann zurueckgeholt werden"
-        :onclick "~/.config/eww/scripts/todo.py archive ${m.id}"
-        {m.archived ? "↶ Zurueckholen" : "Archivieren"}))))
-
-(defwidget mission-list [group]
-  (scroll :height 330 :vexpand true :hscroll false :vscroll true
-    (box :orientation "v" :space-evenly false :spacing 8
-      (box :class "ms-empty" :visible {arraylength(group) == 0} :orientation "v" :spacing 10
-        (label :class "ms-empty-symbol" :text {mission_tab == 0 ? "◎" : "✓"})
-        (label :class "ms-summary" :wrap true :text {mission_tab == 0 ? "Was ist jetzt wichtig?" : mission_tab == 1 ? "Freier Kopf. Alles erledigt." : mission_tab == 2 ? "Hier sammeln sich deine Erfolge." : "Dein Archiv ist leer."})
-        (label :class "ms-subtitle" :wrap true :text {mission_tab == 0 ? "Markiere unter Offen bis zu drei Aufgaben mit ☆ Fokus." : "Alle Missionen bleiben gespeichert."}))
-      (for m in group (mission-row :m m)))))
-
-; Halbe Waybar-Hoehe (30px) ausgleichen: Mitte des gesamten Bildschirms.
-(defwindow mission
-  :monitor "eDP-1"
-  :geometry (geometry :x "24px" :y "-15px" :width "560px" :height "80%" :anchor "center right")
-  :stacking "overlay" :exclusive false :focusable "ondemand"
-  (box :class "panel mission" :orientation "v" :space-evenly false :spacing 16
-    (box :class "ms-head" :space-evenly false :spacing 14
-      (label :class "ms-lambda" :text "λ")
-      (box :orientation "v" :space-evenly false :spacing 3 :hexpand true
-        (label :class "ms-title" :xalign 0 :text "Mission Control")
-        (label :class "ms-subtitle" :xalign 0 :text "Platz fuer deinen naechsten Schritt."))
-      (button :class "ms-action" :tooltip "Panel schliessen · Super+m"
-        :onclick "eww close mission" "✕"))
-    (box :orientation "v" :space-evenly false :spacing 8
-      (box :space-evenly false
-        (label :class "ms-summary" :hexpand true :xalign 0 :text "${missions.open} offen · ${missions.done} erledigt")
-        (label :class "ms-subtitle" :text "${missions.focus}/3 im Fokus"))
-      (progress :class "ms-progress" :value {missions.progress}))
-    (box :class "ms-tabs" :space-evenly true :spacing 4
-      (button :class "ms-tab ${mission_tab == 0 ? 'selected' : ''}" :onclick "eww update mission_tab=0" "Jetzt")
-      (button :class "ms-tab ${mission_tab == 1 ? 'selected' : ''}" :onclick "eww update mission_tab=1" "Offen")
-      (button :class "ms-tab ${mission_tab == 2 ? 'selected' : ''}" :onclick "eww update mission_tab=2" "Erledigt")
-      (button :class "ms-tab ${mission_tab == 3 ? 'selected' : ''}" :onclick "eww update mission_tab=3" "Archiv"))
-    (label :class "ms-error" :visible {missions.error != ""} :wrap true :text {missions.error})
-    (stack :selected mission_tab :transition "crossfade" :same-size true :vexpand true
-      (mission-list :group {missions.groups[0]})
-      (mission-list :group {missions.groups[1]})
-      (mission-list :group {missions.groups[2]})
-      (mission-list :group {missions.groups[3]}))
-    (button :class "ms-add" :timeout "10m" :onclick "~/.config/eww/scripts/todo.py new" "+ Neue Mission")
-    (box :class "ms-foot" :orientation "v" :space-evenly false :spacing 5
-      (label :class "ms-subtitle" :xalign 0 :text "↗ Notiz verbindet jede Mission mit Obsidian.")
-      (label :class "ms-subtitle" :xalign 0 :text "Super+Ctrl+m  Schnell erfassen    ·    Super+m  Schliessen"))))
-
 ; Trading-Journal (Super+Ctrl+j): Formular statt Abfragen. journal.py setzt die
 ; jr_*-Variablen, macht den Screenshot und oeffnet das Fenster auf dem
 ; fokussierten Monitor. Knoepfe schicken nur Werte aus jr_opts (Indizes /
@@ -460,7 +387,7 @@
         (key :k "Super+Shift+f p v" :d "Dateien, Kalender, Zwischenablage")
       (label :class "section" :xalign 0 :text "SYSTEM")
         (key :k "Super+z" :d "Lern-Timer")
-        (key :k "Super+m / Super+Ctrl+m" :d "Mission Control / Mission schnell eintragen")
+        (key :k "Super+m / Super+Ctrl+m" :d "Ticket-Board / Ticket schnell eintragen")
         (key :k "Super+c" :d "Agenten: Claude/Codex-Sessions (j/k, Enter, Esc)")
         (key :k "Super+g" :d "Agenten-Tafel: Chats live nebeneinander (nur Anzeige)")
         (key :k "Super+Ctrl+j" :d "Trading-Journal: Screenshot + Setup-Panel (Obsidian)")

@@ -98,27 +98,14 @@ tooltip { background: rgba(0, 0, 0, 0.85); color: $bright; border: 1px solid $fg
 .ms-lambda { color: $bright; font-size: 40px; font-weight: bold; }
 .ms-title { color: $bright; font-size: 23px; font-weight: bold; }
 .ms-subtitle { color: #b4ac91; font-size: 11px; }
-.ms-summary { color: #eee8d8; font-size: 13px; font-weight: bold; }
-.ms-progress trough { min-height: 3px; background: #343024; border-radius: 3px; }
-.ms-progress progress { min-height: 3px; background: $bright; border-radius: 3px; }
 .ms-tabs { background: #1d1b15; border-radius: 7px; padding: 4px; }
 .ms-tab { padding: 9px 8px; color: #b4ac91; border-radius: 5px; font-size: 12px; }
 .ms-tab.selected { background: #393321; color: $bright; }
-.ms-item { background: #211f18; border: 1px solid #343024; border-left: 3px solid #49422e;
-           border-radius: 7px; padding: 12px; }
-.ms-item.focused { border-left-color: $bright; background: #2b2718; }
-.ms-item.done .ms-text { color: #aaa38e; text-decoration-line: line-through; }
-.ms-text { color: #eee8d8; font-size: 14px; }
-.ms-check { color: $bright; font-size: 23px; min-width: 26px; padding: 0 3px; border-radius: 4px; }
-.ms-actions { margin-left: 35px; }
 .ms-action { color: #b4ac91; font-size: 11px; padding: 5px 6px; border-radius: 4px; }
 .ms-action.selected { color: $bright; }
-.ms-action:hover, .ms-tab:hover, .ms-check:hover { background: #3b3524; color: $bright; }
+.ms-action:hover, .ms-tab:hover { background: #3b3524; color: $bright; }
 .ms-add { background: $bright; color: #141310; padding: 12px; border-radius: 6px; font-size: 13px; font-weight: bold; }
 .ms-add:hover { background: #ffe85b; }
-.ms-foot { border-top: 1px solid $edge; padding-top: 12px; }
-.ms-empty { padding: 36px 12px; }
-.ms-empty-symbol { font-size: 36px; color: $bright; }
 .ms-error { color: #ff9076; }
 .jr-label { color: $label; font-size: 11px; font-weight: bold; min-width: 82px; }
 .jr-gap { min-width: 0; margin-left: 10px; }
@@ -128,7 +115,7 @@ tooltip { background: rgba(0, 0, 0, 0.85); color: $bright; border: 1px solid $fg
 .jr-input { background: #1d1b15; color: $bright; caret-color: $bright; border: 1px solid #49422e;
   border-radius: 6px; padding: 6px 8px; font-size: 13px; }
 .jr-input.bad { border-color: #ff9076; }
-.ms-action, .ms-tab, .ms-check, .ms-add, .win, .btn {
+.ms-action, .ms-tab, .ms-add, .win, .btn {
   transition: background-color 140ms ease-out, color 140ms ease-out;
 }
 .mission button:focus { box-shadow: inset 0 0 0 1px $bright; }
