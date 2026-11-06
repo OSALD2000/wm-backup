@@ -46,7 +46,7 @@ S=.claude/skills/theme-switch/scripts/theme.sh
 Die **Bedienung ist fest** (Abschnitt "Standard-Bedienung" in `CLAUDE.md`:
 Workspaces u/i/o mit 1-10, Ziel-Monitor Super+Esc + Super+Ctrl[+Shift]+N, Super+q/b/Shift+z, Mausrad kippen = Super+q (mit Super = Workspace weiter), Fensterliste links (Quickshell, `quickshell/shell.qml`: nur Farben/Schrift anpassen), Hilfe-Panel,
 Workspace-Raster Super+u / Super+Shift+u (Quickshell-Overlay `grid` in `shell.qml`, live mit App-Icons, hjkl/Pfeile, u/i/o + Nummer ins Eingabefeld je Zeile, Tab = Modus, letztes Ziel je Aktion; `sidebar.py workspaces go|move|apply`),
-unsichtbare Tab-Zeile, Vorschau Super+Tab (rofi, Entf schliesst), Ticket-Board Super+m (Quickshell `Tickets.qml`), Konsole Super+Shift+Tab (cool-retro-term),
+unsichtbare Tab-Zeile, Vorschau Super+Tab (Quickshell `Overview.qml`, `/` Filter, Entf schliesst), Ticket-Board Super+m (Quickshell `Tickets.qml`), Konsole Super+Shift+Tab (cool-retro-term),
 Zwischenablage Super+Shift+V, Pickup-Popups unten rechts,
 waybar mit Nummer vor dem Icon und hervorgehobenem Workspace auf jedem Monitor, daneben Fensterzahl + Symbol
 der Fensterliste `custom/wins`, Ziel-Monitor `custom/target`, Boersenuhr `custom/market` und Agenten `custom/agents`,
@@ -102,10 +102,10 @@ Konventionen aus den bisherigen Themes, die sich bewaehrt haben:
   `sidebar`, `info`, die waybar-Workspaces (Nummer + Icon, `button.visible`
   wie `button.focused`), `custom/wins` (Klassen `open`/`idle`/`off`), `custom/target`, `custom/market` (Klassen `active`/`idle`/`closed`), `custom/agents` (Klassen `busy`/`idle`/`new`/`none`), die swaync-Popups (Pickups
   unten rechts, Block `.floating-notifications` in `swaync/style.css`), das
-  Zwischenablage-Menue `clip.sh`, die Eingabezeile `ask.sh` (Journal, Schnellnotiz, Ticket-Schnelleingabe, Session parken), das Vorschau-Raster (rofi, `overview()` in `sidebar.py`), das Workspace-Raster (Quickshell, Farben oben in `shell.qml`), die
+  Zwischenablage-Menue `clip.sh`, die Eingabezeile `ask.sh` (Journal, Schnellnotiz, Ticket-Schnelleingabe, Session parken), das Vorschau-Raster (Quickshell `Overview.qml`, Farben oben in `shell.qml`), das Workspace-Raster (Quickshell, Farben oben in `shell.qml`), die
   Ticket-Board (Quickshell `Tickets.qml`/`TicketCard.qml`/`TicketDetail.qml`/`Chip.qml`: Farben ueber `root` in `shell.qml` inkl. `warn`, `ticket.py` unveraendert), das Agenten-Panel (eww `agents` + Tafel `agents-board`, `.ag-*`), das Journal-Panel (eww `journal`, `.jr-*` + `.ms-*`, `sway/scripts/journal.py`) und die Konsole (cool-retro-term, eigenes `profile.json` in den Farben des
   Themes). Nach dem Umbau alle einmal ausprobieren:
-  `notify-send`, Super+u / Super+Shift+u (Icons live, hjkl/Pfeile, u/i/o + Nummer ins Eingabefeld je Zeile, Tab = Modus, Enter/Klick bestaetigt, Klick auf Icon springt, Esc verwirft, letztes Ziel bleibt je Aktion), Super+Shift+V, Super+Tab (Entf schliesst ein Fenster), Super+m (Ticket mit `'` anlegen, H/L schieben, viertes In Arbeit prallt ab, Detail, Obsidian oeffnen, Drag & Drop), Super+Shift+Tab, Super+b (Symbol
+  `notify-send`, Super+u / Super+Shift+u (Icons live, hjkl/Pfeile, u/i/o + Nummer ins Eingabefeld je Zeile, Tab = Modus, Enter/Klick bestaetigt, Klick auf Icon springt, Esc verwirft, letztes Ziel bleibt je Aktion), Super+Shift+V, Super+Tab (Bilder da, `/` filtert, Entf schliesst ein Fenster, Enter springt), Super+m (Ticket mit `'` anlegen, H/L schieben, viertes In Arbeit prallt ab, Detail, Obsidian oeffnen, Drag & Drop), Super+Shift+Tab, Super+b (Symbol
   in `custom/wins` wechselt, Zahl stimmt mit den Fenstern ueberein), Super+Esc
   (`custom/target` schaltet weiter) + Super+Ctrl+Shift+N, Super+Ctrl+m, Super+Ctrl+j (Eintrag im Obsidian-Journal, Esc verwirft), Super+Ctrl+n (Notiz geht in Obsidian auf), Super+c (j/k, Enter springt, Esc zu, Mode wieder `default`), Super+g (Chats live nebeneinander, Spalten voll, nichts laeuft unten raus).
 - Seit HL2-v24: IPv6-Modul aus der Leiste lassen, konstante Workspace-Breiten

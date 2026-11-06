@@ -15,8 +15,6 @@ Aufruf: sidebar.py watch       eww (HUD) und Quickshell neu starten, dann bei
         sidebar.py toggle      Sidebar an/aus (Super+b)
         sidebar.py bar         waybar-Modul custom/wins: Fensterzahl des
                                sichtbaren Workspaces + ob die Liste offen ist
-        sidebar.py overview    alle Fenster aller Monitore als Vorschau-Raster
-                               (rofi, Super+Tab), Enter fokussiert
         sidebar.py workspaces go|move  Workspace-Raster (Super[+Shift]+u) in
                                Quickshell oeffnen; das ruft nach der Auswahl
         sidebar.py workspaces apply go|move OUTPUT N CON
@@ -51,13 +49,14 @@ BAR = os.path.join(RUN, "eww-sidebar.bar")  # Stand fuer waybar, schreibt der Wa
 STATE = os.path.join(RUN, "sidebar.json")  # {"wins": {output: [...]}, "show": [outputs], "grid": [...]} fuer Quickshell
 QS = os.path.expanduser("~/.local/bin/quickshell")
 BAR_SIGNAL = 9  # = "signal" von custom/wins in waybar/config.jsonc
-# Vorschaubilder fuer overview. Sway kann nur Monitore abfotografieren, und
-# Fenster hinter Tabs/auf unsichtbaren Workspaces malt es gar nicht -> der
-# Watcher fotografiert jedes Fenster, solange es sichtbar ist; overview zeigt
-# den letzten Stand. In XDG_RUNTIME_DIR (tmpfs, nur fuer Osa lesbar), weg nach
+# Vorschaubilder fuer das Vorschau-Raster (Super+Tab, quickshell/Overview.qml).
+# Sway kann nur Monitore abfotografieren, und Fenster hinter Tabs/auf
+# unsichtbaren Workspaces malt es gar nicht -> der Watcher fotografiert jedes
+# Fenster, solange es sichtbar ist; das Raster zeigt den letzten Stand. In XDG_RUNTIME_DIR (tmpfs, nur fuer Osa lesbar), weg nach
 # dem Abmelden. ponytail: alte Bilder geschlossener Fenster bleiben bis dahin.
 SHOTS = os.path.join(RUN, "win-shots")
 SHOT_EVERY = 3  # Sekunden, hoechstens so oft je Fenster
+OVERVIEW = os.path.join(RUN, "overview.open")  # existiert = Raster offen, snap() pausiert
 AREAS = ["TERMINAL", "BROWSER", "CODE", "CODE 2", "TRADING", "FREI", "TOOLS",
          "TODOS", "CHAT", "MEDIEN"]  # Workspace-Raster 1-10, siehe CLAUDE.md
 LETTERS = "oiu"  # Monitor-Kuerzel von rechts (Laptop) nach links, siehe collapse()
@@ -235,7 +234,8 @@ def windows(node):
 def snap(tree, taken):
     """Sichtbare Fenster fotografieren, je Fenster hoechstens alle SHOT_EVERY s.
     Im Hintergrund (&), damit die Sidebar nicht wartet; sleep, damit das Fenster
-    nach dem Wechsel fertig gemalt ist. Gesperrt nie: grim saehe den Lockscreen."""
+    nach dem Wechsel fertig gemalt ist. Gesperrt oder bei offenem Vorschau-Raster
+    nie: grim saehe den Lockscreen bzw. das Overlay."""
     now, cmds = time.time(), []
     for w in windows(tree):
         if w.get("visible") and now - taken.get(w["id"], 0) > SHOT_EVERY:
@@ -244,59 +244,8 @@ def snap(tree, taken):
             cmds.append(f'grim -s 0.3 -l 1 -g "{r["x"]},{r["y"]} {r["width"]}x{r["height"]}" {f}.tmp && mv {f}.tmp {f}')
     if cmds:
         os.makedirs(SHOTS, mode=0o700, exist_ok=True)
-        subprocess.run(["sh", "-c", "(sleep 0.3; pgrep -x 'hyprlock|swaylock' >/dev/null || { "
+        subprocess.run(["sh", "-c", f"(sleep 0.3; pgrep -x 'hyprlock|swaylock' >/dev/null || [ -e {OVERVIEW} ] || {{ "
                         + "; ".join(cmds) + "; }) >/dev/null 2>&1 &"])
-
-
-def overview_entries(tree, apps):
-    """-> [(con_id, rofi-Eintrag)], sortiert nach Workspace 11-40. Zweizeilig,
-    deshalb trennt overview die Eintraege mit | statt Zeilenumbruch. Eintrag =
-    "U2  BROWSER\nChrome\0icon\x1f<Bild>", ohne Bild das App-Icon."""
-    out = []
-    for o in tree.get("nodes", []):
-        if o.get("name") == "__i3":
-            continue
-        for ws in o.get("nodes", []):
-            num, short = ws.get("num", -1), ws.get("name", "").partition(":")[2].upper()
-            for w in windows(ws):
-                app = w.get("app_id") or (w.get("window_properties") or {}).get("class") or "?"
-                icon, name = apps.get(app.lower(), (FALLBACK, ""))
-                shot = os.path.join(SHOTS, f'{w["id"]}.png')
-                area = AREAS[(num - 1) % 10] if num > 0 else ""
-                out.append((num, w["id"], f"{short}  {area}\n{name or app}"
-                            f"\0icon\x1f{shot if os.path.exists(shot) else icon}"))
-    return [(i, line) for _, i, line in sorted(out, key=lambda e: e[0])]
-
-
-def overview():
-    """Super+Tab: rofi-Raster, Enter fokussiert. Entf schliesst das gewaehlte
-    Fenster (kb-custom-1, rofi endet mit 10), dann geht das Raster neu auf."""
-    row = 0
-    while True:
-        entries = overview_entries(swaymsg("-t", "get_tree"), desktop_apps())
-        if not entries:
-            return
-        r = subprocess.run(
-            ["rofi", "-dmenu", "-sep", "|", "-eh", "2", "-i", "-p", "λ", "-no-custom", "-format", "i", "-show-icons",
-             "-selected-row", str(min(row, len(entries) - 1)),
-             "-kb-remove-char-forward", "Control+d", "-kb-custom-1", "Delete",
-             "-config", os.path.expanduser("~/.config/rofi/config-nord.rasi"),
-             "-theme-str", """mainbox { padding: 5% 6% 0 6%; }
-                              textbox-title { str: "λ  FENSTER   ·   Entf schliesst"; }
-                              listview { columns: 5; lines: 3; fixed-columns: true; spacing: 12px; flow: horizontal; }
-                              element { orientation: vertical; padding: 8px; spacing: 6px; }
-                              element-icon { size: 250px; }
-                              element-text { font: "Verdana Bold 11"; horizontal-align: 0.5; }"""],
-            input="|".join(line for _, line in entries), capture_output=True, text=True)
-        if not r.stdout.strip():
-            return
-        row = int(r.stdout)
-        con = entries[row][0]
-        if r.returncode != 10:
-            subprocess.run(["swaymsg", f"[con_id={con}] focus"], capture_output=True)
-            return
-        subprocess.run(["swaymsg", f"[con_id={con}] kill"], capture_output=True)
-        time.sleep(0.3)  # ponytail: Apps mit Rueckfrage (ungespeichert) bleiben stehen, Raster zeigt sie wieder
 
 
 def workspace_entries(tree, apps={}, index=None):
@@ -436,6 +385,7 @@ def watch():
     # und ist per eww nicht mehr erreichbar -> doppelte Sidebar.
     subprocess.run(["pkill", "-x", "eww"])
     subprocess.run(["pkill", "-x", "quickshell"])
+    subprocess.run(["rm", "-f", OVERVIEW])  # sonst pausiert snap() fuer immer
     time.sleep(0.3)
     eww("open-many", "hud-left", "hud-right")
     subprocess.Popen([QS], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
@@ -502,10 +452,6 @@ def selftest():
     assert step(w["DP-7"], 1) == 3 and step(w["DP-7"], -1) == 1
     assert step(w["DP-7"][:2], 1) == 1  # im Kreis
     assert step([], 1) is None
-    e = overview_entries(tree, apps)
-    assert [i for i, _ in e] == [5, 1, 2, 3], e  # alle Workspaces, Scratchpad nicht
-    assert e[0][1] == "I1  TERMINAL\nhidden\0icon\x1f" + FALLBACK, e[0]
-    assert e[1][1].startswith("I3  CODE\nVisual Studio Code\0icon\x1f"), e[1]
     assert json.loads(bar_json({"DP-7": [3, True]}, "DP-7"))["text"].startswith("\uf2d2 3  ")
     assert json.loads(bar_json({}, "HDMI-1"))["text"].startswith("\uf2d2 0")
     out = lambda name, x, *ws: {"type": "output", "name": name, "active": True,
@@ -593,5 +539,5 @@ if __name__ == "__main__":
         sys.exit(0)
     {"watch": watch, "next": lambda: cycle(1), "prev": lambda: cycle(-1),
      "nudge": lambda: nudge(sys.argv[2], sys.argv[3]),
-     "toggle": toggle, "overview": overview, "bar": bar,
+     "toggle": toggle, "bar": bar,
      "selftest": selftest}[sys.argv[1]]()

@@ -374,7 +374,7 @@ bindsym $mod+Shift+i exec "/usr/share/code/bin/code /home/osa/.config/sway"
 bindsym $mod+x       exec --no-startup-id keepassxc
 bindsym $mod+Shift+p exec --no-startup-id alacritty -e calcurse
 bindsym $mod+Shift+v exec --no-startup-id ~/.config/sway/scripts/clip.sh
-bindsym $mod+Tab     exec ~/.config/eww/scripts/sidebar.py overview
+bindsym $mod+Tab     exec --no-startup-id ~/.local/bin/quickshell ipc call overview toggle
 # Workspace-Raster: letztes Ziel je Aktion, Maus oder h/j/k/l + Enter.
 bindsym $mod+u       exec ~/.config/eww/scripts/sidebar.py workspaces go
 bindsym $mod+Shift+u exec ~/.config/eww/scripts/sidebar.py workspaces move

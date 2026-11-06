@@ -26,12 +26,12 @@ Aenderungen an `theme.sh` immer in beiden Kopien nachziehen.
 | `hypr/` | `~/.config/hypr/` | **nur hyprlock** (Sperrbildschirm) + `loading.sh` (Ladebalken). Hyprland selbst wird nicht benutzt |
 | `waybar/` | `~/.config/waybar/` | obere Leiste (`config.jsonc`, `style.css`): Monitor-Badge U/I/O + Workspaces als `<Taste> <Icon>`, sichtbarer Workspace je Monitor hervorgehoben, `custom/wins` = Fensterzahl + Fensterliste offen/zu, `custom/target` = Ziel-Monitor `→ U/I/O`, `custom/agents` = Claude/Codex-Status |
 | `rofi/` | `~/.config/rofi/` | Launcher. Sway ruft `rofi -config ~/.config/rofi/config-nord.rasi` auf; der Name "nord" ist historisch, das aktive Theme steht per `@theme` darin (HL2: `hl2-menu.rasi`). `config.rasi` gehoert zu i3 |
-| `eww/` | `~/.config/eww/` | Desktop-Widgets. HL2: `hud-left`/`hud-right` + Lern-Panel `learn` (Super+Z), Hilfe `info` (Super+Shift+Z), Trading-Journal `journal` (Super+Ctrl+j, Formular von `sway/scripts/journal.py`). `scripts/learn.py` = Lern-Timer, Daten in `~/.local/share/learn-timer/`; `scripts/sidebar.py` = Watcher fuer die Fensterliste (schreibt `$XDG_RUNTIME_DIR/sidebar.json`, startet Quickshell) + Super+q/b + Workspace-Raster Super[+Shift]+u + Vorschau-Raster Super+Tab (`overview`, rofi) + Stand fuer waybar `custom/wins` (`bar`); `scripts/agents.py` = Agenten-Panel `agents` (Super+c) + Tafel `agents-board` (Super+g) + waybar `custom/agents` |
+| `eww/` | `~/.config/eww/` | Desktop-Widgets. HL2: `hud-left`/`hud-right` + Lern-Panel `learn` (Super+Z), Hilfe `info` (Super+Shift+Z), Trading-Journal `journal` (Super+Ctrl+j, Formular von `sway/scripts/journal.py`). `scripts/learn.py` = Lern-Timer, Daten in `~/.local/share/learn-timer/`; `scripts/sidebar.py` = Watcher fuer die Fensterliste (schreibt `$XDG_RUNTIME_DIR/sidebar.json`, startet Quickshell) + Super+q/b + Workspace-Raster Super[+Shift]+u + Bilder fuer das Vorschau-Raster Super+Tab (`snap()`) + Stand fuer waybar `custom/wins` (`bar`); `scripts/agents.py` = Agenten-Panel `agents` (Super+c) + Tafel `agents-board` (Super+g) + waybar `custom/agents` |
 | `swaync/` | `~/.config/swaync/` | Benachrichtigungen (Popups als Pickups unten rechts) + Panel hinter der Glocke |
 | `swaylock/` | `~/.config/swaylock/` | Fallback-Sperre |
 | `alacritty/` | `~/.config/alacritty/` | Terminal. `alacritty.toml` importiert die Farbdatei (`hl2.toml`, `nord.toml`), `lambda.txt` = Begruessung |
 | `cool-retro-term/` | `~/.config/cool-retro-term/` | Look der Konsole: `profile.json` (Farben, CRT-Effekte, Schrift), traegt `console.py` vor jedem Start ein |
-| `quickshell/` | `~/.config/quickshell/` | Fensterliste links (`shell.qml`): je Monitor eine animierte Leiste, liest `sidebar.json`. Dazu das Workspace-Raster Super+u (`grid`, per `quickshell ipc` geoeffnet). Ausserdem das Ticket-Board Super+m (`Tickets.qml` + `TicketCard.qml`, `TicketDetail.qml`, gemeinsamer Knopf `Chip.qml`). Binary `~/.local/bin/quickshell` selbst gebaut (siehe Stolperfallen) |
+| `quickshell/` | `~/.config/quickshell/` | Fensterliste links (`shell.qml`): je Monitor eine animierte Leiste, liest `sidebar.json`. Dazu das Workspace-Raster Super+u (`grid`, per `quickshell ipc` geoeffnet). Ausserdem das Ticket-Board Super+m (`Tickets.qml` + `TicketCard.qml`, `TicketDetail.qml`, gemeinsamer Knopf `Chip.qml`) und das Vorschau-Raster Super+Tab (`Overview.qml`). Binary `~/.local/bin/quickshell` selbst gebaut (siehe Stolperfallen) |
 | `wallpaper.jpg` | `~/Private/wallpaper.jpg` | von `output * bg` in der sway-Config benutzt |
 | `browser/chrome-hl2-theme/` | `~/.config/chrome-hl2-theme/` | entpacktes Chrome-Theme (in Chrome ueber "Entpackte Erweiterung laden") |
 | `browser/firefox/*.css` | `~/snap/firefox/common/.mozilla/firefox/h5d4ltr7.default/chrome/` | Firefox (Snap) userChrome/userContent |
@@ -101,7 +101,7 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v27` | wie v26, Workspace-Raster (Super+u wechseln, Super+Shift+u verschieben): eine Zeile je Bildschirm, zehn Felder, Maus/hjkl/Pfeile, letztes Ziel je Aktion gespeichert. |
 | `HL2-v28` | wie v27, Fensterliste links mit Quickshell statt eww: animiert (einfahren, Eintraege ploppen rein/raus, leuchtende Markierung gleitet federnd zum aktiven Fenster, Icon huepft), Look wie die waybar-Workspaces, Fenstertitel als Popout. |
 | `HL2-v29` | wie v28, Workspace-Raster (Super+u / Super+Shift+u) als Quickshell-Overlay: live mit App-Icons je Feld, Eingabefeld je Bildschirm fuer die Nummer, Tab = Wechseln/Verschieben, Klick auf Icon springt zum Fenster; Super+j / Super+k = Bildschirm links / rechts; Obsidian-Vault jetzt `~/Private/obsidian-vault`. |
-| `HL2-v30` | wie v29, Ticket-Board statt Mission Control: Tickets als Markdown im Obsidian-Vault (`Tickets/<PROJEKT>/`), Board mit Backlog/ToDo/In Arbeit/Review/Fertig in Quickshell (Super+m), Prio, Labels, Detail-Popup, Drag & Drop, Loeschen in den Obsidian-Papierkorb, CLI `ticket` fuer Agenten. **Aktueller Standard** fuer neue Themes |
+| `HL2-v30` | wie v29, Ticket-Board statt Mission Control: Tickets als Markdown im Obsidian-Vault (`Tickets/<PROJEKT>/`), Board mit Backlog/ToDo/In Arbeit/Review/Fertig in Quickshell (Super+m), Prio, Labels, Detail-Popup, Drag & Drop, Loeschen in den Obsidian-Papierkorb, CLI `ticket` fuer Agenten; Vorschau-Raster (Super+Tab) als animiertes Quickshell-Overlay mit Filter. **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
@@ -145,7 +145,7 @@ Wer davon abweicht, fragt vorher.
   bleibt auf dem Monitor. Dasselbe per Mausrad kippen (ohne Taste, `button7` =
   rechts = naechstes, `button6` = links = voriges, `--whole-window`). Mit Super
   gekippt = belegter Workspace des Monitors weiter / zurueck (`next_on_output`). `Super+b` = Liste an/aus. `Super+Shift+z` = Hilfe.
-  `Super+Tab` = alle Fenster aller Monitore als Vorschau-Raster (rofi; Bild =
+  `Super+Tab` = alle Fenster aller Monitore als Vorschau-Raster (Quickshell; Bild =
   letzter sichtbarer Stand, sway kann verdeckte Fenster nicht abfotografieren).
   `Super+m` = Ticket-Board. `Super+Print` = OCR: Bereich aufziehen,
   erkannter Text (tesseract, `deu+eng`) landet in der Zwischenablage, Popup bestaetigt.
@@ -233,11 +233,23 @@ Wer davon abweicht, fragt vorher.
   Themes, unten rechts ueber dem rechten HUD-Kasten (`positionY bottom`,
   `.floating-notifications` mit `margin-bottom` = HUD-Hoehe), 5 s, schmal.
   Das Panel hinter der Glocke (`Super+n`) ist davon getrennt gestylt.
-- **Vorschau-Raster** (`Super+Tab`, `sidebar.py overview`): alle Fenster aller
-  Monitore als Kacheln (rofi, 5 je Reihe), Beschriftung `<Kuerzel> <Bereich>`
-  + App. Enter fokussiert, **Entf** schliesst das gewaehlte Fenster
-  (`kb-custom-1`, `swaymsg kill`), danach geht das Raster neu auf. Bilder macht der Watcher in `snap()`, solange ein Fenster sichtbar ist
-  (`$XDG_RUNTIME_DIR/win-shots`, nicht bei Sperre).
+- **Vorschau-Raster** (`Super+Tab`, Quickshell `quickshell/Overview.qml`,
+  `quickshell ipc call overview toggle|open|close`, zum Testen `press NAME`,
+  `type TEXT` (= Filter), `info`): Overlay auf dem fokussierten Monitor,
+  alle Fenster aller Monitore als Kacheln (Reihenfolge wie das Workspace-Raster,
+  Daten = `"grid"` aus `sidebar.json`), Spaltenzahl so, dass die Kacheln am
+  groessten werden. Kachel = Bild + Kennzeichen `<Kuerzel> <Bereich>` (● =
+  Workspace gerade sichtbar) + App-Icon, Name, Titel. Startet auf dem
+  fokussierten Fenster. Tasten: `h/j/k/l` oder Pfeile, Tab/Shift+Tab = weiter/
+  zurueck, `u/i/o` = erstes Fenster des Monitors, `/` = Filter (App, Titel,
+  Kuerzel, Bereich; Esc leert), Enter = hin, **Entf** = Fenster schliessen
+  (Raster bleibt offen, Kachel blitzt rot und klappt weg), Esc = zu. Maus: Hover
+  waehlt (nur bei echter Bewegung), Klick = hin, Mittelklick oder ✕ = schliessen.
+  Animiert wie das Ticket-Board (Abtastlinie, Kacheln staffeln herein, Rahmen
+  gleitet federnd, gewaehlte Kachel zoomt beim Springen). Bilder macht der
+  Watcher in `snap()`, solange ein Fenster sichtbar ist (`$XDG_RUNTIME_DIR/win-shots`,
+  nicht bei Sperre und nicht, solange `$XDG_RUNTIME_DIR/overview.open` liegt =
+  Raster offen, sonst faenden die Bilder das Overlay).
 - **Ticket-Board** (`Super+m`, Quickshell `Tickets.qml` + `TicketCard.qml`,
   `TicketDetail.qml`, `Chip.qml`, `sway/scripts/ticket.py`): Overlay auf dem
   fokussierten Monitor. Quelle der Wahrheit sind Markdown-Dateien im Vault
@@ -323,10 +335,10 @@ Ein neues Theme uebernimmt `ws.sh`, `sidebar.py`, `agents.py`, `clip.sh`, `marke
 `format-icons` der waybar (Nummer vor dem Icon) und die Module `custom/wins`, `custom/target`, `custom/market` und `custom/agents`, die
 Workspace-/Bind-Bloecke, den Mode `[ AGENTS ]` und die Konsolen-Regel (`console.py`, `for_window` auf
 cool-retro-term) der sway-Config, die
-Fensterliste `quickshell/shell.qml`, die eww-Fenster `info`/`agents`/`agents-board`/`journal`, das Ticket-Board (`Tickets.qml`/`TicketCard.qml`/`TicketDetail.qml`/`Chip.qml`, `ticket.py`) und Lage/Timeout der swaync-Popups
-(`swaync/config.json`) und passt nur Farben und Schrift an: `eww.scss`, die Farb-Properties oben in `quickshell/shell.qml` (gelten auch fuer das Workspace-Raster und das Ticket-Board; `root` hat `hud bg font barBg edge box fill hover` und `warn` = Rot wie waybar `@warn`),
+Fensterliste `quickshell/shell.qml`, die eww-Fenster `info`/`agents`/`agents-board`/`journal`, das Ticket-Board (`Tickets.qml`/`TicketCard.qml`/`TicketDetail.qml`/`Chip.qml`, `ticket.py`), das Vorschau-Raster (`Overview.qml`) und Lage/Timeout der swaync-Popups
+(`swaync/config.json`) und passt nur Farben und Schrift an: `eww.scss`, die Farb-Properties oben in `quickshell/shell.qml` (gelten auch fuer Workspace-Raster, Ticket-Board und Vorschau-Raster; `root` hat `hud bg font barBg edge box fill hover` und `warn` = Rot wie waybar `@warn`),
 waybar `style.css`, den Popup-Block in `swaync/style.css` und die
-`-theme-str`-Teile in `clip.sh`, `ask.sh` und `overview()` in `sidebar.py` (die rofi-Theme-Datei liefert den Rest); in
+`-theme-str`-Teile in `clip.sh` und `ask.sh` (die rofi-Theme-Datei liefert den Rest); in
 `eww.scss` auch die Bloecke `.ms-*` (nur noch vom Journal-Panel benutzt), `.jr-*` (Journal) und `.ag-*` (Agenten). In `style.css` muss `button.visible` dieselbe
 Hervorhebung bekommen wie `button.focused`; `#custom-wins` mit den Klassen
 `open`/`idle`/`off`, `#custom-target` und `#custom-market` (Klassen `active`/`idle`/`closed`) und `#custom-agents` (Klassen `busy`/`idle`/`new`/`none`) umfaerben; `cool-retro-term/profile.json` mit den Farben

@@ -6,7 +6,8 @@
 // Look = waybar (waybar/style.css): eckige Kaesten wie die Workspaces, Leiste buendig
 // in voller Hoehe; der aktive Eintrag ist gefuellt wie der aktive Workspace.
 // Dazu das Workspace-Raster (Super+u / Super+Shift+u), siehe unten bei `grid`.
-// Dazu das Ticket-Board (Super+m), siehe Tickets.qml.
+// Dazu das Ticket-Board (Super+m), siehe Tickets.qml, und das Vorschau-Raster
+// (Super+Tab), siehe Overview.qml.
 import QtQuick
 import QtQuick.Effects
 import Quickshell
@@ -567,4 +568,5 @@ ShellRoot {
     }
 
     Tickets { shell: root }
+    Overview { shell: root }
 }
