@@ -31,7 +31,7 @@ Aenderungen an `theme.sh` immer in beiden Kopien nachziehen.
 | `swaylock/` | `~/.config/swaylock/` | Fallback-Sperre |
 | `alacritty/` | `~/.config/alacritty/` | Terminal. `alacritty.toml` importiert die Farbdatei (`hl2.toml`, `nord.toml`), `lambda.txt` = Begruessung |
 | `cool-retro-term/` | `~/.config/cool-retro-term/` | Look der Konsole: `profile.json` (Farben, CRT-Effekte, Schrift), traegt `console.py` vor jedem Start ein |
-| `quickshell/` | `~/.config/quickshell/` | Fensterliste links (`shell.qml`): je Monitor eine animierte Leiste, liest `sidebar.json`. Dazu das Workspace-Raster Super+u (`grid`, per `quickshell ipc` geoeffnet). dazu das Ticket-Board Super+m (`Tickets.qml` + `TicketCard.qml`, `TicketDetail.qml`, gemeinsamer Knopf `Chip.qml`). Binary `~/.local/bin/quickshell` selbst gebaut (siehe Stolperfallen) |
+| `quickshell/` | `~/.config/quickshell/` | Fensterliste links (`shell.qml`): je Monitor eine animierte Leiste, liest `sidebar.json`. Dazu das Workspace-Raster Super+u (`grid`, per `quickshell ipc` geoeffnet). Ausserdem das Ticket-Board Super+m (`Tickets.qml` + `TicketCard.qml`, `TicketDetail.qml`, gemeinsamer Knopf `Chip.qml`). Binary `~/.local/bin/quickshell` selbst gebaut (siehe Stolperfallen) |
 | `wallpaper.jpg` | `~/Private/wallpaper.jpg` | von `output * bg` in der sway-Config benutzt |
 | `browser/chrome-hl2-theme/` | `~/.config/chrome-hl2-theme/` | entpacktes Chrome-Theme (in Chrome ueber "Entpackte Erweiterung laden") |
 | `browser/firefox/*.css` | `~/snap/firefox/common/.mozilla/firefox/h5d4ltr7.default/chrome/` | Firefox (Snap) userChrome/userContent |
@@ -262,7 +262,7 @@ Wer davon abweicht, fragt vorher.
   `ticket.py list [PROJ] [STATUS] | show KEY | new PROJ TITEL [-p PRIO] [-l LABEL]...
   [-s STATUS] | set KEY FELD WERT | delete KEY | quick | open KEY | watch | migrate |
   selftest`. `FELD` = status|prio|title|project|labels|archived. `delete` schiebt die
-  Datei nach `<Vault>/.trash/` (wiederherstellbar). `quick` liest stdin
+  Datei nach `<Vault>/.trash/` (wiederherstellbar). `quick` liest stdin (oder `quick STATUS TEXT`)
   `[PROJ:] Titel #label !prio`, ohne Projekt das zuletzt benutzte
   (`~/.local/state/tickets-last`). Nur `ticket.py` schreibt Ticket-Dateien: atomar
   (`.tmp` + `os.replace`) unter `flock` auf `Tickets/.lock`; Text unter dem

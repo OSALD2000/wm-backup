@@ -198,7 +198,7 @@ Scope {
         editing = ""
         if (mode === "filter") filter = v.replace(/^#/, "")
         else if (mode === "new") {
-            if (v) run(["quick", statuses[col], (tab && !/^[A-Za-z][A-Za-z0-9]*:/.test(v) ? tab + ": " : "") + v],
+            if (v) run(["quick", statuses[col], (tab ? tab + ": " : "") + v],
                        k => tix.key = k)
         } else if (target && (v || mode === "labels")) run(["set", target, mode, v], k => tix.key = k)
     }
@@ -244,6 +244,9 @@ Scope {
     // logisch sofort zu; das Fenster bleibt, bis die Staffel rueckwaerts durch ist
     function hide() {
         open = false; detail = false; editing = ""
+        // offenes Loeschen verwerfen (disarm() wuerde das Fenster wieder oeffnen)
+        armed = ""; delTimer.stop()
+        if (err.startsWith("Nochmal Entf")) err = ""
         if (dragKey) { dragKey = ""; flyKey = "" }
         introAnim.stop(); outroAnim.restart()
     }

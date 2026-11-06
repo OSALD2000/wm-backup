@@ -82,6 +82,11 @@ def split(text):
 def _unq(v):
     v = v.strip()
     if len(v) >= 2 and v[0] == v[-1] and v[0] in "\"'":
+        if v[0] == '"':
+            try:
+                return json.loads(v)
+            except ValueError:
+                pass
         return v[1:-1]
     return v
 
@@ -105,7 +110,7 @@ def parse_fm(lines):
         k, v = m.group(1), m.group(2).strip()
         j = _block_end(lines, i)
         if v.startswith("[") and v.endswith("]"):
-            out[k] = [_unq(x) for x in re.findall(r'"[^"]*"|\'[^\']*\'|[^,]+', v[1:-1]) if x.strip()]
+            out[k] = [_unq(x) for x in re.findall(r'"(?:[^"\\]|\\.)*"|\'[^\']*\'|[^,]+', v[1:-1]) if x.strip()]
         elif v == "":
             out[k] = [_unq(l.strip()[1:]) for l in lines[i + 1:j] if l.strip().startswith("-")]
         else:
@@ -449,6 +454,8 @@ def set_field(key, field, value):
         elif field == "labels":
             r = write(t, {"labels": clean_labels(value.split())})
         elif field == "archived":
+            if value == "nein" and t["archived"] and t["status"] == "in-arbeit":
+                _check_wip(tickets, t["key"])
             r = write(t, {"archived": "true" if value == "ja" else None})
         else:
             r = write(t, {field: value})
@@ -536,6 +543,8 @@ def main(argv):
     sub.add_parser("selftest")
     a = ap.parse_args(argv)
     if a.cmd == "list":
+        if a.project and not a.status and a.project.lower() in STATUSES:
+            a.project, a.status = None, a.project.lower()
         print("\n".join(list_lines(a.project, a.status)))
     elif a.cmd == "show":
         t = find(a.key, scan()["tickets"])
@@ -551,8 +560,11 @@ def main(argv):
         if a.args:
             print(quick(a.args[0], " ".join(a.args[1:])))
         else:
+            txt = sys.stdin.read()
+            if not txt.strip():
+                return  # Esc im Eingabedialog: still beenden
             try:
-                print(quick("todo", sys.stdin.read()))
+                print(quick("todo", txt))
             except ValueError as e:
                 subprocess.run(["notify-send", "Tickets", str(e)])
                 raise
@@ -720,6 +732,42 @@ def selftest():
         assert ts["WORK-5"]["title"] == "Mission 5" and ts["WORK-5"]["body"].lstrip("\n").startswith("## Ziel\n???\n")
         assert ts["WORK-5"]["body"].startswith("\n## Ziel") and new("WORK", "Gleich") == "WORK-9"
         assert find("WORK-9", scan()["tickets"])["body"].startswith("\n## Ziel")  # gleiches Layout wie migrate
+        # Review-Fixes: frischer Vault
+        use_vault(Path(tmp) / "v2", Path(tmp) / "last2")
+        import io, unittest.mock as um
+        k = new("ZZ", "Alias")
+        tp = Path(find(k, scan()["tickets"])["path"])
+        tx = tp.read_text()
+        al = [l for l in tx.split("\n") if l.startswith("aliases:")][0]
+        want = ['Bericht "Q3"', 'Pfad C:\\x', "ZZ-1"]
+        tp.write_text(tx.replace(al, "aliases:\n  - " + json.dumps(want[0]) + "\n  - " + json.dumps(want[1]) + "\n  - ZZ-1"))
+        assert find(k, scan()["tickets"])["aliases"] == want
+        set_field(k, "prio", "hoch"); set_field(k, "prio", "niedrig")
+        assert find(k, scan()["tickets"])["aliases"] == want, "Alias-Rundlauf"
+        # list review = Status
+        set_field(k, "status", "review")
+        assert any("ZZ-1" in l for l in list_lines(None, "review"))
+        with um.patch("sys.stdout", new=io.StringIO()) as o:
+            main(["list", "review"])
+        assert "ZZ-1" in o.getvalue()
+        # WIP beim Rueckholen aus dem Archiv
+        set_field(k, "status", "in-arbeit"); set_field(k, "archived", "ja")
+        for n in range(3):
+            set_field(new("ZZ", f"W{n}"), "status", "in-arbeit")
+        try:
+            set_field(k, "archived", "nein"); raise AssertionError("WIP fehlt beim Zurueckholen")
+        except ValueError:
+            pass
+        # Abbruch im Eingabedialog: still, keine Meldung
+        with um.patch("sys.stdin", io.StringIO("  \n")), um.patch("subprocess.run") as run:
+            main(["quick"])
+        assert not run.called
+        with um.patch("sys.stdin", io.StringIO("#nur")), um.patch("subprocess.run") as run:
+            try:
+                main(["quick"]); raise AssertionError("nur Label")
+            except ValueError:
+                pass
+        assert run.called
     print("selftest ok: Kern (new/set/list/find, WIP, Projektwechsel, Frontmatter)")
 
 
