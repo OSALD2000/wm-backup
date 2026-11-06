@@ -45,6 +45,7 @@ Scope {
     property string text: ""         // Inhalt des offenen Eingabefelds
     property string target: ""       // Karte, fuer die e/t/P gestartet wurde
     property string err: ""
+    property string armed: ""        // Karte, fuer die Entf einmal gedrueckt wurde (3 s)
     property Item selItem: null      // Karte unter dem Auswahlrahmen
     property var pointer: null       // letzte Mausposition (Szene)
     property var lastCur: blank      // haelt den Popup-Inhalt beim Zuklappen
@@ -207,6 +208,25 @@ Scope {
         call.createObject(tix, { command: [ticketPy, args[0], "--", ...args.slice(1).map(String)],
                                  done: done || null, running: true })
     }
+    // Loeschen braucht zwei Anlaeufe auf derselben Karte innerhalb 3 s
+    function disarm() {
+        if (!armed) return
+        armed = ""; delTimer.stop()
+        if (err.startsWith("Nochmal Entf")) err = ""
+    }
+    function arm(k) {
+        armed = k; delTimer.restart()
+        fail("Nochmal Entf = " + k + " loeschen")
+    }
+    // Papierkorb: Karte sofort raus (Entfernen-Animation), bei Fehler stellt run() den Stand wieder her
+    function remove(k) {
+        disarm()
+        const tickets = state.tickets.filter(t => t.key !== k)
+        state = Object.assign({}, state, { tickets: tickets,
+                                           wip: tickets.filter(t => t.status === "in-arbeit" && !t.archived).length })
+        detail = false
+        run(["delete", k])
+    }
     // Fehlerzeile: schuettelt sich, pulsiert rot, blendet nach 4 s aus
     function fail(msg) {
         err = msg
@@ -238,6 +258,7 @@ Scope {
     // Einzige Tastenlogik (Tastatur und IPC). true = Taste verbraucht.
     function handle(name) {
         if (!open) return false
+        if (name !== "Delete") disarm()
         if (editing) {
             if (name === "Return") submit()
             else if (name === "Escape") editing = ""
@@ -260,6 +281,7 @@ Scope {
         case "P": if (t) edit("project", t.project); break
         case "p": if (t) setField(t.key, "prio", prios[(prios.indexOf(t.prio) + 1) % 3]); break
         case "a": if (t) setField(t.key, "archived", t.archived ? "nein" : "ja"); break
+        case "Delete": if (t) { if (armed === t.key) remove(t.key); else arm(t.key) } break
         case "A": showArchive = !showArchive; break
         case "o": if (t) { run(["open", t.key]); hide() } break
         case "/": edit("filter", filter); break
@@ -288,11 +310,13 @@ Scope {
         tabSlide.restart()
         fix()
     }
+    onKeyChanged: disarm()
     onFilterChanged: fix()
     onShowArchiveChanged: fix()
     onCurChanged: if (cur) lastCur = cur
     onEditingChanged: (editing === "filter" ? filterInput : editing ? fieldInput : keys).forceActiveFocus()
 
+    Timer { id: delTimer; interval: 3000; onTriggered: tix.disarm() }
     Timer { id: errTimer; interval: 4000; onTriggered: errFade.restart() }
     Timer { id: tabSlide; interval: 350; onTriggered: tix.tabDir = 0 }
     // Zeitachse bis 900 ms (letzte Karte: 240 + 4*45 + 7*30 + 260); zu: schnell rueckwaerts
@@ -474,7 +498,7 @@ Scope {
                 Keys.onPressed: ev => {
                     const named = { [Qt.Key_Return]: "Return", [Qt.Key_Enter]: "Return", [Qt.Key_Escape]: "Escape",
                                     [Qt.Key_Tab]: "Tab", [Qt.Key_Backtab]: "Backtab", [Qt.Key_Left]: "Left",
-                                    [Qt.Key_Right]: "Right", [Qt.Key_Up]: "Up", [Qt.Key_Down]: "Down" }
+                                    [Qt.Key_Right]: "Right", [Qt.Key_Up]: "Up", [Qt.Key_Down]: "Down", [Qt.Key_Delete]: "Delete" }
                     ev.accepted = tix.handle(named[ev.key] || ev.text)
                 }
             }
@@ -960,6 +984,8 @@ Scope {
                 onSetField: (field, value) => tix.setField(tix.key, field, value)
                 onEdit: field => tix.handle(({ title: "e", labels: "t", project: "P" })[field])
                 onOpenNote: tix.handle("o")
+                armed: tix.armed === t.key
+                onRemove: tix.handle("Delete")
                 onClosed: { tix.editing = ""; tix.detail = false }
             }
 
@@ -1071,7 +1097,7 @@ Scope {
                           labels: " · Labels mit Leerzeichen getrennt, leer = keine",
                           filter: " · leer = Filter aus" })[tix.editing] || "")
                       : "hjkl / Pfeile waehlen · H/L oder Ziehen schieben · Enter Details · n neu · e Titel · t Labels · p Prio · P Projekt"
-                        + " · a archivieren · A Archiv zeigen · o Obsidian · Tab / 0-9 Projekt · / Filter · Esc zu"
+                        + " · a archivieren · Entf loeschen · A Archiv zeigen · o Obsidian · Tab / 0-9 Projekt · / Filter · Esc zu"
                 font { family: tix.shell.font; pixelSize: 11 }
                 color: Qt.alpha(tix.shell.hud, 0.45)
             }

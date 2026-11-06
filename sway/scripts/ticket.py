@@ -2,7 +2,7 @@
 """Tickets als Markdown-Dateien im Obsidian-Vault (Quelle der Wahrheit).
 
 Aufruf: ticket.py list [PROJ] [STATUS] | show KEY | new PROJ TITEL [-p PRIO] [-l LABEL]... [-s STATUS]
-        | set KEY FELD WERT
+        | set KEY FELD WERT | delete KEY (Datei in <Vault>/.trash)
         | quick [STATUS TEXT] | open KEY | watch | migrate | selftest
 FELD:   status | prio | title | project | labels | archived (ja|nein)
 Datei:  <Vault>/Tickets/<PROJ>/<PROJ>-<N> <Titel>.md, Frontmatter status prio created
@@ -290,7 +290,8 @@ def find(key, tickets):
 def next_num(project, tickets):
     pre, n = project.upper() + "-", 0
     # auch unlesbare/verirrte Dateien zaehlen: ihre Nummer wird nie neu vergeben
-    for f in ROOT.glob("*/*.md"):
+    # auch der Papierkorb: geloeschte Nummern bleiben vergeben
+    for f in [*ROOT.glob("*/*.md"), *(VAULT / ".trash").glob("*.md")]:
         m = FILE_RE.match(f.name)
         if m and m.group(1) == project.upper():
             n = max(n, int(m.group(2)))
@@ -454,6 +455,20 @@ def set_field(key, field, value):
     return r["key"]
 
 
+def delete(key):
+    """Ticket in den Obsidian-Papierkorb (<Vault>/.trash) verschieben; -> Zielpfad."""
+    with locked():
+        p = Path(find(key, scan()["tickets"])["path"])
+        trash = VAULT / ".trash"
+        trash.mkdir(parents=True, exist_ok=True)
+        dst, n = trash / p.name, 1
+        while dst.exists():
+            n += 1
+            dst = trash / f"{p.name[:-3]} ({n}).md"
+        os.replace(p, dst)
+    return dst
+
+
 def list_lines(project=None, status=None):
     """Zeilen fuer `list`: Kennung, Status, Prio, Titel, Labels (ohne archivierte)."""
     ts = [t for t in scan()["tickets"] if not t["archived"]
@@ -512,6 +527,7 @@ def main(argv):
     s.add_argument("key")
     s.add_argument("field")
     s.add_argument("value")
+    sub.add_parser("delete").add_argument("key")
     s = sub.add_parser("quick")
     s.add_argument("args", nargs="*", help="[STATUS TEXT]; ohne: Text von stdin, Status todo")
     sub.add_parser("open").add_argument("key")
@@ -528,6 +544,9 @@ def main(argv):
         print(new(a.project, a.title, a.prio, a.label, a.status))
     elif a.cmd == "set":
         print(set_field(a.key, a.field, a.value))
+    elif a.cmd == "delete":
+        delete(a.key)
+        print(f"{a.key} in den Papierkorb verschoben")
     elif a.cmd == "quick":
         if a.args:
             print(quick(a.args[0], " ".join(a.args[1:])))
@@ -644,6 +663,28 @@ def selftest():
         s = w.poll(); assert not any(t["key"] == "WORK-5" for t in s["tickets"])
         main(["quick", "review", "AURORA: Aus dem Board #ui"])
         assert find("AURORA-2", scan()["tickets"])["status"] == "review"
+        # Task 6b: loeschen in den Papierkorb
+        k = new("WORK", "Weg damit")
+        p = Path(find(k, scan()["tickets"])["path"])
+        dst = delete(k)
+        assert not p.exists() and dst == VAULT / ".trash" / p.name and dst.exists()
+        assert not any(t["key"] == k for t in scan()["tickets"])
+        assert new("WORK", "Danach") != k                      # Nummer nicht wiederverwendet
+        k2 = new("WORK", "Weg damit")
+        d2 = delete(k2); assert d2.exists() and d2 != dst
+        try:
+            delete("WORK-999"); raise AssertionError("nicht gefunden")
+        except ValueError:
+            pass
+        k3 = new("WORK", "Doppelt"); p3 = Path(find(k3, scan()["tickets"])["path"])
+        (VAULT / ".trash" / p3.name).write_text("alt")
+        assert delete(k3).name == p3.name[:-3] + " (2).md"
+        k4 = new("WORK", "Doppelt"); p4 = Path(find(k4, scan()["tickets"])["path"])
+        (VAULT / ".trash" / p4.name).write_text("alt"); (VAULT / ".trash" / (p4.name[:-3] + " (2).md")).write_text("alt")
+        assert delete(k4).name == p4.name[:-3] + " (3).md"
+        (VAULT / ".trash" / "PROJX-7 Alt.md").write_text("x")  # Papierkorb zaehlt fuer die Nummer
+        assert new("PROJX", "Neu") == "PROJX-8"
+        main(["delete", "--", new("WORK", "Per CLI")])
         use_vault(Path(tmp) / "leer", Path(tmp) / "last2")
         assert Watcher().poll() == {"projects": [], "tickets": [], "wip": 0, "error": ""}
     # Task 3: migrate (eigener Vault)

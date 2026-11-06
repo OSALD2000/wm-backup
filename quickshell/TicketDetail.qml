@@ -21,6 +21,8 @@ Rectangle {
     signal setField(string field, string value)
     signal edit(string field)  // title | labels | project
     signal openNote()
+    signal remove()
+    property bool armed: false  // Entf/Klick einmal gedrueckt, wartet auf die Bestaetigung
     signal closed()
 
     component Caption: Text {
@@ -196,6 +198,12 @@ Rectangle {
             shell: dlg.shell
             label: (dlg.t.archived ? "↺ ZURUECKHOLEN" : "▣ ARCHIVIEREN") + "  a"
             onHit: dlg.setField("archived", dlg.t.archived ? "nein" : "ja")
+        }
+        Chip {
+            shell: dlg.shell
+            label: dlg.armed ? "WIRKLICH?" : "✕ LOESCHEN  Entf"
+            ink: dlg.shell.warn
+            onHit: dlg.remove()
         }
     }
     Text {
