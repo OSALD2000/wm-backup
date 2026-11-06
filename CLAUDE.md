@@ -22,16 +22,16 @@ Aenderungen an `theme.sh` immer in beiden Kopien nachziehen.
 | Repo-Pfad | Live-Pfad | Was |
 |---|---|---|
 | `sway/config` | `~/.config/sway/config` | Compositor, Keybinds, Workspaces, Farben (`set $hl2_*` …), Autostart |
-| `sway/scripts/` | `~/.config/sway/scripts/` | `lock.sh` (hyprlock, sonst swaylock), `powermenu.sh` (rofi -dmenu), `clip.sh` (Zwischenablage, rofi ueber copyq), `screens.py` (Monitore anordnen, Laptop rechts), `ws.sh` (Super+N = Workspace N des aktuellen Monitors, Super+Ctrl+N = des Ziel-Monitors, Super+Esc = Ziel weiter), `console.py` (Konsole Super+Shift+Tab), `market.py` (waybar `custom/market`: NY-Zeit + Session), `journal.py` (Trading-Journal), `note.py` (Schnellnotiz Obsidian), `park.py` (Session parken), `ask.sh` (rofi-Eingabezeile, mit `-` Auswahlliste), `ipv6.sh` |
+| `sway/scripts/` | `~/.config/sway/scripts/` | `lock.sh` (hyprlock, sonst swaylock), `powermenu.sh` (rofi -dmenu), `clip.sh` (Zwischenablage, rofi ueber copyq), `screens.py` (Monitore anordnen, Laptop rechts), `ws.sh` (Super+N = Workspace N des aktuellen Monitors, Super+Ctrl+N = des Ziel-Monitors, Super+Esc = Ziel weiter), `console.py` (Konsole Super+Shift+Tab), `market.py` (waybar `custom/market`: NY-Zeit + Session), `journal.py` (Trading-Journal), `note.py` (Schnellnotiz Obsidian), `park.py` (Session parken), `ask.sh` (rofi-Eingabezeile, mit `-` Auswahlliste), `ipv6.sh`, `ticket.py` (Tickets als Markdown im Vault, einzige Schreibstelle, CLI fuer Board und Agenten) |
 | `hypr/` | `~/.config/hypr/` | **nur hyprlock** (Sperrbildschirm) + `loading.sh` (Ladebalken). Hyprland selbst wird nicht benutzt |
 | `waybar/` | `~/.config/waybar/` | obere Leiste (`config.jsonc`, `style.css`): Monitor-Badge U/I/O + Workspaces als `<Taste> <Icon>`, sichtbarer Workspace je Monitor hervorgehoben, `custom/wins` = Fensterzahl + Fensterliste offen/zu, `custom/target` = Ziel-Monitor `→ U/I/O`, `custom/agents` = Claude/Codex-Status |
 | `rofi/` | `~/.config/rofi/` | Launcher. Sway ruft `rofi -config ~/.config/rofi/config-nord.rasi` auf; der Name "nord" ist historisch, das aktive Theme steht per `@theme` darin (HL2: `hl2-menu.rasi`). `config.rasi` gehoert zu i3 |
-| `eww/` | `~/.config/eww/` | Desktop-Widgets. HL2: `hud-left`/`hud-right` + Lern-Panel `learn` (Super+Z), Hilfe `info` (Super+Shift+Z), Missionen `mission` (Super+m), Trading-Journal `journal` (Super+Ctrl+j, Formular von `sway/scripts/journal.py`). `scripts/learn.py` = Lern-Timer, Daten in `~/.local/share/learn-timer/`; `scripts/sidebar.py` = Watcher fuer die Fensterliste (schreibt `$XDG_RUNTIME_DIR/sidebar.json`, startet Quickshell) + Super+q/b + Workspace-Raster Super[+Shift]+u + Vorschau-Raster Super+Tab (`overview`, rofi) + Stand fuer waybar `custom/wins` (`bar`); `scripts/todo.py` = Missionen (Todo-Liste), Daten in `~/.local/share/missions/`; `scripts/agents.py` = Agenten-Panel `agents` (Super+c) + Tafel `agents-board` (Super+g) + waybar `custom/agents` |
+| `eww/` | `~/.config/eww/` | Desktop-Widgets. HL2: `hud-left`/`hud-right` + Lern-Panel `learn` (Super+Z), Hilfe `info` (Super+Shift+Z), Trading-Journal `journal` (Super+Ctrl+j, Formular von `sway/scripts/journal.py`). `scripts/learn.py` = Lern-Timer, Daten in `~/.local/share/learn-timer/`; `scripts/sidebar.py` = Watcher fuer die Fensterliste (schreibt `$XDG_RUNTIME_DIR/sidebar.json`, startet Quickshell) + Super+q/b + Workspace-Raster Super[+Shift]+u + Vorschau-Raster Super+Tab (`overview`, rofi) + Stand fuer waybar `custom/wins` (`bar`); `scripts/agents.py` = Agenten-Panel `agents` (Super+c) + Tafel `agents-board` (Super+g) + waybar `custom/agents` |
 | `swaync/` | `~/.config/swaync/` | Benachrichtigungen (Popups als Pickups unten rechts) + Panel hinter der Glocke |
 | `swaylock/` | `~/.config/swaylock/` | Fallback-Sperre |
 | `alacritty/` | `~/.config/alacritty/` | Terminal. `alacritty.toml` importiert die Farbdatei (`hl2.toml`, `nord.toml`), `lambda.txt` = Begruessung |
 | `cool-retro-term/` | `~/.config/cool-retro-term/` | Look der Konsole: `profile.json` (Farben, CRT-Effekte, Schrift), traegt `console.py` vor jedem Start ein |
-| `quickshell/` | `~/.config/quickshell/` | Fensterliste links (`shell.qml`): je Monitor eine animierte Leiste, liest `sidebar.json`. Dazu das Workspace-Raster Super+u (`grid`, per `quickshell ipc` geoeffnet). Binary `~/.local/bin/quickshell` selbst gebaut (siehe Stolperfallen) |
+| `quickshell/` | `~/.config/quickshell/` | Fensterliste links (`shell.qml`): je Monitor eine animierte Leiste, liest `sidebar.json`. Dazu das Workspace-Raster Super+u (`grid`, per `quickshell ipc` geoeffnet). dazu das Ticket-Board Super+m (`Tickets.qml` + `TicketCard.qml`, `TicketDetail.qml`, gemeinsamer Knopf `Chip.qml`). Binary `~/.local/bin/quickshell` selbst gebaut (siehe Stolperfallen) |
 | `wallpaper.jpg` | `~/Private/wallpaper.jpg` | von `output * bg` in der sway-Config benutzt |
 | `browser/chrome-hl2-theme/` | `~/.config/chrome-hl2-theme/` | entpacktes Chrome-Theme (in Chrome ueber "Entpackte Erweiterung laden") |
 | `browser/firefox/*.css` | `~/snap/firefox/common/.mozilla/firefox/h5d4ltr7.default/chrome/` | Firefox (Snap) userChrome/userContent |
@@ -44,8 +44,8 @@ nur dort eintragen.
 Nicht im Repo, gehoert aber zum Setup: `~/.config/environment.d/50-wayland.conf`
 (Wayland-Variablen), `~/.local/bin/shot-wl` (Screenshots), Pakete `tesseract-ocr` +
 `tesseract-ocr-deu` (OCR auf Super+Print),
-`~/Private/obsidian-vault/` (Obsidian-Vault fuer Trading-Journal, Schnellnotiz und Missionen-Notizen; bis HL2-v28 `~/Documents/Obsidian Vault`),
-`~/Private/shell_scripts/` (Lautstaerke-OSD), `~/.config/rofi/themes/` und
+`~/Private/obsidian-vault/` (Obsidian-Vault fuer Trading-Journal, Schnellnotiz und Tickets (`Tickets/<PROJEKT>/`); bis HL2-v28 `~/Documents/Obsidian Vault`),
+`~/Private/shell_scripts/` (Lautstaerke-OSD), `~/.local/bin/ticket` (Symlink auf `sway/scripts/ticket.py`), Hinweiszeilen zu `ticket` in `~/.claude/CLAUDE.md` und `~/.codex/AGENTS.md`, `~/.config/rofi/themes/` und
 `~/.config/alacritty/themes/` (fremde Themes, per `.gitignore` draussen),
 `~/.config/i3/` (alte i3-Session als Rollback: am GDM "i3" waehlen).
 
@@ -100,16 +100,17 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v26` | wie v25, Trading-Journal als eww-Formular (Super+Ctrl+j): eine Datei je Setup unter `journaling/{live-trades,backtesting}/JJJJ/MM/TT/`, Model/Symbol/Long-Short/Session/Timeframe/Ergebnis/R im Frontmatter + Tags, weitere Screenshots ans letzte Setup, Altes in `legacy/`. |
 | `HL2-v27` | wie v26, Workspace-Raster (Super+u wechseln, Super+Shift+u verschieben): eine Zeile je Bildschirm, zehn Felder, Maus/hjkl/Pfeile, letztes Ziel je Aktion gespeichert. |
 | `HL2-v28` | wie v27, Fensterliste links mit Quickshell statt eww: animiert (einfahren, Eintraege ploppen rein/raus, leuchtende Markierung gleitet federnd zum aktiven Fenster, Icon huepft), Look wie die waybar-Workspaces, Fenstertitel als Popout. |
-| `HL2-v29` | wie v28, Workspace-Raster (Super+u / Super+Shift+u) als Quickshell-Overlay: live mit App-Icons je Feld, Eingabefeld je Bildschirm fuer die Nummer, Tab = Wechseln/Verschieben, Klick auf Icon springt zum Fenster; Super+j / Super+k = Bildschirm links / rechts; Obsidian-Vault jetzt `~/Private/obsidian-vault`. **Aktueller Standard** fuer neue Themes |
+| `HL2-v29` | wie v28, Workspace-Raster (Super+u / Super+Shift+u) als Quickshell-Overlay: live mit App-Icons je Feld, Eingabefeld je Bildschirm fuer die Nummer, Tab = Wechseln/Verschieben, Klick auf Icon springt zum Fenster; Super+j / Super+k = Bildschirm links / rechts; Obsidian-Vault jetzt `~/Private/obsidian-vault`. |
+| `HL2-v30` | wie v29, Ticket-Board statt Mission Control: Tickets als Markdown im Obsidian-Vault (`Tickets/<PROJEKT>/`), Board mit Backlog/ToDo/In Arbeit/Review/Fertig in Quickshell (Super+m), Prio, Labels, Detail-Popup, Drag & Drop, Loeschen in den Obsidian-Papierkorb, CLI `ticket` fuer Agenten. **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v29` (Vorschau,
+Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v30` (Vorschau,
 Zwischenablage, Konsole, Pickup-Popups, Workspace-Nummern und Fensterzahl in waybar,
-Missionen). Alles in dieser Liste gilt fuer
+Ticket-Board). Alles in dieser Liste gilt fuer
 **jedes** neue Theme, nicht nur fuer HL2: es aendert nur den **Look**
 (Farben, Schrift, Formen), nicht Tasten, Workspace-Schema, Fensterliste oder
 die Bausteine unten. Basis fuer ein neues Theme ist immer der neueste Standard-Tag.
@@ -146,9 +147,9 @@ Wer davon abweicht, fragt vorher.
   gekippt = belegter Workspace des Monitors weiter / zurueck (`next_on_output`). `Super+b` = Liste an/aus. `Super+Shift+z` = Hilfe.
   `Super+Tab` = alle Fenster aller Monitore als Vorschau-Raster (rofi; Bild =
   letzter sichtbarer Stand, sway kann verdeckte Fenster nicht abfotografieren).
-  `Super+m` = Missionen (Todo-Liste). `Super+Print` = OCR: Bereich aufziehen,
+  `Super+m` = Ticket-Board. `Super+Print` = OCR: Bereich aufziehen,
   erkannter Text (tesseract, `deu+eng`) landet in der Zwischenablage, Popup bestaetigt.
-  `Super+Ctrl+m` = Mission schnell eintragen (nur Eingabezeile `ask.sh`, Panel bleibt zu).
+  `Super+Ctrl+m` = Ticket schnell eintragen (nur Eingabezeile `ask.sh`: `PROJ: Titel #label !prio`, Board bleibt zu).
 - **Workspace-Raster** (`Super+u` wechseln, `Super+Shift+u` aktives Fenster
   verschieben; `sidebar.py workspaces go|move`): Overlay in Quickshell
   (`grid` in `quickshell/shell.qml`) auf dem fokussierten Monitor, eine Zeile je
@@ -237,22 +238,39 @@ Wer davon abweicht, fragt vorher.
   + App. Enter fokussiert, **Entf** schliesst das gewaehlte Fenster
   (`kb-custom-1`, `swaymsg kill`), danach geht das Raster neu auf. Bilder macht der Watcher in `snap()`, solange ein Fenster sichtbar ist
   (`$XDG_RUNTIME_DIR/win-shots`, nicht bei Sperre).
-- **Mission Control** (`Super+m`, eww `mission`, `scripts/todo.py`): scrollbares
-  Panel rechts auf dem fokussierten Monitor, 80 % Bildschirmhoehe mit je 10 %
-  Abstand oben/unten (30px-Waybar beruecksichtigt). Reiter Jetzt (bis zu drei
-  Fokus-Aufgaben), Offen, Erledigt und Archiv. Kreis = erledigen/wieder oeffnen,
-  Stern = Fokus, Bearbeiten = rofi mit bestehendem Text, Neue Mission = rofi.
-  Archivieren entfernt keine Daten; im Archiv holt Zurueckholen den Eintrag
-  samt Erledigt-Status zurueck. Auch die alten CLI-Befehle `del`/`clear`
-  archivieren nur. `Super+Ctrl+m` bleibt die Schnelleingabe.
-  `Notiz` legt bei Bedarf `Missionen/Mission-<id>.md` im Obsidian-Vault an und
-  oeffnet sie per URI. Die stabile ID erhaelt die Verbindung beim Umbenennen.
-  Bestehende Notizen werden nie ueberschrieben; Titel und Aufgabenstatus bleiben
-  im Panel, Notizen/Unteraufgaben in Obsidian (keine Zwei-Wege-Synchronisation).
-  Daten bleiben in `~/.local/share/missions/data.json` (atomar, Tagesbackups,
-  30 bleiben); alte Eintraege brauchen keine Migration. `todo.py watch` meldet
-  Aenderungen und Lesefehler per `deflisten`. Freitext geht ueber rofi/stdin,
-  nicht durch eww-Shell-Interpolation. Ansichtswechsel blenden weich ueber.
+- **Ticket-Board** (`Super+m`, Quickshell `Tickets.qml` + `TicketCard.qml`,
+  `TicketDetail.qml`, `Chip.qml`, `sway/scripts/ticket.py`): Overlay auf dem
+  fokussierten Monitor. Quelle der Wahrheit sind Markdown-Dateien im Vault
+  `Tickets/<PROJEKT>/<PROJ>-<N> <Titel>.md` (Vorlage `Templates/Ticket.md`),
+  Frontmatter `status prio created archived aliases tags`; Nummern je Projekt
+  fortlaufend, nie wiederverwendet. Status `backlog|todo|in-arbeit|review|fertig`
+  = fuenf Spalten, Prio `hoch|mittel|niedrig`, Labels = Tags. **WIP-Limit 3** auf
+  `in-arbeit` (nicht archivierte, alle Projekte): das vierte prallt ab.
+  Projekte (jetzt `WORK` = migrierte Missionen, `PRIVATE`) als Reiter oben
+  (Tab/Shift+Tab, `1`-`9`, `0` = alle). Karte: Key, Titel, Prio, Labels,
+  Checkliste `x/y` (leere `- [ ]` zaehlen nicht). Tasten: `h/j/k/l` oder Pfeile,
+  `H`/`L` = Karte eine Spalte zurueck/vor, Enter = Detail-Popup, `n` neu, `e` Titel,
+  `t` Labels, `P` Projekt, `p` Prio weiter, `a` archivieren/zurueckholen, `A`
+  Archiv zeigen, `o` Notiz in Obsidian, `/` Filter, `Entf` zweimal binnen 3 s auf
+  derselben Karte = loeschen (Hinweis "Nochmal Entf = KEY loeschen"; im Popup
+  Knopf LOESCHEN, zweiter Klick bestaetigt), Esc = Popup/Board zu. Drag & Drop
+  zwischen Spalten, Mikroanimationen (Oeffnen, fliegende Karte, Funken bei Fertig).
+  Aenderungen an Status/Prio/Archiv gelten sofort, `ticket.py` schreibt hinterher.
+  **Freitext** (neu, Titel, Labels, Filter) geht als Argument mit `--` an
+  `ticket.py`, nie durch eine Shell-Zeile. Fehlerzeile ueber dem Fuss (Dateien
+  ohne Kennung, doppelte Kennungen, Lesefehler, stderr fehlgeschlagener Aufrufe).
+  `ticket.py list [PROJ] [STATUS] | show KEY | new PROJ TITEL [-p PRIO] [-l LABEL]...
+  [-s STATUS] | set KEY FELD WERT | delete KEY | quick | open KEY | watch | migrate |
+  selftest`. `FELD` = status|prio|title|project|labels|archived. `delete` schiebt die
+  Datei nach `<Vault>/.trash/` (wiederherstellbar). `quick` liest stdin
+  `[PROJ:] Titel #label !prio`, ohne Projekt das zuletzt benutzte
+  (`~/.local/state/tickets-last`). Nur `ticket.py` schreibt Ticket-Dateien: atomar
+  (`.tmp` + `os.replace`) unter `flock` auf `Tickets/.lock`; Text unter dem
+  Frontmatter und fremde Frontmatter-Zeilen bleiben byte-gleich (Obsidian darf
+  Listen umschreiben). `watch` (dauerhaft, eine JSON-Zeile je Aenderung) behaelt bei
+  halb gespeicherten Dateien den letzten guten Stand. `migrate` (einmalig) holte die
+  Missionen aus `~/.local/share/missions/data.json` nach `WORK`; Mission Control
+  und `todo.py` sind entfernt. Farben nur ueber `root` in `shell.qml`.
 - **Agenten** (`Super+c`, eww `agents`, `scripts/agents.py`): laufende
   Claude-Code- und Codex-Sessions als Karten (Tool, Titel, ⚙ arbeitet / ✓ bereit,
   letzter Prompt, letzte Aktion, Laufzeit, Kontext-Tokens, Workspace), darunter
@@ -301,15 +319,15 @@ Wer davon abweicht, fragt vorher.
   Rechts daneben `custom/target` (`ws.sh bar`) = Ziel-Monitor fuer Super+Ctrl+N.
   `sway/scratchpad` (≡ N) zaehlt die Fenster im Scratchpad, also die Konsole.
 
-Ein neues Theme uebernimmt `ws.sh`, `sidebar.py`, `agents.py`, `clip.sh`, `market.py`, `journal.py`, `note.py`, `park.py`, `ask.sh`, die
+Ein neues Theme uebernimmt `ws.sh`, `sidebar.py`, `agents.py`, `clip.sh`, `market.py`, `journal.py`, `note.py`, `park.py`, `ticket.py`, `ask.sh`, die
 `format-icons` der waybar (Nummer vor dem Icon) und die Module `custom/wins`, `custom/target`, `custom/market` und `custom/agents`, die
 Workspace-/Bind-Bloecke, den Mode `[ AGENTS ]` und die Konsolen-Regel (`console.py`, `for_window` auf
 cool-retro-term) der sway-Config, die
-Fensterliste `quickshell/shell.qml`, die eww-Fenster `info`/`mission`/`agents`/`agents-board`/`journal` (mit `todo.py`) und Lage/Timeout der swaync-Popups
-(`swaync/config.json`) und passt nur Farben und Schrift an: `eww.scss`, die Farb-Properties oben in `quickshell/shell.qml` (gelten auch fuer das Workspace-Raster),
+Fensterliste `quickshell/shell.qml`, die eww-Fenster `info`/`agents`/`agents-board`/`journal`, das Ticket-Board (`Tickets.qml`/`TicketCard.qml`/`TicketDetail.qml`/`Chip.qml`, `ticket.py`) und Lage/Timeout der swaync-Popups
+(`swaync/config.json`) und passt nur Farben und Schrift an: `eww.scss`, die Farb-Properties oben in `quickshell/shell.qml` (gelten auch fuer das Workspace-Raster und das Ticket-Board; `root` hat `hud bg font barBg edge box fill hover` und `warn` = Rot wie waybar `@warn`),
 waybar `style.css`, den Popup-Block in `swaync/style.css` und die
 `-theme-str`-Teile in `clip.sh`, `ask.sh` und `overview()` in `sidebar.py` (die rofi-Theme-Datei liefert den Rest); in
-`eww.scss` auch die Bloecke `.ms-*` (Missionen, auch vom Journal-Panel benutzt), `.jr-*` (Journal) und `.ag-*` (Agenten). In `style.css` muss `button.visible` dieselbe
+`eww.scss` auch die Bloecke `.ms-*` (nur noch vom Journal-Panel benutzt), `.jr-*` (Journal) und `.ag-*` (Agenten). In `style.css` muss `button.visible` dieselbe
 Hervorhebung bekommen wie `button.focused`; `#custom-wins` mit den Klassen
 `open`/`idle`/`off`, `#custom-target` und `#custom-market` (Klassen `active`/`idle`/`closed`) und `#custom-agents` (Klassen `busy`/`idle`/`new`/`none`) umfaerben; `cool-retro-term/profile.json` mit den Farben
 des Themes neu einstellen (`fontColor`, `backgroundColor`, Effekte).
@@ -381,9 +399,9 @@ Skills: `theme-erstellen` (neues Theme bauen und taggen), `theme-switch`
   `sh -c`-Zeile von sway selbst).
 - eww setzt `{}` (Text aus `input`) **ungeschuetzt** in die Shell-Zeile: ein `'`
   im Text bricht sie. Freitext deshalb ueber externe Eingabedialoge/stdin uebergeben
-  (`todo.py new` nutzt rofi, `todo.py add` liest stdin), IDs statt Text in
+  (Journal und `ask.sh` nutzen rofi/stdin), IDs statt Text in
   `onclick`. Befehle aus `onclick` killt eww standardmaessig nach 200 ms:
-  fuer Eingabedialoge ein explizites `:timeout` setzen (Mission Control: 10m).
+  fuer Eingabedialoge ein explizites `:timeout` setzen.
 - Aus Python eww/Daemons starten: `stdout=DEVNULL`, nie `capture_output` —
   der Daemon erbt die Pipe und der Aufruf haengt fuer immer.
 - waybar `wlr/taskbar` taugt unter Sway nicht: Fenster hinter Tabs fehlen.
