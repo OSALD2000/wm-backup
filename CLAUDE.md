@@ -256,8 +256,9 @@ Wer davon abweicht, fragt vorher.
   `Tickets/<PROJEKT>/<PROJ>-<N> <Titel>.md` (Vorlage `Templates/Ticket.md`),
   Frontmatter `status prio created archived aliases tags`; Nummern je Projekt
   fortlaufend, nie wiederverwendet. Status `backlog|todo|in-arbeit|review|fertig`
-  = fuenf Spalten, Prio `hoch|mittel|niedrig`, Labels = Tags. **WIP-Limit 3** auf
-  `in-arbeit` (nicht archivierte, alle Projekte): das vierte prallt ab.
+  = fuenf Spalten, Prio `hoch|mittel|niedrig`, Labels = Tags. **WIP-Limit 4 je Projekt**
+  auf `in-arbeit` (nicht archivierte): das fuenfte prallt ab, auch beim Projektwechsel;
+  Spaltenkopf zeigt `n/4` nur mit Projekt-Reiter.
   Projekte (jetzt `WORK` = migrierte Missionen, `PRIVATE`) als Reiter oben
   (Tab/Shift+Tab, `1`-`9`, `0` = alle). Karte: Key, Titel, Prio, Labels,
   Checkliste `x/y` (leere `- [ ]` zaehlen nicht). Tasten: `h/j/k/l` oder Pfeile,

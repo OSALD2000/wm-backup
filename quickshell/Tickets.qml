@@ -30,8 +30,8 @@ Scope {
     property string output: ""
     // I3 gleich beim Laden verbinden: sonst ist focusedMonitor beim ersten Oeffnen noch leer
     readonly property string focused: I3.focusedMonitor ? I3.focusedMonitor.name : ""
-    property var state: ({ projects: [], tickets: [], wip: 0, error: "" })
-    property var watched: ({ projects: [], tickets: [], wip: 0, error: "" })  // letzter watch-Stand
+    property var state: ({ projects: [], tickets: [], error: "" })
+    property var watched: ({ projects: [], tickets: [], error: "" })  // letzter watch-Stand
     // gemerkt, solange Quickshell laeuft
     property string tab: ""          // "" = ALLE
     property int col: 0
@@ -120,11 +120,12 @@ Scope {
         key = list.length ? list[Math.min(row, list.length - 1)].key : ""
     }
 
-    // Stand sofort aendern (wip wie ticket.py: nicht archiviert)
+    // In Arbeit je Projekt, wie WIP in ticket.py (nicht archiviert)
+    readonly property int wipMax: 4
+    function wip(p) { return state.tickets.filter(t => t.project === p && t.status === "in-arbeit" && !t.archived).length }
+    // Stand sofort aendern
     function patch(k, fields) {
-        const tickets = state.tickets.map(t => t.key === k ? Object.assign({}, t, fields) : t)
-        state = Object.assign({}, state, { tickets: tickets,
-                                           wip: tickets.filter(t => t.status === "in-arbeit" && !t.archived).length })
+        state = Object.assign({}, state, { tickets: state.tickets.map(t => t.key === k ? Object.assign({}, t, fields) : t) })
     }
     // Status setzen: H/L, Drag & Drop (from = Lage der gezogenen Kopie), Status-Chip.
     // Die Karte fliegt als Kopie hin; In Arbeit voll -> Abprallen, kein Aufruf.
@@ -135,8 +136,8 @@ Scope {
             return
         }
         const d = c - statuses.indexOf(t.status)
-        if (!d || status === "in-arbeit" && state.wip >= 3) {
-            if (d) { fail("Drei reichen fuer jetzt"); blocked() }
+        if (!d || status === "in-arbeit" && wip(t.project) >= wipMax) {
+            if (d) { fail("Vier reichen fuer " + t.project); blocked() }
             if (from) fly(t, t.status, from, false, pick)
             else if (d && selItem && selItem.t.key === k) selItem.bump(d > 0 ? 1 : -1)
             return
@@ -221,9 +222,7 @@ Scope {
     // Papierkorb: Karte sofort raus (Entfernen-Animation), bei Fehler stellt run() den Stand wieder her
     function remove(k) {
         disarm()
-        const tickets = state.tickets.filter(t => t.key !== k)
-        state = Object.assign({}, state, { tickets: tickets,
-                                           wip: tickets.filter(t => t.status === "in-arbeit" && !t.archived).length })
+        state = Object.assign({}, state, { tickets: state.tickets.filter(t => t.key !== k) })
         detail = false
         run(["delete", k])
     }
@@ -668,7 +667,9 @@ Scope {
                         readonly property bool here: tix.col === index
                         readonly property bool withField: here && !tix.detail && tix.editModes.includes(tix.editing)
                         readonly property var list: tix.cards(status)
-                        readonly property bool full: status === "in-arbeit" && tix.state.wip >= 3
+                        // Projekt fuer das Limit: Reiter, sonst die gezogene Karte
+                        readonly property string wipOf: tix.tab || (drop.containsDrag ? tix.flyT.project : "")
+                        readonly property bool full: status === "in-arbeit" && wipOf !== "" && tix.wip(wipOf) >= tix.wipMax
                         // beim Ziehen: Zielspalte leuchtet (rot, wenn In Arbeit voll)
                         readonly property bool target: drop.containsDrag && tix.flyT.status !== status
                         // Oeffnen: Spalten kommen gestaffelt von unten
@@ -704,7 +705,7 @@ Scope {
                             layer.enabled: visible
                             layer.effect: MultiEffect { shadowEnabled: true; shadowColor: column.full ? tix.shell.warn : tix.shell.hud; shadowBlur: 0.8; shadowOpacity: 0.7 }
                         }
-                        // Kopf: Name + Anzahl, In Arbeit als n/3; gewaehlte Spalte hell
+                        // Kopf: Name + Anzahl, In Arbeit mit Reiter als n/4; gewaehlte Spalte hell
                         Rectangle {
                             x: 1; y: 1; width: parent.width - 2; height: 40
                             radius: 3
@@ -720,7 +721,7 @@ Scope {
                             Roll {
                                 id: counter
                                 anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
-                                value: column.status === "in-arbeit" ? tix.state.wip + "/3" : String(column.list.length)
+                                value: column.status === "in-arbeit" && tix.tab ? tix.wip(tix.tab) + "/" + tix.wipMax : String(column.list.length)
                                 font { family: tix.shell.font; pixelSize: 14; bold: true }
                                 color: column.full ? tix.shell.warn : column.here ? tix.shell.hud : Qt.alpha(tix.shell.hud, 0.6)
                             }

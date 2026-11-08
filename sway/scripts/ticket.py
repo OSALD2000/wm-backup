@@ -22,7 +22,7 @@ from urllib.parse import quote
 
 STATUSES = ("backlog", "todo", "in-arbeit", "review", "fertig")
 PRIOS = ("hoch", "mittel", "niedrig")
-WIP = 3  # hoechstens so viele nicht archivierte Tickets in-arbeit (alle Projekte)
+WIP = 4  # hoechstens so viele nicht archivierte Tickets in-arbeit je Projekt
 MANAGED = ("status", "prio", "created", "archived", "aliases", "tags")
 DEFAULT_BODY = """## Ziel
 
@@ -230,8 +230,7 @@ def _state(projects, entries):
             if t["bad"]:
                 errs.append(f"{t['key']}: {t['bad']}")
             tickets.append(t)
-    wip = sum(t["status"] == "in-arbeit" and not t["archived"] for t in tickets)
-    return {"projects": projects, "tickets": tickets, "wip": wip, "error": "; ".join(errs)}
+    return {"projects": projects, "tickets": tickets, "error": "; ".join(errs)}
 
 
 def _files():
@@ -366,11 +365,11 @@ def _file_text(lines, body):
     return "---\n" + "\n".join(lines + ["---"]) + "\n\n" + body
 
 
-def _check_wip(tickets, me=None):
+def _check_wip(tickets, project, me=None):
     full = sorted((t for t in tickets if t["status"] == "in-arbeit" and not t["archived"]
-                   and t["key"] != me), key=lambda t: (t["project"], t["num"]))
+                   and t["project"] == project and t["key"] != me), key=lambda t: t["num"])
     if len(full) >= WIP:
-        raise ValueError(f"In Arbeit ist voll ({len(full)}/{WIP}): "
+        raise ValueError(f"In Arbeit ist fuer {project} voll ({len(full)}/{WIP}): "
                          + ", ".join(t["key"] for t in full) + ". Erst eins weiterschieben.")
 
 
@@ -386,7 +385,7 @@ def new(project, title, prio="mittel", labels=(), status="todo"):
     with locked():
         tickets = scan()["tickets"]
         if status == "in-arbeit":
-            _check_wip(tickets)
+            _check_wip(tickets, project)
         key = f"{project}-{next_num(project, tickets)}"
         body = _template_body()
         lines = _fm_lines(project, key, status, prio, clean_labels(labels))
@@ -446,7 +445,9 @@ def set_field(key, field, value):
         tickets = scan()["tickets"]
         t = find(key, tickets)
         if field == "status" and value == "in-arbeit" and t["status"] != "in-arbeit":
-            _check_wip(tickets, t["key"])
+            _check_wip(tickets, t["project"], t["key"])
+        if field == "project" and t["status"] == "in-arbeit" and not t["archived"]:
+            _check_wip(tickets, clean_project(value), t["key"])
         if field == "title":
             r = write(t, {}, title=value)
         elif field == "project":
@@ -455,7 +456,7 @@ def set_field(key, field, value):
             r = write(t, {"labels": clean_labels(value.split())})
         elif field == "archived":
             if value == "nein" and t["archived"] and t["status"] == "in-arbeit":
-                _check_wip(tickets, t["key"])
+                _check_wip(tickets, t["project"], t["key"])
             r = write(t, {"archived": "true" if value == "ja" else None})
         else:
             r = write(t, {field: value})
@@ -594,10 +595,18 @@ def selftest():
         # WIP-Limit
         for n in range(3):
             set_field(new("WORK", f"A{n}"), "status", "in-arbeit")
+        set_field("WORK-1", "status", "in-arbeit")
         try:
-            set_field("WORK-1", "status", "in-arbeit"); raise AssertionError("WIP fehlt")
+            new("WORK", "Zuviel", status="in-arbeit"); raise AssertionError("WIP fehlt")
         except ValueError as e:
-            assert "WORK-2" in str(e) and "WORK-4" in str(e)
+            assert "WORK-1" in str(e) and "WORK-4" in str(e)
+        # je Projekt: anderes Projekt ist frei, Projektwechsel in ein volles prallt ab
+        b = new("BETA", "B0", status="in-arbeit")
+        try:
+            set_field(b, "project", "work"); raise AssertionError("WIP fehlt beim Projektwechsel")
+        except ValueError:
+            pass
+        delete(b); set_field("WORK-1", "status", "todo")
         # Projektwechsel + keine Wiederverwendung (Review Focus 1)
         assert set_field("WORK-4", "project", "aurora") == "AURORA-1"
         assert find("WORK-4", scan()["tickets"])["key"] == "AURORA-1"
@@ -698,7 +707,7 @@ def selftest():
         assert new("PROJX", "Neu") == "PROJX-8"
         main(["delete", "--", new("WORK", "Per CLI")])
         use_vault(Path(tmp) / "leer", Path(tmp) / "last2")
-        assert Watcher().poll() == {"projects": [], "tickets": [], "wip": 0, "error": ""}
+        assert Watcher().poll() == {"projects": [], "tickets": [], "error": ""}
     # Task 3: migrate (eigener Vault)
     with tempfile.TemporaryDirectory() as tmp:
         use_vault(Path(tmp), Path(tmp) / "last")
@@ -752,7 +761,7 @@ def selftest():
         assert "ZZ-1" in o.getvalue()
         # WIP beim Rueckholen aus dem Archiv
         set_field(k, "status", "in-arbeit"); set_field(k, "archived", "ja")
-        for n in range(3):
+        for n in range(WIP):
             set_field(new("ZZ", f"W{n}"), "status", "in-arbeit")
         try:
             set_field(k, "archived", "nein"); raise AssertionError("WIP fehlt beim Zurueckholen")
