@@ -196,16 +196,20 @@ bindsym $mod+Ctrl+q exec ~/.config/eww/scripts/sidebar.py prev
 # Mausrad kippen (REL_HWHEEL) = dasselbe ohne Taste: rechts naechstes, links
 # voriges. --whole-window: auch ueber Fenstern, horizontales Scrollen per
 # Kippen geht dafuer in Apps nicht mehr.
-bindsym --whole-window button7 exec ~/.config/eww/scripts/sidebar.py next
-bindsym --whole-window button6 exec ~/.config/eww/scripts/sidebar.py prev
+# Nur die Funkmaus: Touchpad-Wischen seitlich schickt auch button6/7 und
+# wechselte sonst die Fenster. ponytail: andere Maus = Kennung aus
+# `swaymsg -t get_inputs` hier eintragen.
+set $tiltmouse 12994:18:HS6209_2.4G_Wireless_Receiver_Mouse
+bindsym --whole-window --input-device=$tiltmouse button7 exec ~/.config/eww/scripts/sidebar.py next
+bindsym --whole-window --input-device=$tiltmouse button6 exec ~/.config/eww/scripts/sidebar.py prev
 # Mit Super links gekippt = Ziel-Monitor weiter (wie Super+Esc). Mit Super
 # rechts gekippt = Mode, danach Nummer = Workspace N des Ziel-Monitors (wie
 # Super+Ctrl+N).
-bindsym --whole-window $mod+button6 exec ~/.config/sway/scripts/ws.sh cycle 1
+bindsym --whole-window --input-device=$tiltmouse $mod+button6 exec ~/.config/sway/scripts/ws.sh cycle 1
 # Mit Super+Shift rechts gekippt = Mode, danach Nummer = Fenster auf Workspace N
 # des Ziel-Monitors (wie Super+Ctrl+Shift+N). Kippen im Mode schaltet das Ziel.
-bindsym --whole-window $mod+Shift+button7 mode "[ MOVE → ZIEL ]"
-bindsym --whole-window $mod+button7 mode "[ GO → ZIEL ]"
+bindsym --whole-window --input-device=$tiltmouse $mod+Shift+button7 mode "[ MOVE → ZIEL ]"
+bindsym --whole-window --input-device=$tiltmouse $mod+button7 mode "[ GO → ZIEL ]"
 # Fensterliste links an/aus. Nicht Super+Shift_R: das faellt bei jedem
 # Super+Shift+N mit.
 bindsym $mod+b      exec ~/.config/eww/scripts/sidebar.py toggle
@@ -475,7 +479,7 @@ mode "[ GO → ZIEL ]" {
         bindsym $mod+9 exec ~/.config/sway/scripts/ws.sh tgo 9; mode "default"
         bindsym 0 exec ~/.config/sway/scripts/ws.sh tgo 10; mode "default"
         bindsym $mod+0 exec ~/.config/sway/scripts/ws.sh tgo 10; mode "default"
-        bindsym --whole-window button6 exec ~/.config/sway/scripts/ws.sh cycle 1
+        bindsym --whole-window --input-device=$tiltmouse button6 exec ~/.config/sway/scripts/ws.sh cycle 1
         bindsym Escape mode "default"
         bindsym Return mode "default"
 }
@@ -501,7 +505,7 @@ mode "[ MOVE → ZIEL ]" {
         bindsym $mod+Shift+9 exec ~/.config/sway/scripts/ws.sh tmove 9; mode "default"
         bindsym 0 exec ~/.config/sway/scripts/ws.sh tmove 10; mode "default"
         bindsym $mod+Shift+0 exec ~/.config/sway/scripts/ws.sh tmove 10; mode "default"
-        bindsym --whole-window button6 exec ~/.config/sway/scripts/ws.sh cycle 1
+        bindsym --whole-window --input-device=$tiltmouse button6 exec ~/.config/sway/scripts/ws.sh cycle 1
         bindsym Escape mode "default"
         bindsym Return mode "default"
 }

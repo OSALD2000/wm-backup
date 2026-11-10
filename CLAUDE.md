@@ -143,7 +143,7 @@ Wer davon abweicht, fragt vorher.
   ohne Umlauf); Fokus innerhalb des Monitors per `Super+l/ö` und Pfeile.
   `Super+q` / `Super+Ctrl+q` = naechstes / voriges Fenster der Liste links,
   bleibt auf dem Monitor. Dasselbe per Mausrad kippen (ohne Taste, `button7` =
-  rechts = naechstes, `button6` = links = voriges, `--whole-window`). Mit Super
+  rechts = naechstes, `button6` = links = voriges, `--whole-window`, nur `--input-device=$tiltmouse` = Funkmaus, sonst loest seitliches Touchpad-Wischen es aus). Mit Super
   gekippt = belegter Workspace des Monitors weiter / zurueck (`next_on_output`). `Super+b` = Liste an/aus. `Super+Shift+z` = Hilfe.
   `Super+Tab` = alle Fenster aller Monitore als Vorschau-Raster (Quickshell; Bild =
   letzter sichtbarer Stand, sway kann verdeckte Fenster nicht abfotografieren).

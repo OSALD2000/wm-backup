@@ -44,7 +44,7 @@ S=.agents/skills/theme-switch/scripts/theme.sh
 
 ### 3. Design festlegen
 Die **Bedienung ist fest** (Abschnitt "Standard-Bedienung" in `AGENTS.md`:
-Workspaces u/i/o mit 1-10, Ziel-Monitor Super+Esc + Super+Ctrl[+Shift]+N, Super+q/b/Shift+z, Mausrad kippen = Super+q (mit Super = Workspace weiter), Fensterliste links (Quickshell, `quickshell/shell.qml`: nur Farben/Schrift anpassen), Hilfe-Panel,
+Workspaces u/i/o mit 1-10, Ziel-Monitor Super+Esc + Super+Ctrl[+Shift]+N, Super+q/b/Shift+z, Mausrad kippen = Super+q (mit Super = Workspace weiter; nur die Maus per `--input-device=$tiltmouse`, nicht das Touchpad), Fensterliste links (Quickshell, `quickshell/shell.qml`: nur Farben/Schrift anpassen), Hilfe-Panel,
 Workspace-Raster Super+u / Super+Shift+u (Quickshell-Overlay `grid` in `shell.qml`, live mit App-Icons, hjkl/Pfeile, u/i/o + Nummer ins Eingabefeld je Zeile, Tab = Modus, letztes Ziel je Aktion; `sidebar.py workspaces go|move|apply`),
 unsichtbare Tab-Zeile, Vorschau Super+Tab (Quickshell `Overview.qml`, `/` Filter, Entf schliesst), Ticket-Board Super+m (Quickshell `Tickets.qml`), Konsole Super+Shift+Tab (cool-retro-term),
 Zwischenablage Super+Shift+V, Pickup-Popups unten rechts,

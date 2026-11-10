@@ -361,7 +361,7 @@
         (key :k "Super+Ctrl+Shift+1…0" :d "Fenster dorthin schieben")
       (label :class "section" :xalign 0 :text "FENSTER")
         (key :k "Super+q / Super+Ctrl+q" :d "naechstes / voriges (Liste links)")
-        (key :k "Mausrad kippen → / ←" :d "naechstes / voriges (wie Super+q)")
+        (key :k "Mausrad kippen → / ←" :d "naechstes / voriges (wie Super+q, nur Maus)")
         (key :k "Super+Mausrad kippen ←" :d "Ziel-Monitor weiter (wie Super+Esc)")
         (key :k "Super+Mausrad →, dann N" :d "Workspace N des Ziel-Monitors (Esc = abbrechen)")
         (key :k "Super+Shift+Mausrad →, dann N" :d "Fenster auf Workspace N des Ziel-Monitors (Esc = abbrechen)")
