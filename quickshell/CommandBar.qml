@@ -8,11 +8,11 @@
 // deshalb oeffnet Super+f (`quickshell ipc call bar toggle`) ein Overlay mit
 // exklusivem Fokus, das genau ueber dem Eingabefeld liegt, samt Liste darunter.
 // Eingabe = nav.js: Codes wie `bawss`, `wf`, `d`, `mbawd` (je Taste), Befehle
-// `:wort arg …` mit Enter aus commands/commands.json:
+// `#wort arg …` mit Enter aus commands/commands.json:
 //   {"name": {"help": "...", "exec": ["skript", ...]}}  Skript in commands/,
-//     Woerter nach :name als Argumente (nie durch eine Shell), stdout optional
+//     Woerter nach #name als Argumente (nie durch eine Shell), stdout optional
 //     {"notify": "Text"}, Exit != 0 = Fehler (stderr) -> Meldung in der Leiste.
-//   {"name": {"help": "...", "builtin": "tree"}}  kann nur die Leiste (:all).
+//   {"name": {"help": "...", "builtin": "tree"}}  kann nur die Leiste (#all).
 // Daten beim Oeffnen eingefroren ("grid"): Codes bleiben stabil.
 // `quickshell ipc call bar toggle|open|close|type TEXT|press NAME|info`.
 import QtQuick
@@ -34,7 +34,7 @@ Scope {
     property var cmds: ({})
 
     property bool open: false
-    property bool tree: false                // :all offen
+    property bool tree: false                // #all offen
     property string output: ""
     property string typed: ""
     property var snap: []                    // "grid" beim Oeffnen
@@ -81,7 +81,7 @@ Scope {
         if (r.cmd !== null) {
             const p = Nav.parse(r.cmd)
             return Object.keys(cmds).filter(n => n.indexOf(p.name) === 0)
-                         .map(n => ({ key: ":" + n, label: cmds[n].help || "", hit: n === p.name, act: { cmd: n } }))
+                         .map(n => ({ key: "#" + n, label: cmds[n].help || "", hit: n === p.name, act: { cmd: n } }))
         }
         if (tree) {
             const out = []
@@ -156,9 +156,9 @@ Scope {
     }
     function run(p) {
         const c = cmds[p.name]
-        if (!c) { reject(); return say("unbekannt: :" + p.name, true) }
+        if (!c) { reject(); return say("unbekannt: #" + p.name, true) }
         if (c.builtin === "tree") { tree = true; typed = ""; return }
-        if (!c.exec || !c.exec.length) { reject(); return say(":" + p.name + ": weder exec noch builtin", true) }
+        if (!c.exec || !c.exec.length) { reject(); return say("#" + p.name + ": weder exec noch builtin", true) }
         call.createObject(cb, { name: p.name, running: true,
                                 command: [dir + "/" + c.exec[0], ...c.exec.slice(1), ...p.args] })
         hide()
@@ -167,7 +167,7 @@ Scope {
         if (act.win) focusWin(act.win)
         else if (act.go) { apply(r.move ? "move" : "go", act.go); hide() }
         else if (act.output) { I3.dispatch(`focus output ${JSON.stringify(act.output)}`); hide() }
-        else if (act.cmd) { typed = ":" + act.cmd; keys.forceActiveFocus() }
+        else if (act.cmd) { typed = "#" + act.cmd; keys.forceActiveFocus() }
     }
     function handle(name, text) {
         if (!open) return false
@@ -194,9 +194,9 @@ Scope {
                 if (code === 0) {
                     let out = {}
                     try { out = JSON.parse(stdout.text.trim() || "{}") } catch (e) {}
-                    if (out.notify) cb.say(":" + name + "  " + out.notify, false)
+                    if (out.notify) cb.say("#" + name + "  " + out.notify, false)
                 } else {
-                    cb.say(":" + name + "  " + (stderr.text.trim().split("\n").pop()
+                    cb.say("#" + name + "  " + (stderr.text.trim().split("\n").pop()
                            || (code < 0 ? "Start fehlgeschlagen" : "Exit " + code)), true)
                 }
                 destroy()
@@ -344,7 +344,7 @@ Scope {
                     }
                 }
             }
-            // Ueberlauf: Rest per :all oder Super+Tab
+            // Ueberlauf: Rest per #all oder Super+Tab
             Text {
                 visible: bar.shown < bar.wins.length
                 x: 6 + bar.shown * (bar.tabW + 4) + 6
@@ -366,7 +366,7 @@ Scope {
                     anchors { left: parent.left; leftMargin: 9; right: parent.right; rightMargin: 9; verticalCenter: parent.verticalCenter }
                     elide: Text.ElideRight
                     readonly property bool mine: cb.msg.text && cb.msg.output === bar.modelData.name
-                    text: mine ? cb.msg.text : "λ   Super+f   ·   : Befehle"
+                    text: mine ? cb.msg.text : "λ   Super+f   ·   # Befehle"
                     font { family: cb.shell.font; pixelSize: 11; bold: mine }
                     color: mine && cb.msg.warn ? cb.shell.warn : mine ? cb.shell.hud : Qt.alpha(cb.shell.hud, 0.4)
                 }
@@ -488,7 +488,7 @@ Scope {
                 }
             }
 
-            // Liste: Befehle, :all-Baum, Bildschirme, Workspaces oder Fenster dort
+            // Liste: Befehle, #all-Baum, Bildschirme, Workspaces oder Fenster dort
             Rectangle {
                 visible: cb.drop.length > 0
                 width: cb.inputW

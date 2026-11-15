@@ -44,12 +44,12 @@ assert.strictEqual(nav.act(d(""), d("q")), "error")
 // Backspace: eine Stufe zurueck
 assert.deepStrictEqual(["bawsaa", "bawsa", "baws", "baw", "ba", "m", "w"].map(t => nav.back(t, ctx)),
                        ["baws", "baws", "ba", "ba", "", "", ""])
-// Befehle: ":" schaltet die Codes ab, Ausfuehren erst mit Enter
-assert.deepStrictEqual(pick(d(":all"), "cmd", "win", "error"), { cmd: "all", win: -1, error: false })
-assert.strictEqual(nav.act(d(":al"), d(":all")), "")
-assert.ok(nav.enter(d(":clear")) === "cmd" && nav.enter(d(":")) === "close" && nav.enter(d(": ")) === "close")
-assert.strictEqual(nav.back(":all", ctx), ":al")
-assert.ok(d("a:").error)  // ":" nur vorne
+// Befehle: "#" schaltet die Codes ab, Ausfuehren erst mit Enter
+assert.deepStrictEqual(pick(d("#all"), "cmd", "win", "error"), { cmd: "all", win: -1, error: false })
+assert.strictEqual(nav.act(d("#al"), d("#all")), "")
+assert.ok(nav.enter(d("#clear")) === "cmd" && nav.enter(d("#")) === "close" && nav.enter(d("# ")) === "close")
+assert.strictEqual(nav.back("#all", ctx), "#al")
+assert.ok(d("a#").error && d(":all").error)  // "#" nur vorne, ":" gibt es nicht mehr
 assert.strictEqual(JSON.stringify(nav.parse(" open  notiz x ")), JSON.stringify({ name: "open", args: ["notiz", "x"] }))
 assert.strictEqual(JSON.stringify(nav.parse("")), JSON.stringify({ name: "", args: [] }))
 // kuerzester Befehl fuer den Baum

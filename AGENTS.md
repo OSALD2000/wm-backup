@@ -104,14 +104,15 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v30` | wie v29, Ticket-Board statt Mission Control: Tickets als Markdown im Obsidian-Vault (`Tickets/<PROJEKT>/`), Board mit Backlog/ToDo/In Arbeit/Review/Fertig in Quickshell (Super+m), Prio, Labels, Detail-Popup, Drag & Drop, Loeschen in den Obsidian-Papierkorb, CLI `ticket` fuer Agenten; Vorschau-Raster (Super+Tab) als animiertes Quickshell-Overlay mit Filter. |
 | `HL2-v31`-`v33` | verworfener Versuch (Navigation, Fensterleiste unten, Fokus-Karte), nur lokal am Branch `backup/vor-ruecksetzung-20261115-111324`, nicht auf `master` |
 | `HL2-v34` | wie v30, Navigator (Super+f) statt Workspace-Raster und Ziel-Monitor: Bildschirm, Workspace und Fenster per Buchstabencode (`[m] [b+a/s/d] [w+a…ö] [Fenster]`), Kuerzel A/S/D statt U/I/O, Vollbild auf Super+Ctrl+f, Super+Kippen raus, Trainer `tools/nav-trainer.html`. |
-| `HL2-v35` | wie v34, Befehlsleiste unter der waybar statt Fensterliste links und Navigator-Overlay: Tabs des Workspaces mit Code links, Kommandozeile rechts (Super+f), Befehle `:all` (Baum mit Befehl je App) und `:clear`, neue Befehle per `commands/commands.json` + Skript; Super+b und `custom/wins` raus. **Aktueller Standard** fuer neue Themes |
+| `HL2-v35` | wie v34, Befehlsleiste unter der waybar statt Fensterliste links und Navigator-Overlay: Tabs des Workspaces mit Code links, Kommandozeile rechts (Super+f), Befehle `:all` (Baum mit Befehl je App) und `:clear`, neue Befehle per `commands/commands.json` + Skript; Super+b und `custom/wins` raus. |
+| `HL2-v36` | wie v35, Befehle mit `#` statt `:` (`#all`, `#clear`; `#` ohne Shift). **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v35` (Vorschau,
+Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v36` (Vorschau,
 Zwischenablage, Konsole, Pickup-Popups, Workspace-Nummern und Fensterzahl in waybar,
 Ticket-Board, Navigator, Befehlsleiste). Alles in dieser Liste gilt fuer
 **jedes** neue Theme, nicht nur fuer HL2: es aendert nur den **Look**
@@ -179,14 +180,15 @@ Wer davon abweicht, fragt vorher.
   passenden Tabs; geht es um einen anderen Bildschirm/Workspace, klappt unter dem
   Eingabefeld eine Liste auf (nach `b` die Bildschirme, nach `w` die Workspaces mit
   Icons, dann die Fenster dort mit Code; Zeilen anklickbar).
-  **Befehle** `:wort arg …` mit Enter (nur am Leerzeichen getrennt); `:` allein
-  listet alle mit Hilfe. Eingebaut: `:all` = Baum Bildschirm -> Workspace -> App
+  **Befehle** `#wort arg …` mit Enter (nur am Leerzeichen getrennt, `#` ohne Shift auf
+  deutscher Tastatur; bis HL2-v35 `:`); `#` allein
+  listet alle mit Hilfe. Eingebaut: `#all` = Baum Bildschirm -> Workspace -> App
   mit dem kuerzesten Befehl je App (`nav.js` `route()`), direkt daraus tippen,
-  Enter/Esc klappt zu; `:clear` = alle Fenster im fokussierten Workspace schliessen
+  Enter/Esc klappt zu; `#clear` = alle Fenster im fokussierten Workspace schliessen
   (sway `kill`, Apps mit ungespeicherten Aenderungen fragen selbst).
   **Neuer Befehl** = Eintrag in `commands/commands.json` + Skript daneben, keine
   QML-Aenderung: `{"name": {"help": "...", "exec": ["skript", ...]}}`, Skript
-  ausfuehrbar, beliebige Sprache, Woerter nach `:name` als Argumente (nie durch eine
+  ausfuehrbar, beliebige Sprache, Woerter nach `#name` als Argumente (nie durch eine
   Shell-Zeile), stdout optional `{"notify": "Text"}` = Meldung im Eingabefeld (4 s),
   Exit != 0 = rote Meldung (letzte stderr-Zeile). `{"builtin": "tree"}` nur fuer
   Befehle, die die Leiste selbst kann; wenige halten. Codes bleiben feste
@@ -260,7 +262,7 @@ Wer davon abweicht, fragt vorher.
 - **Vorschau-Raster** (`Super+Tab`, Quickshell `quickshell/Overview.qml`,
   `quickshell ipc call overview toggle|open|close`, zum Testen `press NAME`,
   `type TEXT` (= Filter), `info`): Overlay auf dem fokussierten Monitor,
-  alle Fenster aller Monitore als Kacheln (Reihenfolge wie der Baum `:all`,
+  alle Fenster aller Monitore als Kacheln (Reihenfolge wie der Baum `#all`,
   Daten = `"grid"` aus `sidebar.json`), Spaltenzahl so, dass die Kacheln am
   groessten werden. Kachel = Bild + Kennzeichen `<Kuerzel> <Bereich>` (● =
   Workspace gerade sichtbar) + App-Icon, Name, Titel. Startet auf dem

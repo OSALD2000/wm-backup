@@ -9,7 +9,7 @@
 //   gleich, wenn Fenster dazukommen). Ist ein Code zugleich Anfang eines
 //   laengeren (a bei 11+ Fenstern), wartet er ohne Timeout: Enter = a, aa = 11.
 //   m = das aktive Fenster verschieben statt hingehen.
-// ":wort arg …" = Befehl aus commands/commands.json, erst mit Enter (cmd/parse).
+// "#wort arg …" = Befehl aus commands/commands.json, erst mit Enter (cmd/parse).
 
 var KEYS = "asdfghjklö"
 
@@ -20,13 +20,13 @@ function code(i) {
 
 // ctx = { screens: vorhandene Kuerzel, z. B. "asd", here: Kuerzel des
 // fokussierten Bildschirms, wins(screen, ws): Fensterliste, ws 0 = sichtbarer }
-// -> { cmd (Text nach ":", sonst null), move, screen ("" = here), ws (1-10, 0 = sichtbarer), code (getippter
+// -> { cmd (Text nach "#", sonst null), move, screen ("" = here), ws (1-10, 0 = sichtbarer), code (getippter
 //      Fenstercode), wait ("b"/"w": Buchstabe dazu fehlt), match (Index des
 //      Fensters mit genau diesem Code, sonst -1), win (= match, sobald kein
 //      laengerer Code passt, sonst -1), error (Taste passt nicht) }
 function decode(typed, ctx) {
     var r = { cmd: null, move: false, screen: "", ws: 0, code: "", wait: "", match: -1, win: -1, error: false }
-    if (typed[0] === ":") { r.cmd = typed.slice(1); return r }
+    if (typed[0] === "#") { r.cmd = typed.slice(1); return r }
     for (var i = 0; i < typed.length; i++) {
         var c = typed[i]
         if (r.wait === "b") {
@@ -73,7 +73,7 @@ function act(prev, r) {
 
 // Enter: "win" = Fenster mit genau dem getippten Code (a bei 11+ Fenstern),
 // "output" = Fokus auf den Bildschirm (b<x>), "move" = aktives Fenster auf
-// dessen sichtbaren Workspace (m b<x>), "cmd" = Befehl ausfuehren (:wort),
+// dessen sichtbaren Workspace (m b<x>), "cmd" = Befehl ausfuehren (#wort),
 // "" = unvollstaendig, nichts tun, "close" = zu
 function enter(r) {
     if (r.cmd !== null) return r.cmd.trim() ? "cmd" : "close"
@@ -92,7 +92,7 @@ function back(typed, ctx) {
     return decode(t, ctx).wait ? t.slice(0, -1) : t
 }
 
-// ":wort a b" (ohne ":") -> { name, args }; nur am Leerzeichen getrennt
+// "#wort a b" (ohne "#") -> { name, args }; nur am Leerzeichen getrennt
 function parse(cmd) {
     var w = cmd.trim().split(/\s+/)
     return { name: w[0] || "", args: w.slice(1) }

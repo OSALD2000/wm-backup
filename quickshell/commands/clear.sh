@@ -1,5 +1,5 @@
 #!/bin/sh
-# :clear — alle Fenster im fokussierten Workspace schliessen (sway kill: Apps mit
+# #clear — alle Fenster im fokussierten Workspace schliessen (sway kill: Apps mit
 # ungespeicherten Aenderungen fragen selbst nach und bleiben offen).
 # Vertrag aller Befehle: siehe CommandBar.qml (stdout optional {"notify": "..."}).
 n=$(swaymsg -t get_tree | jq '[.. | objects | select(.type == "workspace") | select([.. | objects | select(.focused == true)] | length > 0)
