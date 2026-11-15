@@ -32,7 +32,6 @@
     "sway/mode",
     "sway/scratchpad",
     "custom/wins",
-    "custom/target",
     "custom/agents",
     "sway/window"
   ],
@@ -60,7 +59,7 @@
     "on-click": "rofi -config ~/.config/rofi/config-nord.rasi -modi drun,run -show drun"
   },
 
-  // Kuerzel dieses Monitors (U/I/O), abgelesen am ersten Workspace auf dem
+  // Kuerzel dieses Monitors (A/S/D), abgelesen am ersten Workspace auf dem
   // Output. waybar setzt WAYBAR_OUTPUT_NAME pro Bar.
   "custom/monitor": {
     "exec": "swaymsg -t get_workspaces | jq -r --arg o \"$WAYBAR_OUTPUT_NAME\" '[.[] | select(.output == $o) | .name | split(\":\")[1][0:1] | ascii_upcase] | .[0:1] | join(\"\")'",
@@ -71,43 +70,43 @@
   "sway/workspaces": {
     "disable-scroll": true,
     "all-outputs": false,
-    // Namen "11:u1" … "40:o10" (siehe sway/config). Jede Nummer hat auf jedem
+    // Namen "11:a1" … "40:d10" (siehe sway/config). Jede Nummer hat auf jedem
     // Monitor dieselbe Bedeutung, die Bar zeigt das Bereichs-Icon:
     // 1 Terminal, 2 Browser, 3 Code, 4 Code 2, 5 Trading, 6 frei, 7 Tools,
     // 8 Todos, 9 Chat, 10 Medien. Wichtig: {icon}, nicht {name}.
     // Vor dem Icon die Taste (Super+N, 10 = 0), sonst verliert man den Ueberblick.
     "format": "{icon}",
     "format-icons": {
-      "11:u1": "1 \uf120",
-      "12:u2": "2 \uf0ac",
-      "13:u3": "3 \uf121",
-      "14:u4": "4 \uf1c9",
-      "15:u5": "5 \uf201",
-      "16:u6": "6 \uf111",
-      "17:u7": "7 \uf084",
-      "18:u8": "8 \uf00c",
-      "19:u9": "9 \uf086",
-      "20:u10": "0 \uf04b",
-      "21:i1": "1 \uf120",
-      "22:i2": "2 \uf0ac",
-      "23:i3": "3 \uf121",
-      "24:i4": "4 \uf1c9",
-      "25:i5": "5 \uf201",
-      "26:i6": "6 \uf111",
-      "27:i7": "7 \uf084",
-      "28:i8": "8 \uf00c",
-      "29:i9": "9 \uf086",
-      "30:i10": "0 \uf04b",
-      "31:o1": "1 \uf120",
-      "32:o2": "2 \uf0ac",
-      "33:o3": "3 \uf121",
-      "34:o4": "4 \uf1c9",
-      "35:o5": "5 \uf201",
-      "36:o6": "6 \uf111",
-      "37:o7": "7 \uf084",
-      "38:o8": "8 \uf00c",
-      "39:o9": "9 \uf086",
-      "40:o10": "0 \uf04b"
+      "11:a1": "1 \uf120",
+      "12:a2": "2 \uf0ac",
+      "13:a3": "3 \uf121",
+      "14:a4": "4 \uf1c9",
+      "15:a5": "5 \uf201",
+      "16:a6": "6 \uf111",
+      "17:a7": "7 \uf084",
+      "18:a8": "8 \uf00c",
+      "19:a9": "9 \uf086",
+      "20:a10": "0 \uf04b",
+      "21:s1": "1 \uf120",
+      "22:s2": "2 \uf0ac",
+      "23:s3": "3 \uf121",
+      "24:s4": "4 \uf1c9",
+      "25:s5": "5 \uf201",
+      "26:s6": "6 \uf111",
+      "27:s7": "7 \uf084",
+      "28:s8": "8 \uf00c",
+      "29:s9": "9 \uf086",
+      "30:s10": "0 \uf04b",
+      "31:d1": "1 \uf120",
+      "32:d2": "2 \uf0ac",
+      "33:d3": "3 \uf121",
+      "34:d4": "4 \uf1c9",
+      "35:d5": "5 \uf201",
+      "36:d6": "6 \uf111",
+      "37:d7": "7 \uf084",
+      "38:d8": "8 \uf00c",
+      "39:d9": "9 \uf086",
+      "40:d10": "0 \uf04b"
     }
   },
 
@@ -133,16 +132,6 @@
     "on-click": "~/.config/eww/scripts/sidebar.py toggle"
   },
 
-  // Ziel-Monitor fuer Super+Ctrl[+Shift]+N, Super+Esc oder Klick schaltet
-  // weiter. Leer (ausgeblendet) bei einem Monitor. Signal kommt von ws.sh
-  // cycle, das Intervall faengt an-/abgesteckte Schirme ab.
-  "custom/target": {
-    "exec": "~/.config/sway/scripts/ws.sh bar",
-    "interval": 5,
-    "signal": 10,
-    "tooltip": false,
-    "on-click": "~/.config/sway/scripts/ws.sh cycle"
-  },
 
   // Agenten (Claude Code + Codex): ⚙ = arbeiten, ✓ = bereit; Klick = Panel
   // (Super+c). Den Stand schreibt agents.py watch, Signal 11 weckt.

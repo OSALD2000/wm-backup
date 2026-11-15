@@ -1,10 +1,10 @@
 // Vorschau-Raster (Super+Tab): alle Fenster aller Monitore als Kacheln mit dem
 // letzten Bild, Overlay auf dem fokussierten Monitor. Fenster = "grid" aus
-// sidebar.json (shell.state, Reihenfolge wie das Workspace-Raster: Monitor links
+// sidebar.json (shell.state, Reihenfolge wie der Navigator: Monitor links
 // -> rechts, Workspace 1-10). Bilder macht sidebar.py snap() nach
 // $XDG_RUNTIME_DIR/win-shots/<id>.png; solange das Overlay zu sehen ist, liegt
 // overview.open daneben und snap() pausiert (sonst fotografiert es das Overlay).
-// Tasten: hjkl/Pfeile, Tab/Shift+Tab = weiter/zurueck, u/i/o = erstes Fenster des
+// Tasten: hjkl/Pfeile, Tab/Shift+Tab = weiter/zurueck, a/s/d = erstes Fenster des
 // Monitors, / = Filter, Enter = hin, Entf = schliessen (Raster bleibt offen), Esc.
 // Maus: Hover waehlt, Klick = hin, Mittelklick oder ✕ = schliessen.
 // `quickshell ipc call overview toggle|open|close|press NAME|type TEXT|info`.
@@ -118,7 +118,7 @@ Scope {
         else if (name === "Delete") kill(cur)
         else if (name === "Escape") { if (filter) filter = ""; else hide() }
         else if (name === "/") filtering = true
-        else if (name.length === 1 && "uio".includes(name)) {
+        else if (name.length === 1 && "asd".includes(name)) {
             const i = wins.findIndex(w => w.letter === name)
             if (i >= 0) sel = i
         } else return false

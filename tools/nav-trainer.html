@@ -1,0 +1,251 @@
+<!doctype html>
+<!-- Trainer fuer den Navigator (Super+f): lokal im Browser oeffnen
+     (file:///…/wm-backup/tools/nav-trainer.html). Nutzt dieselbe Decodierung
+     wie Quickshell (../quickshell/nav.js), ein simulierter Desktop mit A/S/D
+     und je 10 Workspaces. Runde = 20 Aufgaben, Bestwert im localStorage. -->
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Navigator-Trainer</title>
+<script src="../quickshell/nav.js"></script>
+<style>
+  :root { --hud: #FFDC00; --bg: #141310; --box: rgba(40,36,24,.55); --fill: rgba(255,220,0,.16);
+          --edge: rgba(255,220,0,.14); --dim: rgba(255,220,0,.5); --warn: #FF5A3C; --ok: #7CFC6A; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--hud); padding: 16px;
+         font: 13px "Iosevka Nerd Font", "Iosevka", ui-monospace, monospace; }
+  main { max-width: 1320px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 12px; letter-spacing: 2px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; margin-bottom: 12px; color: var(--dim); }
+  .bar b { color: var(--hud); }
+  button, label { font: inherit; color: var(--hud); }
+  button { background: var(--box); border: 1px solid var(--edge); padding: 4px 10px; cursor: pointer; }
+  button:hover { background: var(--fill); }
+  .task { border: 1px solid var(--dim); padding: 14px 18px; margin-bottom: 12px; }
+  .task .what { font-size: 22px; font-weight: bold; }
+  .task .ctx { color: var(--dim); margin-top: 6px; }
+  .task .sol { margin-top: 6px; letter-spacing: 2px; }
+  .input { display: inline-block; min-width: 180px; border: 1px solid var(--hud); padding: 6px 12px;
+           font-size: 20px; font-weight: bold; letter-spacing: 3px; margin: 4px 0 12px; }
+  .input.bad { border-color: var(--warn); animation: shake .25s; }
+  .input.good { border-color: var(--ok); }
+  @keyframes shake { 25% { transform: translateX(6px); } 75% { transform: translateX(-6px); } }
+  .hint { color: var(--dim); margin-left: 12px; }
+  .grid { display: grid; grid-template-columns: 56px repeat(10, minmax(0, 1fr)); gap: 6px; margin-bottom: 12px; }
+  .head { text-align: center; font-size: 24px; font-weight: bold; align-self: center; }
+  .head small { display: block; font-size: 9px; color: var(--dim); }
+  .row-off { opacity: .35; }
+  .cell { background: var(--box); border: 1px solid var(--edge); border-radius: 4px; padding: 4px 6px; min-height: 64px; overflow: hidden; }
+  .cell.vis { background: var(--fill); }
+  .cell.sel { border: 2px solid var(--hud); box-shadow: 0 0 10px rgba(255,220,0,.5); }
+  .cell .k { font-size: 17px; font-weight: bold; }
+  .cell .n { float: right; font-size: 9px; color: var(--dim); }
+  .cell .apps { font-size: 9px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .list { display: flex; flex-wrap: wrap; gap: 6px; }
+  .win { width: 300px; background: var(--box); border: 1px solid var(--edge); padding: 5px 8px;
+         white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .win b { display: inline-block; width: 30px; font-size: 15px; }
+  .win.hit { background: var(--fill); border-color: var(--hud); }
+  .win.off { opacity: .4; }
+  .done { border: 1px solid var(--hud); padding: 18px; margin-top: 12px; }
+  .done table { border-collapse: collapse; margin-top: 8px; }
+  .done td { padding: 2px 12px 2px 0; }
+  @media (max-width: 800px) { .grid { grid-template-columns: 36px repeat(10, minmax(0, 1fr)); } .cell .apps, .cell .n { display: none; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>λ NAVIGATOR-TRAINER</h1>
+  <div class="bar">
+    <span>Aufgabe <b id="no"></b>/20</span>
+    <span>Zeit <b id="clock">0.0</b> s</span>
+    <span>Fehler <b id="errs">0</b></span>
+    <span>Serie <b id="streak">0</b></span>
+    <span>Bestwert <b id="best">–</b></span>
+    <label><input type="checkbox" id="showSol"> Loesung zeigen</label>
+    <button id="restart">Neue Runde</button>
+  </div>
+  <div class="task">
+    <div class="what" id="what"></div>
+    <div class="ctx" id="ctx"></div>
+    <div class="sol" id="sol" hidden></div>
+  </div>
+  <div><span class="input" id="input"></span><span class="hint" id="hint"></span></div>
+  <div class="grid" id="grid"></div>
+  <div id="title"></div>
+  <div class="list" id="list"></div>
+  <div class="done" id="done" hidden></div>
+  <p class="hint">[m] [b a/s/d] [w a…ö] [Fenster] · Enter = los · Backspace = zurueck · Esc = Eingabe leeren</p>
+</main>
+<script>
+const SCREENS = "asd", NAMES = { a: "links", s: "Mitte", d: "Laptop" }
+const AREAS = ["TERMINAL", "BROWSER", "CODE", "CODE 2", "TRADING", "FREI", "TOOLS", "TODOS", "CHAT", "MEDIEN"]
+const APPS = ["Firefox", "Chrome", "Alacritty", "VS Code", "IntelliJ", "Teams", "Obsidian", "Slack", "Spotify",
+              "KeePassXC", "TradingView", "Dateien", "Thunderbird", "Discord", "YouTube", "Outlook", "Postman", "DBeaver"]
+const TITLES = ["README.md", "Pull Request #12", "NQ 5m", "Daily Standup", "Inbox", "server.log", "Ticket-Board",
+                "Notizen", "build", "Release 3.1", "Kalender", "main.py", "Doku", "Backtest", "Musik"]
+const $ = id => document.getElementById(id)
+const rnd = n => Math.floor(Math.random() * n), any = a => a[rnd(a.length)]
+let best = null
+try { best = JSON.parse(localStorage.getItem("nav-trainer-best")) } catch (e) {}
+
+let desk, task, typed, t0, no, errs, streak, log, timer
+
+// Desktop: je Bildschirm 10 Workspaces, wenige Fenster, zwei volle (11-25 Fenster)
+function makeDesk() {
+  const ws = {}
+  for (const s of SCREENS) for (let w = 1; w <= 10; w++)
+    ws[s + w] = Array.from({ length: Math.random() < 0.35 ? 0 : 1 + rnd(4) }, win)
+  for (let i = 0; i < 2; i++) ws[any(SCREENS) + (1 + rnd(10))] = Array.from({ length: 11 + rnd(15) }, win)
+  const visible = {}
+  for (const s of SCREENS) visible[s] = 1 + rnd(10)
+  return { ws, visible, here: "d" }
+}
+function win() { return { name: any(APPS), title: any(TITLES) + " " + (1 + rnd(9)) } }
+const wsOf = (s, w) => w || desk.visible[s]
+const ctx = () => ({ screens: SCREENS, here: desk.here, wins: (s, w) => desk.ws[s + wsOf(s, w)] })
+const active = () => desk.ws[desk.here + desk.visible[desk.here]][0]
+const label = (s, w) => s.toUpperCase() + (w % 10)
+
+// Aufgabe + kuerzeste Loesung
+function makeTask() {
+  const s = any(SCREENS), w = 1 + rnd(10), pre = s === desk.here ? "" : "b" + s
+  const r = Math.random()
+  if (r < 0.15) {
+    const o = any(SCREENS.replace(desk.here, ""))
+    return { kind: "output", s: o, text: `Fokus auf Bildschirm ${o.toUpperCase()} (${NAMES[o]})`, sol: "b" + o + " ⏎" }
+  }
+  if (r < 0.32 && active()) {
+    return { kind: "move", s, w, text: `Aktives Fenster nach ${label(s, w)} (${AREAS[w - 1]}) verschieben`,
+             sol: "m" + pre + "w" + KEYS[w - 1] }
+  }
+  if (r < 0.55) return { kind: "go", s, w, text: `Gehe zu ${label(s, w)} (${AREAS[w - 1]})`, sol: pre + "w" + KEYS[w - 1] }
+  // Fenster: ein Workspace mit Fenstern, volle bevorzugt
+  const full = Object.keys(desk.ws).filter(k => desk.ws[k].length > 10)
+  const k = Math.random() < 0.4 && full.length ? any(full) : any(Object.keys(desk.ws).filter(k => desk.ws[k].length))
+  const ts = k[0], tw = Number(k.slice(1)), list = desk.ws[k], i = rnd(list.length), c = code(i)
+  const amb = list.some((x, j) => j !== i && code(j).startsWith(c))
+  const p = (ts === desk.here ? "" : "b" + ts) + (tw === desk.visible[ts] ? "" : "w" + KEYS[tw - 1])
+  return { kind: "win", s: ts, w: tw, i,
+           text: `Fenster ${list[i].name} · „${list[i].title}“ auf ${label(ts, tw)} (Nr. ${i + 1})`,
+           sol: p + c + (amb ? " ⏎" : "") }
+}
+
+function newRound() {
+  desk = makeDesk(); no = 0; errs = 0; streak = 0; log = []
+  $("done").hidden = true
+  next()
+}
+function next() {
+  if (no === 20) return finish()
+  no++; typed = ""; task = makeTask(); t0 = performance.now()
+  render()
+}
+// Ergebnis einer Aktion pruefen: passt sie zur Aufgabe?
+function done(kind, s, w, i) {
+  const ok = kind === task.kind && s === task.s && (task.kind === "output" || w === task.w) &&
+             (task.kind !== "win" || i === task.i)
+  if (!ok) return fail()
+  const ms = performance.now() - t0
+  log.push({ text: task.text, sol: task.sol, ms })
+  streak++
+  // Desktop wie in echt weiterfuehren
+  if (kind === "go" || kind === "win") { desk.visible[s] = w; desk.here = s }
+  if (kind === "output") desk.here = s
+  if (kind === "move") {
+    const from = desk.ws[desk.here + desk.visible[desk.here]]
+    desk.ws[s + w].push(from.shift())
+  }
+  flash("good")
+  setTimeout(next, 250)
+}
+function fail() {
+  errs++; streak = 0; typed = ""
+  flash("bad"); render()
+}
+function flash(cls) {
+  const el = $("input")
+  el.classList.remove("bad", "good"); void el.offsetWidth; el.classList.add(cls)
+}
+
+document.addEventListener("keydown", ev => {
+  if (!task || !$("done").hidden || ev.ctrlKey || ev.altKey || ev.metaKey) return
+  const c = ctx(), r = decode(typed, c)
+  if (ev.key === "Escape") typed = ""
+  else if (ev.key === "Backspace") typed = back(typed, c)
+  else if (ev.key === "Enter") {
+    const e = enter(r), s = r.screen || desk.here
+    if (e === "win") return done("win", s, wsOf(s, r.ws), r.match)
+    if (e === "output") return done("output", s)
+    if (e === "move") return done("move", s, desk.visible[s])
+    if (e === "close") return fail()
+  } else if (ev.key.length === 1) {
+    const ch = ev.key.toLowerCase(), n = decode(typed + ch, c), a = act(r, n), s = n.screen || desk.here
+    if (a === "error") { errs++; streak = 0; flash("bad"); ev.preventDefault(); return render() }
+    typed += ch
+    if (a === "move") return done("move", s, n.ws)
+    if (a === "win") return done("win", s, wsOf(s, n.ws), n.win)
+    // go: in echt wechselt der Workspace sofort; falsches Ziel = Fehler, bei
+    // Fensteraufgaben geht es danach mit dem Code weiter
+    if (a === "go" && (task.kind === "go" || task.kind === "win")) {
+      if (s !== task.s || n.ws !== task.w) return fail()
+      if (task.kind === "go") return done("go", s, n.ws)
+    } else if (a === "go") return fail()
+  } else return
+  ev.preventDefault()
+  render()
+})
+
+function render() {
+  const c = ctx(), r = decode(typed, c), s = r.screen || desk.here, w = wsOf(s, r.ws), list = desk.ws[s + w]
+  $("no").textContent = no; $("errs").textContent = errs; $("streak").textContent = streak
+  $("best").textContent = best ? best.avg.toFixed(2) + " s" : "–"
+  $("what").textContent = task.text
+  const a = active()
+  $("ctx").textContent = `Du bist auf ${label(desk.here, desk.visible[desk.here])} (${NAMES[desk.here]})` +
+    (a ? ` · aktives Fenster: ${a.name}` : " · kein aktives Fenster")
+  $("sol").textContent = "Loesung: " + task.sol
+  $("sol").hidden = !$("showSol").checked
+  $("input").textContent = (r.move ? "⇢ " : "") + typed + "▏"
+  $("hint").textContent = r.wait === "b" ? "Bildschirm: a s d" : r.wait === "w" ? "Workspace: a … ö"
+    : r.code && r.win < 0 && r.match >= 0 ? `Enter = Fenster ${r.match + 1} · weiter tippen` : ""
+  let g = ""
+  for (const x of SCREENS) {
+    const off = r.screen && r.screen !== x ? " row-off" : ""
+    g += `<div class="head${off}">${x.toUpperCase()}<small>${NAMES[x]}${x === desk.here ? " ◆" : ""}</small></div>`
+    for (let k = 1; k <= 10; k++) {
+      const ws = desk.ws[x + k], vis = desk.visible[x] === k
+      const sel = (r.screen || desk.here) === x && r.ws === k
+      g += `<div class="cell${vis ? " vis" : ""}${sel ? " sel" : ""}${off}"><span class="k">${KEYS[k - 1]}</span>` +
+           `<span class="n">${vis ? "● " : ""}${k % 10} ${AREAS[k - 1]}</span>` +
+           `<div class="apps">${ws.length ? ws.length + ": " + [...new Set(ws.map(x => x.name))].join(", ") : ""}</div></div>`
+    }
+  }
+  $("grid").innerHTML = g
+  $("title").textContent = `${label(s, w)} · ${AREAS[w - 1]} · ${list.length ? list.length + " Fenster" : "leer"}`
+  $("list").innerHTML = list.map((x, i) => {
+    const cd = code(i), hit = r.code && cd.startsWith(r.code)
+    return `<div class="win${hit ? " hit" : r.code ? " off" : ""}"><b>${cd}</b>${x.name} · ${x.title}</div>`
+  }).join("")
+}
+
+function finish() {
+  const avg = log.reduce((a, x) => a + x.ms, 0) / log.length / 1000
+  const slow = [...log].sort((a, b) => b.ms - a.ms).slice(0, 5)
+  const isBest = !best || avg < best.avg
+  if (isBest) { best = { avg, errs }; try { localStorage.setItem("nav-trainer-best", JSON.stringify(best)) } catch (e) {} }
+  $("done").hidden = false
+  $("done").innerHTML = `<b>Runde fertig.</b> Schnitt ${avg.toFixed(2)} s je Aufgabe, ${errs} Fehler` +
+    (isBest ? " · neuer Bestwert!" : "") + `<table>${slow.map(x =>
+      `<tr><td>${(x.ms / 1000).toFixed(1)} s</td><td>${x.sol}</td><td>${x.text}</td></tr>`).join("")}</table>` +
+    `<p>Langsamste Aufgaben mit kuerzester Loesung. „Neue Runde“ startet von vorn.</p>`
+}
+
+$("restart").onclick = e => { e.target.blur(); newRound() }
+$("showSol").onchange = e => { e.target.blur(); render() }
+setInterval(() => { if (task && $("done").hidden) $("clock").textContent = ((performance.now() - t0) / 1000).toFixed(1) }, 100)
+newRound()
+</script>
+</body>
+</html>

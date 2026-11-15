@@ -15,9 +15,9 @@ Aufruf: sidebar.py watch       eww (HUD) und Quickshell neu starten, dann bei
         sidebar.py toggle      Sidebar an/aus (Super+b)
         sidebar.py bar         waybar-Modul custom/wins: Fensterzahl des
                                sichtbaren Workspaces + ob die Liste offen ist
-        sidebar.py workspaces go|move  Workspace-Raster (Super[+Shift]+u) in
-                               Quickshell oeffnen; das ruft nach der Auswahl
         sidebar.py workspaces apply go|move OUTPUT N CON
+                               Workspace hin / Fenster CON dorthin, ruft der
+                               Navigator (Super+f, quickshell/Navigator.qml)
         sidebar.py selftest
 """
 import configparser
@@ -59,8 +59,8 @@ SHOT_EVERY = 3  # Sekunden, hoechstens so oft je Fenster
 OVERVIEW = os.path.join(RUN, "overview.open")  # existiert = Raster offen, snap() pausiert
 AREAS = ["TERMINAL", "BROWSER", "CODE", "CODE 2", "TRADING", "FREI", "TOOLS",
          "TODOS", "CHAT", "MEDIEN"]  # Workspace-Raster 1-10, siehe CLAUDE.md
-LETTERS = "oiu"  # Monitor-Kuerzel von rechts (Laptop) nach links, siehe collapse()
-BASE = {"u": 10, "i": 20, "o": 30}  # Workspace-Nummer = BASE + N
+LETTERS = "dsa"  # Monitor-Kuerzel von rechts (Laptop) nach links, siehe collapse()
+BASE = {"a": 10, "s": 20, "d": 30}  # Workspace-Nummer = BASE + N
 
 
 def swaymsg(*args):
@@ -159,11 +159,14 @@ def focused_output(tree):
 
 def collapse(tree):
     """-> sway-Befehle, damit jeder Workspace das Kuerzel seines Monitors traegt.
-    Kuerzel nach Position, von rechts: o, i, u (1: o, 2: o+i, 3: o+i+u). Ein
+    Kuerzel nach Position, von rechts: d, s, a (1: d, 2: d+s, 3: d+s+a). Ein
     Workspace mit fremdem Kuerzel bekommt mit gleicher Nummer das des Monitors,
-    auf dem er liegt (i3 -> o3). Faengt Assigns, abgezogene Schirme und den
+    auf dem er liegt (s3 -> d3). Faengt Assigns, abgezogene Schirme und den
     Login ab: sway legt den ersten Workspace je Monitor an, solange noch nicht
-    alle Monitore da sind, und erwischt dabei fremde Kuerzel (u1 auf der Mitte).
+    alle Monitore da sind, und erwischt dabei fremde Kuerzel (a1 auf der Mitte).
+    Die alten Kuerzel u/i/o (bis HL2-v30) gelten als fremd und werden so beim
+    ersten Lauf umbenannt (i3 -> s3). ponytail: uio aus der Regex streichen,
+    sobald keine Session mit alten Namen mehr laeuft.
     Gibt es den Ziel-Workspace noch nicht, wird umbenannt (bleibt, wo er ist),
     sonst wandern die Fenster dorthin.
     ponytail: Steckt man einen Schirm wieder an, wandern die Fenster nicht zurueck."""
@@ -175,7 +178,7 @@ def collapse(tree):
     for o in outs:
         k = own[o["name"]]
         for ws in o.get("nodes", []):
-            m = re.fullmatch(r"\d+:([uio])(\d+)", ws.get("name", ""))
+            m = re.fullmatch(r"\d+:([asduio])(\d+)", ws.get("name", ""))
             if not m or m[1] == k:
                 continue
             dest = f"{BASE[k] + int(m[2])}:{k}{m[2]}"
@@ -251,10 +254,10 @@ def snap(tree, taken):
 def workspace_entries(tree, apps={}, index=None):
     """Zehn Felder je Monitor, zeilenweise von links nach rechts wie collapse().
     Mit den Fenstern je Feld; der Watcher schreibt das als "grid" nach STATE,
-    das Raster in Quickshell zeigt es live."""
+    Navigator und Vorschau-Raster in Quickshell lesen es live."""
     outs = sorted((o for o in tree.get("nodes", []) if o.get("active")),
                   key=lambda o: o["rect"]["x"])
-    # shortcut: Das vorhandene Workspace-Schema hat drei Monitore, bei mehr zuerst ws.sh/collapse erweitern.
+    # shortcut: Das Workspace-Schema hat drei Monitore (a/s/d), bei mehr zuerst ws.sh/collapse erweitern.
     if len(outs) > len(LETTERS):
         raise ValueError("Das Workspace-Schema unterstuetzt hoechstens drei Bildschirme.")
     entries = []
@@ -271,52 +274,14 @@ def workspace_entries(tree, apps={}, index=None):
     return entries
 
 
-def grid_statefile():
-    return os.path.join(os.environ.get("XDG_STATE_HOME", os.path.expanduser("~/.local/state")),
-                        "workspace-grid.json")
-
-
-def load_grid_state():
-    try:
-        with open(grid_statefile()) as f:
-            state = json.load(f)
-        return state if isinstance(state, dict) else {}
-    except (OSError, ValueError):
-        return {}
-
-
-def workspace_grid(action):
-    """Super[+Shift]+u: Startfeld (letztes Ziel je Aktion, sonst der aktuelle
-    Workspace) und das aktive Fenster hier festhalten, dann das Raster in
-    Quickshell auf dem fokussierten Monitor oeffnen. Quickshell ruft apply()."""
-    if action not in ("go", "move"):
-        raise ValueError("workspaces erwartet go oder move")
-    tree = swaymsg("-t", "get_tree")
-    entries = workspace_entries(tree)
-    if not entries:
-        return
-    con = next((w["id"] for w in windows(tree) if w.get("focused")), 0)
-    if action == "move" and not con:
-        raise ValueError("Kein aktives Fenster zum Verschieben.")
-    state = load_grid_state()
-    current = next((i for i, e in enumerate(entries) if e["focused"]), 0)
-    row = next((i for i, e in enumerate(entries)
-                if state.get(action) == [e["output"], e["number"]]), current)
-    r = subprocess.run([QS, "ipc", "call", "grid", "open", action, str(row), str(con),
-                        focused_output(tree) or entries[current]["output"]],
-                       capture_output=True, text=True)
-    if r.returncode != 0:
-        raise RuntimeError(r.stderr.strip() or "Quickshell nicht erreichbar (quickshell log).")
-
-
 def apply(action, output, number, con):
-    """Bestaetigte Auswahl aus dem Raster ausfuehren und als letztes Ziel merken."""
+    """Workspace N auf output: hin (go) oder Fenster con dorthin (move, Fokus bleibt)."""
     if action not in ("go", "move"):
         raise ValueError("apply erwartet go oder move")
     target = next((e for e in workspace_entries(swaymsg("-t", "get_tree"))
                    if e["output"] == output and e["number"] == int(number)), None)
     if target is None:
-        raise ValueError("Bildschirme haben sich geaendert. Bitte das Raster neu oeffnen.")
+        raise ValueError("Bildschirme haben sich geaendert. Bitte den Navigator neu oeffnen.")
     name = json.dumps(target["name"])
     # Neue Workspaces auch bei ausgeschaltetem Laptop auf dem gewaehlten Monitor anlegen.
     commands = [f'workspace {name} output {json.dumps(output)}',
@@ -327,13 +292,6 @@ def apply(action, output, number, con):
         if not all(item.get("success") for item in result):
             raise RuntimeError("; ".join(item.get("error", "Sway-Befehl fehlgeschlagen")
                                          for item in result if not item.get("success")))
-    state = load_grid_state()
-    state[action] = [output, int(number)]
-    statefile = grid_statefile()
-    os.makedirs(os.path.dirname(statefile), exist_ok=True)
-    with open(statefile + ".tmp", "w") as f:
-        json.dump(state, f)
-    os.replace(statefile + ".tmp", statefile)
 
 
 def kill_previous():
@@ -458,83 +416,73 @@ def selftest():
                                 "rect": {"x": x}, "nodes": list(ws)}
     lap = lambda *ws: {"nodes": [{"type": "output", "name": "__i3", "nodes": []},
                                  out("eDP-1", 3840, *ws)]}
-    assert collapse(lap({"name": "11:u1", "nodes": [], "focused": True})) == \
-        ['rename workspace "11:u1" to "31:o1"']
-    assert collapse(lap({"name": "31:o1", "nodes": [con(1, "a")]})) == []
+    assert collapse(lap({"name": "11:a1", "nodes": [], "focused": True})) == \
+        ['rename workspace "11:a1" to "31:d1"']
+    assert collapse(lap({"name": "31:d1", "nodes": [con(1, "a")]})) == []
     # Ziel gibt es schon -> Fenster wandern
-    assert collapse(lap({"name": "33:o3", "nodes": []}, {"name": "23:i3", "nodes": [con(1, "a")]})) == \
-        ["[con_id=1] move container to workspace 33:o3"]
-    # Login: u1 auf der Mitte, u3 auf dem Laptop (drei Monitore)
-    three = {"nodes": [out("HDMI-A-1", 0, {"name": "11:u1", "nodes": []}),
-                       out("DP-7", 1920, {"name": "12:u2", "nodes": []}),
-                       out("eDP-1", 3840, {"name": "13:u3", "nodes": []})]}
-    assert collapse(three) == ['rename workspace "13:u3" to "33:o3"',
-                               'rename workspace "12:u2" to "22:i2"']
-    # zwei Monitore: u wird i in der Mitte, o auf dem Laptop
-    two = {"nodes": [out("DP-7", 1920, {"name": "11:u1", "nodes": [con(1, "a")]}),
-                     out("eDP-1", 3840, {"name": "31:o1", "nodes": []})]}
-    assert collapse(two) == ['rename workspace "11:u1" to "21:i1"']
+    assert collapse(lap({"name": "33:d3", "nodes": []}, {"name": "23:s3", "nodes": [con(1, "a")]})) == \
+        ["[con_id=1] move container to workspace 33:d3"]
+    # Login: a1 auf der Mitte, a3 auf dem Laptop (drei Monitore)
+    three = {"nodes": [out("HDMI-A-1", 0, {"name": "11:a1", "nodes": []}),
+                       out("DP-7", 1920, {"name": "12:a2", "nodes": []}),
+                       out("eDP-1", 3840, {"name": "13:a3", "nodes": []})]}
+    assert collapse(three) == ['rename workspace "13:a3" to "33:d3"',
+                               'rename workspace "12:a2" to "22:s2"']
+    # zwei Monitore: a wird s in der Mitte, d auf dem Laptop
+    two = {"nodes": [out("DP-7", 1920, {"name": "11:a1", "nodes": [con(1, "a")]}),
+                     out("eDP-1", 3840, {"name": "31:d1", "nodes": []})]}
+    assert collapse(two) == ['rename workspace "11:a1" to "21:s1"']
+    # Migration der alten Namen bis HL2-v30: u/i/o -> a/s/d am gleichen Platz
+    old = {"nodes": [out("HDMI-A-1", 0, {"name": "11:u1", "nodes": [con(1, "a")]}),
+                     out("DP-7", 1920, {"name": "23:i3", "nodes": [con(2, "b")]},
+                         {"name": "23:s3", "nodes": [con(3, "c")]}),
+                     out("eDP-1", 3840, {"name": "40:o10", "nodes": [], "focused": True})]}
+    assert collapse(old) == ['rename workspace "40:o10" to "40:d10"',
+                             "[con_id=2] move container to workspace 23:s3",
+                             'rename workspace "11:u1" to "11:a1"']
     grid = workspace_entries(three)
     assert len(grid) == 30
     assert [grid[i]["name"] for i in (0, 9, 10, 20, 29)] == \
-        ["11:u1", "20:u10", "21:i1", "31:o1", "40:o10"]
-    assert [e["name"] for e in workspace_entries(two)][::10] == ["21:i1", "31:o1"]
-    solo = lap({"name": "31:o1", "focused": True, "nodes": [con(1, "a")],
+        ["11:a1", "20:a10", "21:s1", "31:d1", "40:d10"]
+    assert [e["name"] for e in workspace_entries(two)][::10] == ["21:s1", "31:d1"]
+    solo = lap({"name": "31:d1", "focused": True, "nodes": [con(1, "a")],
                 "floating_nodes": [con(2, "b")]})
-    solo["nodes"][1]["current_workspace"] = "31:o1"
+    solo["nodes"][1]["current_workspace"] = "31:d1"
     assert len(workspace_entries(solo)) == 10
     cell = workspace_entries(solo, apps, index)[0]
-    assert (cell["name"], cell["area"], cell["visible"], cell["focused"]) == ("31:o1", "TERMINAL", True, True)
+    assert (cell["name"], cell["letter"], cell["area"], cell["visible"], cell["focused"]) == \
+        ("31:d1", "d", "TERMINAL", True, True)
     assert [w["id"] for w in cell["wins"]] == [1, 2]
     assert workspace_entries(solo)[-1]["wins"] == []
     assert workspace_entries({"nodes": []}) == []
-    import tempfile
     from unittest.mock import patch
-    solo["nodes"][1]["nodes"][0]["nodes"][0]["focused"] = True
-    with tempfile.TemporaryDirectory() as state_dir, \
-         patch.dict(os.environ, {"XDG_STATE_HOME": state_dir}):
-        statefile = os.path.join(state_dir, "workspace-grid.json")
-        ok = [{"success": True}]
-        # Oeffnen: Startfeld = aktueller Workspace, Fenster-ID wird mitgegeben
-        with patch(__name__ + ".swaymsg", return_value=solo), \
-             patch("subprocess.run", return_value=subprocess.CompletedProcess([], 0, "", "")) as qs:
-            workspace_grid("move")
-            assert qs.call_args.args[0][1:] == ["ipc", "call", "grid", "open", "move", "0", "1", "eDP-1"]
-        with patch(__name__ + ".swaymsg", side_effect=[solo, ok, ok]) as ipc:
-            apply("move", "eDP-1", "5", "1")
-            assert ipc.call_args.args == ('[con_id=1] move container to workspace "35:o5"',)
-        with open(statefile) as f:
-            assert json.load(f) == {"move": ["eDP-1", 5]}
-        with patch(__name__ + ".swaymsg", return_value=solo), \
-             patch("subprocess.run", return_value=subprocess.CompletedProcess([], 0, "", "")) as qs:
-            workspace_grid("move")
-            assert qs.call_args.args[0][6] == "4"  # letztes Ziel je Aktion
-            workspace_grid("go")
-            assert qs.call_args.args[0][6] == "0"
-        # Ein abgezogener Monitor und ein Sway-Fehler duerfen weder bewegen noch speichern.
-        for replies, error in [([{"nodes": []}], ValueError),
-                               ([solo, [{"success": False, "error": "test"}]], RuntimeError)]:
-            with patch(__name__ + ".swaymsg", side_effect=replies):
-                try:
-                    apply("move", "eDP-1", "7", "1")
-                except error:
-                    pass
-                else:
-                    raise AssertionError("Workspace-Aktion trotz Fehler ausgefuehrt")
-            with open(statefile) as f:
-                assert json.load(f) == {"move": ["eDP-1", 5]}
+    ok = [{"success": True}]
+    with patch(__name__ + ".swaymsg", side_effect=[solo, ok, ok]) as ipc:
+        apply("move", "eDP-1", "5", "1")
+        assert ipc.call_args.args == ('[con_id=1] move container to workspace "35:d5"',)
+    with patch(__name__ + ".swaymsg", side_effect=[solo, ok, ok]) as ipc:
+        apply("go", "eDP-1", "10", "0")
+        assert [c.args for c in ipc.call_args_list[1:]] == \
+            [('workspace "40:d10" output "eDP-1"',), ('workspace --no-auto-back-and-forth "40:d10"',)]
+    # Ein abgezogener Monitor und ein Sway-Fehler brechen ab.
+    for replies, error in [([{"nodes": []}], ValueError),
+                           ([solo, [{"success": False, "error": "test"}]], RuntimeError)]:
+        with patch(__name__ + ".swaymsg", side_effect=replies):
+            try:
+                apply("move", "eDP-1", "7", "1")
+            except error:
+                pass
+            else:
+                raise AssertionError("Workspace-Aktion trotz Fehler ausgefuehrt")
     print("ok")
 
 
 if __name__ == "__main__":
     if sys.argv[1] == "workspaces":
         try:
-            if sys.argv[2] == "apply":
-                apply(*sys.argv[3:7])
-            else:
-                workspace_grid(sys.argv[2])
+            apply(*sys.argv[3:7])
         except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as error:
-            subprocess.run(["notify-send", "Workspace-Raster", str(error)])
+            subprocess.run(["notify-send", "Navigator", str(error)])
             sys.exit(str(error))
         sys.exit(0)
     {"watch": watch, "next": lambda: cycle(1), "prev": lambda: cycle(-1),

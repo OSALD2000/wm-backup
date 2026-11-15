@@ -44,12 +44,12 @@ S=.agents/skills/theme-switch/scripts/theme.sh
 
 ### 3. Design festlegen
 Die **Bedienung ist fest** (Abschnitt "Standard-Bedienung" in `AGENTS.md`:
-Workspaces u/i/o mit 1-10, Ziel-Monitor Super+Esc + Super+Ctrl[+Shift]+N, Super+q/b/Shift+z, Mausrad kippen = Super+q (mit Super = Workspace weiter; nur die Maus per `--input-device=$tiltmouse`, nicht das Touchpad), Fensterliste links (Quickshell, `quickshell/shell.qml`: nur Farben/Schrift anpassen), Hilfe-Panel,
-Workspace-Raster Super+u / Super+Shift+u (Quickshell-Overlay `grid` in `shell.qml`, live mit App-Icons, hjkl/Pfeile, u/i/o + Nummer ins Eingabefeld je Zeile, Tab = Modus, letztes Ziel je Aktion; `sidebar.py workspaces go|move|apply`),
+Workspaces a/s/d mit 1-10, Super+q/b/Shift+z, Mausrad kippen = Super+q (Super+Kippen frei; nur die Maus per `--input-device=$tiltmouse`, nicht das Touchpad), Vollbild Super+Ctrl+f, Fensterliste links (Quickshell, `quickshell/shell.qml`: nur Farben/Schrift anpassen), Hilfe-Panel,
+Navigator Super+f (Quickshell `Navigator.qml` + `nav.js`, `[m] [b+a/s/d] [w+a…ö] [Fenstercode]`, Trainer `tools/nav-trainer.html`; `sidebar.py workspaces apply`),
 unsichtbare Tab-Zeile, Vorschau Super+Tab (Quickshell `Overview.qml`, `/` Filter, Entf schliesst), Ticket-Board Super+m (Quickshell `Tickets.qml`), Konsole Super+Shift+Tab (cool-retro-term),
 Zwischenablage Super+Shift+V, Pickup-Popups unten rechts,
 waybar mit Nummer vor dem Icon und hervorgehobenem Workspace auf jedem Monitor, daneben Fensterzahl + Symbol
-der Fensterliste `custom/wins`, Ziel-Monitor `custom/target`, Boersenuhr `custom/market` und Agenten `custom/agents`,
+der Fensterliste `custom/wins`, Boersenuhr `custom/market` und Agenten `custom/agents`,
 Trading-Journal Super+Ctrl+j, Schnellnotiz Super+Ctrl+n, Ticket-Schnelleingabe Super+Ctrl+m, Agenten-Panel Super+c, Agenten-Tafel Super+g, Session parken Super+Ctrl+p / zurueck Super+Ctrl+Shift+p). Das gilt fuer jedes
 Theme, nicht nur HL2. Ein Theme aendert nur den Look. Soll davon etwas
 anders werden, erst mit dem User klaeren und danach `AGENTS.md` nachziehen.
@@ -95,19 +95,19 @@ Konventionen aus den bisherigen Themes, die sich bewaehrt haben:
   `hud-left hud-right` in `watch()`. Braucht das Theme andere Dauer-Fenster,
   dort eintragen, keine zweite `eww open`-Zeile (zwei Starts = zwei Daemons).
   Der Watcher klappt auch Workspaces ohne eigenen Monitor ein (`collapse()`,
-  1 Monitor = nur o, 2 = o+i) und benennt Workspaces mit fremdem Kuerzel um: `sidebar.py` unveraendert uebernehmen.
-- Workspace-Raster und Direktkuerzel gemeinsam uebernehmen; Kompatibilitaet
-  und getrennte Ziel-Speicher stehen unter "Workspace-Raster" in `AGENTS.md`.
+  1 Monitor = nur d, 2 = d+s) und benennt Workspaces mit fremdem Kuerzel um: `sidebar.py` unveraendert uebernehmen.
+- Navigator und Super+N gemeinsam uebernehmen; Grammatik und Codes stehen unter
+  "Navigator" in `AGENTS.md`, `nav.js` nie je Theme aendern (Trainer und Test haengen dran).
 - Die Bausteine der Standard-Bedienung mit umfaerben, nicht weglassen:
   `sidebar`, `info`, die waybar-Workspaces (Nummer + Icon, `button.visible`
-  wie `button.focused`), `custom/wins` (Klassen `open`/`idle`/`off`), `custom/target`, `custom/market` (Klassen `active`/`idle`/`closed`), `custom/agents` (Klassen `busy`/`idle`/`new`/`none`), die swaync-Popups (Pickups
+  wie `button.focused`), `custom/wins` (Klassen `open`/`idle`/`off`), `custom/market` (Klassen `active`/`idle`/`closed`), `custom/agents` (Klassen `busy`/`idle`/`new`/`none`), die swaync-Popups (Pickups
   unten rechts, Block `.floating-notifications` in `swaync/style.css`), das
-  Zwischenablage-Menue `clip.sh`, die Eingabezeile `ask.sh` (Journal, Schnellnotiz, Ticket-Schnelleingabe, Session parken), das Vorschau-Raster (Quickshell `Overview.qml`, Farben oben in `shell.qml`), das Workspace-Raster (Quickshell, Farben oben in `shell.qml`), die
+  Zwischenablage-Menue `clip.sh`, die Eingabezeile `ask.sh` (Journal, Schnellnotiz, Ticket-Schnelleingabe, Session parken), das Vorschau-Raster (Quickshell `Overview.qml`, Farben oben in `shell.qml`), den Navigator (Quickshell `Navigator.qml`, Farben oben in `shell.qml`), die
   Ticket-Board (Quickshell `Tickets.qml`/`TicketCard.qml`/`TicketDetail.qml`/`Chip.qml`: Farben ueber `root` in `shell.qml` inkl. `warn`, `ticket.py` unveraendert), das Agenten-Panel (eww `agents` + Tafel `agents-board`, `.ag-*`), das Journal-Panel (eww `journal`, `.jr-*` + `.ms-*`, `sway/scripts/journal.py`) und die Konsole (cool-retro-term, eigenes `profile.json` in den Farben des
   Themes). Nach dem Umbau alle einmal ausprobieren:
-  `notify-send`, Super+u / Super+Shift+u (Icons live, hjkl/Pfeile, u/i/o + Nummer ins Eingabefeld je Zeile, Tab = Modus, Enter/Klick bestaetigt, Klick auf Icon springt, Esc verwirft, letztes Ziel bleibt je Aktion), Super+Shift+V, Super+Tab (Bilder da, `/` filtert, Entf schliesst ein Fenster, Enter springt), Super+m (Ticket mit `'` anlegen, H/L schieben, fuenftes In Arbeit je Projekt prallt ab, Detail, Obsidian oeffnen, Drag & Drop), Super+Shift+Tab, Super+b (Symbol
-  in `custom/wins` wechselt, Zahl stimmt mit den Fenstern ueberein), Super+Esc
-  (`custom/target` schaltet weiter) + Super+Ctrl+Shift+N, Super+Ctrl+m, Super+Ctrl+j (Eintrag im Obsidian-Journal, Esc verwirft), Super+Ctrl+n (Notiz geht in Obsidian auf), Super+c (j/k, Enter springt, Esc zu, Mode wieder `default`), Super+g (Chats live nebeneinander, Spalten voll, nichts laeuft unten raus).
+  `notify-send`, Super+f (Icons live, `bswf` wechselt sofort, Fenstercode fokussiert, `m…` verschiebt mit Fokus am Platz, falsche Taste wackelt rot, Esc zu; `node tests/nav.cjs`), Super+Shift+V, Super+Tab (Bilder da, `/` filtert, Entf schliesst ein Fenster, Enter springt), Super+m (Ticket mit `'` anlegen, H/L schieben, fuenftes In Arbeit je Projekt prallt ab, Detail, Obsidian oeffnen, Drag & Drop), Super+Shift+Tab, Super+b (Symbol
+  in `custom/wins` wechselt, Zahl stimmt mit den Fenstern ueberein),
+  Super+Ctrl+m, Super+Ctrl+j (Eintrag im Obsidian-Journal, Esc verwirft), Super+Ctrl+n (Notiz geht in Obsidian auf), Super+c (j/k, Enter springt, Esc zu, Mode wieder `default`), Super+g (Chats live nebeneinander, Spalten voll, nichts laeuft unten raus).
 - Seit HL2-v24: IPv6-Modul aus der Leiste lassen, konstante Workspace-Breiten
   und kurze Farbuebergaenge erhalten.
 - Aendern sich Binds oder Assigns, das Hilfe-Panel `info` in `eww.yuck`

@@ -2,7 +2,7 @@
 """Session parken (Super+Ctrl+p) / zurueckholen (Super+Ctrl+Shift+p).
 
 park.py save     Name per ask.sh, alle Fenster aller Monitore (ohne Scratchpad)
-                 merken und auf 36:o6 schieben.
+                 merken und auf 36:d6 schieben.
 park.py restore  Session per ask.sh-Liste waehlen, jedes noch offene Fenster
                  zurueck auf seinen alten Workspace; die Session ist danach weg.
 Gespeichert in $XDG_RUNTIME_DIR/parked.json ({name: {con_id: workspace}}):
@@ -15,7 +15,7 @@ import os
 import subprocess
 import sys
 
-PARK = "36:o6"
+PARK = "36:d6"
 DB = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "parked.json")
 ASK = os.path.expanduser("~/.config/sway/scripts/ask.sh")
 
@@ -82,7 +82,7 @@ def save():
     store(db)
     sway([f'[con_id={c}] move container to workspace "{PARK}"' for c in wins]
          + [f"workspace {PARK}"])
-    notify(f"{name}: {len(wins)} Fenster auf o6")
+    notify(f"{name}: {len(wins)} Fenster auf d6")
 
 
 def restore():
@@ -106,9 +106,9 @@ def selftest():
     ws = lambda n, *k: {"type": "workspace", "name": n, "nodes": list(k)}
     tree = {"type": "root", "nodes": [{"type": "output", "nodes": [
         ws("__i3_scratch", win(1)), ws(PARK, win(2)),
-        ws("31:o1", win(3), {"id": 9, "type": "con", "nodes": [win(4)]}),
-        {**ws("33:o3"), "floating_nodes": [{"id": 5, "type": "floating_con", "nodes": []}]}]}]}
-    assert windows(tree) == {"3": "31:o1", "4": "31:o1", "5": "33:o3"}, windows(tree)
+        ws("31:d1", win(3), {"id": 9, "type": "con", "nodes": [win(4)]}),
+        {**ws("33:d3"), "floating_nodes": [{"id": 5, "type": "floating_con", "nodes": []}]}]}]}
+    assert windows(tree) == {"3": "31:d1", "4": "31:d1", "5": "33:d3"}, windows(tree)
     assert set(windows(tree, ())) == {"1", "2", "3", "4", "5"}
     print("ok")
 
