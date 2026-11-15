@@ -1,23 +1,19 @@
 #!/usr/bin/python3
-"""Fensterliste links (Quickshell, quickshell/shell.qml), eine pro Monitor.
-
-Zeigt die Fenster des sichtbaren Workspaces dieses Monitors, in Baum-Reihenfolge,
-erst ab MIN_WINDOWS Fenstern (sonst ist das eww-Fenster zu und gibt den Platz frei).
-Super+q / Super+Ctrl+q laufen mit next/prev genau durch diese Liste im Kreis und
+"""Daten fuer die Befehlsleiste (Quickshell, quickshell/CommandBar.qml) und
+das Vorschau-Raster: Fenster des sichtbaren Workspaces je Monitor (Tabs der
+Leiste, Baum-Reihenfolge) und alle Workspaces samt Fenstern ("grid").
+Super+q / Super+Ctrl+q laufen mit next/prev genau durch die Tabs im Kreis und
 verlassen den Monitor nie (sways `focus next` springt am Ende raus).
 
 Aufruf: sidebar.py watch       eww (HUD) und Quickshell neu starten, dann bei
-                               jeder Aenderung STATE schreiben (Fenster + welche
-                               Leisten offen sind), Quickshell liest die Datei.
-                               Laeuft per exec_always, ein neuer Start beendet
-                               den alten (PIDFILE).
-        sidebar.py next|prev   naechstes/vorheriges Fenster der Liste fokussieren
-        sidebar.py toggle      Sidebar an/aus (Super+b)
-        sidebar.py bar         waybar-Modul custom/wins: Fensterzahl des
-                               sichtbaren Workspaces + ob die Liste offen ist
+                               jeder Aenderung STATE schreiben, Quickshell liest
+                               die Datei. Laeuft per exec_always, ein neuer
+                               Start beendet den alten (PIDFILE).
+        sidebar.py next|prev   naechstes/vorheriges Fenster der Tabs fokussieren
+        sidebar.py nudge ID up|down  Fenster in den Tabs verschieben (Mausrad)
         sidebar.py workspaces apply go|move OUTPUT N CON
-                               Workspace hin / Fenster CON dorthin, ruft der
-                               Navigator (Super+f, quickshell/Navigator.qml)
+                               Workspace hin / Fenster CON dorthin, ruft die
+                               Befehlsleiste (Super+f)
         sidebar.py selftest
 """
 import configparser
@@ -41,14 +37,10 @@ ICON_DIRS = [os.path.expanduser("~/.local/share/icons"), "/usr/share/icons/hicol
              "/usr/share/pixmaps", "/var/lib/snapd/desktop/icons",
              "/var/lib/flatpak/exports/share/icons", "/usr/share/icons/Yaru",
              "/usr/share/icons/Adwaita", "/usr/share/icons/HighContrast"]
-MIN_WINDOWS = 2     # darunter keine Sidebar
 RUN = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
 PIDFILE = os.path.join(RUN, "eww-sidebar.pid")
-OFF = os.path.join(RUN, "eww-sidebar.off")  # existiert = Sidebar per Super+b aus
-BAR = os.path.join(RUN, "eww-sidebar.bar")  # Stand fuer waybar, schreibt der Watcher
-STATE = os.path.join(RUN, "sidebar.json")  # {"wins": {output: [...]}, "show": [outputs], "grid": [...]} fuer Quickshell
+STATE = os.path.join(RUN, "sidebar.json")  # {"wins": {output: [...]}, "grid": [...]} fuer Quickshell
 QS = os.path.expanduser("~/.local/bin/quickshell")
-BAR_SIGNAL = 9  # = "signal" von custom/wins in waybar/config.jsonc
 # Vorschaubilder fuer das Vorschau-Raster (Super+Tab, quickshell/Overview.qml).
 # Sway kann nur Monitore abfotografieren, und Fenster hinter Tabs/auf
 # unsichtbaren Workspaces malt es gar nicht -> der Watcher fotografiert jedes
@@ -112,7 +104,7 @@ def resolve(icon, index):
 
 
 def win_entry(node, apps, index=None):
-    """-> {id, name, title, focused, icon} fuer Fensterliste und Workspace-Raster."""
+    """-> {id, name, title, focused, icon} fuer Tabs, Befehlsleiste und Vorschau."""
     app = node.get("app_id") or (node.get("window_properties") or {}).get("class") or "?"
     icon, name = apps.get(app.lower(), (FALLBACK, ""))
     return {"id": node["id"], "name": name or app, "title": node.get("name") or app,
@@ -236,7 +228,7 @@ def windows(node):
 
 def snap(tree, taken):
     """Sichtbare Fenster fotografieren, je Fenster hoechstens alle SHOT_EVERY s.
-    Im Hintergrund (&), damit die Sidebar nicht wartet; sleep, damit das Fenster
+    Im Hintergrund (&), damit der Watcher nicht wartet; sleep, damit das Fenster
     nach dem Wechsel fertig gemalt ist. Gesperrt oder bei offenem Vorschau-Raster
     nie: grim saehe den Lockscreen bzw. das Overlay."""
     now, cmds = time.time(), []
@@ -306,41 +298,11 @@ def kill_previous():
         f.write(str(os.getpid()))
 
 
-def toggle():
-    """Super+b: Sidebar an/aus. Der Tick weckt den Watcher, der das OFF-File liest."""
-    if os.path.exists(OFF):
-        os.remove(OFF)
-    else:
-        open(OFF, "w").close()
-    subprocess.run(["swaymsg", "-t", "send_tick", "sidebar"], capture_output=True)
-
-
-def bar_json(state, output):
-    """-> waybar-JSON fuer custom/wins: Fensterzahl + Symbol Liste offen/zu."""
-    n, shown = state.get(output, [0, False])
-    if os.path.exists(OFF):
-        icon, cls, tip = "\uf2d0", "off", "Fensterliste aus (Super+b)"
-    elif shown:
-        icon, cls, tip = "\uf0db", "open", "Fensterliste offen (Super+b)"
-    else:
-        icon, cls, tip = "\uf0db", "idle", f"Fensterliste erst ab {MIN_WINDOWS} Fenstern"
-    return json.dumps({"text": f"\uf2d2 {n}  {icon}", "class": cls, "tooltip": tip})
-
-
-def bar():
-    try:
-        with open(BAR) as f:
-            state = json.load(f)
-    except (OSError, ValueError):
-        state = {}
-    print(bar_json(state, os.environ.get("WAYBAR_OUTPUT_NAME", "")))
-
-
 def watch():
     kill_previous()
     # Alle eww-Prozesse weg, nicht nur `eww kill`: ein Daemon, der seinen Socket
     # verloren hat (zwei gleichzeitige Starts), zeigt seine Fenster weiter an
-    # und ist per eww nicht mehr erreichbar -> doppelte Sidebar.
+    # und ist per eww nicht mehr erreichbar -> doppelte HUD-Fenster.
     subprocess.run(["pkill", "-x", "eww"])
     subprocess.run(["pkill", "-x", "quickshell"])
     subprocess.run(["rm", "-f", OVERVIEW])  # sonst pausiert snap() fuer immer
@@ -350,7 +312,7 @@ def watch():
     apps, index = desktop_apps(), icon_index()  # ponytail: nur beim Start; neue Apps nach Super+Shift+C
     events = subprocess.Popen(["swaymsg", "-m", "-t", "subscribe", '["window","workspace","output","tick"]'],
                               stdout=subprocess.PIPE, text=True)
-    last, shown, taken, barstate = None, set(), {}, None
+    last, taken = None, {}
     while True:
         tree = swaymsg("-t", "get_tree")
         cmds = collapse(tree)
@@ -359,24 +321,16 @@ def watch():
             tree = swaymsg("-t", "get_tree")
         snap(tree, taken)
         wins = visible_windows(tree, apps, index)
-        shown = set() if os.path.exists(OFF) else {o for o, w in wins.items() if len(w) >= MIN_WINDOWS}
         try:
             grid = workspace_entries(tree, apps, index)
-        except ValueError:  # mehr als drei Monitore: kein Raster, Liste laeuft weiter
+        except ValueError:  # mehr als drei Monitore: kein Raster, Tabs laufen weiter
             grid = []
-        cur = json.dumps({"wins": wins, "show": sorted(shown), "grid": grid})
+        cur = json.dumps({"wins": wins, "grid": grid})
         if cur != last:
             with open(STATE + ".tmp", "w") as f:
                 f.write(cur)
             os.replace(STATE + ".tmp", STATE)  # atomar: Quickshell liest nie halbe Dateien
             last = cur
-        st = {o: [len(w), o in shown] for o, w in wins.items()}
-        cur = json.dumps(st) + str(os.path.exists(OFF))  # OFF aendert das Symbol
-        if cur != barstate:
-            with open(BAR, "w") as f:
-                json.dump(st, f)
-            subprocess.run(["pkill", f"-RTMIN+{BAR_SIGNAL}", "-x", "waybar"])
-            barstate = cur
         if not events.stdout.readline():
             return
 
@@ -410,8 +364,6 @@ def selftest():
     assert step(w["DP-7"], 1) == 3 and step(w["DP-7"], -1) == 1
     assert step(w["DP-7"][:2], 1) == 1  # im Kreis
     assert step([], 1) is None
-    assert json.loads(bar_json({"DP-7": [3, True]}, "DP-7"))["text"].startswith("\uf2d2 3  ")
-    assert json.loads(bar_json({}, "HDMI-1"))["text"].startswith("\uf2d2 0")
     out = lambda name, x, *ws: {"type": "output", "name": name, "active": True,
                                 "rect": {"x": x}, "nodes": list(ws)}
     lap = lambda *ws: {"nodes": [{"type": "output", "name": "__i3", "nodes": []},
@@ -482,10 +434,9 @@ if __name__ == "__main__":
         try:
             apply(*sys.argv[3:7])
         except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as error:
-            subprocess.run(["notify-send", "Navigator", str(error)])
+            subprocess.run(["notify-send", "Befehlsleiste", str(error)])
             sys.exit(str(error))
         sys.exit(0)
     {"watch": watch, "next": lambda: cycle(1), "prev": lambda: cycle(-1),
      "nudge": lambda: nudge(sys.argv[2], sys.argv[3]),
-     "toggle": toggle, "bar": bar,
      "selftest": selftest}[sys.argv[1]]()

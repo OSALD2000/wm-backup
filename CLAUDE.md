@@ -24,14 +24,14 @@ Aenderungen an `theme.sh` immer in beiden Kopien nachziehen.
 | `sway/config` | `~/.config/sway/config` | Compositor, Keybinds, Workspaces, Farben (`set $hl2_*` …), Autostart |
 | `sway/scripts/` | `~/.config/sway/scripts/` | `lock.sh` (hyprlock, sonst swaylock), `powermenu.sh` (rofi -dmenu), `clip.sh` (Zwischenablage, rofi ueber copyq), `screens.py` (Monitore anordnen, Laptop rechts), `ws.sh` (Super+N = Workspace N des aktuellen Monitors), `console.py` (Konsole Super+Shift+Tab), `market.py` (waybar `custom/market`: NY-Zeit + Session), `journal.py` (Trading-Journal), `note.py` (Schnellnotiz Obsidian), `park.py` (Session parken), `ask.sh` (rofi-Eingabezeile, mit `-` Auswahlliste), `ipv6.sh`, `ticket.py` (Tickets als Markdown im Vault, einzige Schreibstelle, CLI fuer Board und Agenten) |
 | `hypr/` | `~/.config/hypr/` | **nur hyprlock** (Sperrbildschirm) + `loading.sh` (Ladebalken). Hyprland selbst wird nicht benutzt |
-| `waybar/` | `~/.config/waybar/` | obere Leiste (`config.jsonc`, `style.css`): Monitor-Badge A/S/D + Workspaces als `<Taste> <Icon>`, sichtbarer Workspace je Monitor hervorgehoben, `custom/wins` = Fensterzahl + Fensterliste offen/zu, `custom/agents` = Claude/Codex-Status |
+| `waybar/` | `~/.config/waybar/` | obere Leiste (`config.jsonc`, `style.css`): Monitor-Badge A/S/D + Workspaces als `<Taste> <Icon>`, sichtbarer Workspace je Monitor hervorgehoben, `custom/agents` = Claude/Codex-Status |
 | `rofi/` | `~/.config/rofi/` | Launcher. Sway ruft `rofi -config ~/.config/rofi/config-nord.rasi` auf; der Name "nord" ist historisch, das aktive Theme steht per `@theme` darin (HL2: `hl2-menu.rasi`). `config.rasi` gehoert zu i3 |
-| `eww/` | `~/.config/eww/` | Desktop-Widgets. HL2: `hud-left`/`hud-right` + Lern-Panel `learn` (Super+Z), Hilfe `info` (Super+Shift+Z), Trading-Journal `journal` (Super+Ctrl+j, Formular von `sway/scripts/journal.py`). `scripts/learn.py` = Lern-Timer, Daten in `~/.local/share/learn-timer/`; `scripts/sidebar.py` = Watcher fuer die Fensterliste (schreibt `$XDG_RUNTIME_DIR/sidebar.json`, startet Quickshell) + Super+q/b + Workspace-Raster Super[+Shift]+u + Bilder fuer das Vorschau-Raster Super+Tab (`snap()`) + Stand fuer waybar `custom/wins` (`bar`); `scripts/agents.py` = Agenten-Panel `agents` (Super+c) + Tafel `agents-board` (Super+g) + waybar `custom/agents` |
+| `eww/` | `~/.config/eww/` | Desktop-Widgets. HL2: `hud-left`/`hud-right` + Lern-Panel `learn` (Super+Z), Hilfe `info` (Super+Shift+Z), Trading-Journal `journal` (Super+Ctrl+j, Formular von `sway/scripts/journal.py`). `scripts/learn.py` = Lern-Timer, Daten in `~/.local/share/learn-timer/`; `scripts/sidebar.py` = Watcher fuer die Befehlsleiste (schreibt `$XDG_RUNTIME_DIR/sidebar.json`, startet Quickshell) + Super+q + Workspace hin/verschieben (`workspaces apply`) + Bilder fuer das Vorschau-Raster Super+Tab (`snap()`); `scripts/agents.py` = Agenten-Panel `agents` (Super+c) + Tafel `agents-board` (Super+g) + waybar `custom/agents` |
 | `swaync/` | `~/.config/swaync/` | Benachrichtigungen (Popups als Pickups unten rechts) + Panel hinter der Glocke |
 | `swaylock/` | `~/.config/swaylock/` | Fallback-Sperre |
 | `alacritty/` | `~/.config/alacritty/` | Terminal. `alacritty.toml` importiert die Farbdatei (`hl2.toml`, `nord.toml`), `lambda.txt` = Begruessung |
 | `cool-retro-term/` | `~/.config/cool-retro-term/` | Look der Konsole: `profile.json` (Farben, CRT-Effekte, Schrift), traegt `console.py` vor jedem Start ein |
-| `quickshell/` | `~/.config/quickshell/` | Fensterliste links (`shell.qml`): je Monitor eine animierte Leiste, liest `sidebar.json`. Dazu der Navigator Super+f (`Navigator.qml` + Decodierung `nav.js`, per `quickshell ipc` geoeffnet). Ausserdem das Ticket-Board Super+m (`Tickets.qml` + `TicketCard.qml`, `TicketDetail.qml`, gemeinsamer Knopf `Chip.qml`) und das Vorschau-Raster Super+Tab (`Overview.qml`). Binary `~/.local/bin/quickshell` selbst gebaut (siehe Stolperfallen) |
+| `quickshell/` | `~/.config/quickshell/` | `shell.qml` = Farben + Stand aus `sidebar.json`. Befehlsleiste unter der waybar (`CommandBar.qml`, je Monitor: Tabs links, Kommandozeile rechts, Super+f) mit Decodierung `nav.js` und Befehlen in `commands/` (`commands.json` + Skripte). Ausserdem das Ticket-Board Super+m (`Tickets.qml` + `TicketCard.qml`, `TicketDetail.qml`, gemeinsamer Knopf `Chip.qml`) und das Vorschau-Raster Super+Tab (`Overview.qml`). Binary `~/.local/bin/quickshell` selbst gebaut (siehe Stolperfallen) |
 | `wallpaper.jpg` | `~/Private/wallpaper.jpg` | von `output * bg` in der sway-Config benutzt |
 | `browser/chrome-hl2-theme/` | `~/.config/chrome-hl2-theme/` | entpacktes Chrome-Theme (in Chrome ueber "Entpackte Erweiterung laden") |
 | `browser/firefox/*.css` | `~/snap/firefox/common/.mozilla/firefox/h5d4ltr7.default/chrome/` | Firefox (Snap) userChrome/userContent |
@@ -103,18 +103,19 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v29` | wie v28, Workspace-Raster (Super+u / Super+Shift+u) als Quickshell-Overlay: live mit App-Icons je Feld, Eingabefeld je Bildschirm fuer die Nummer, Tab = Wechseln/Verschieben, Klick auf Icon springt zum Fenster; Super+j / Super+k = Bildschirm links / rechts; Obsidian-Vault jetzt `~/Private/obsidian-vault`. |
 | `HL2-v30` | wie v29, Ticket-Board statt Mission Control: Tickets als Markdown im Obsidian-Vault (`Tickets/<PROJEKT>/`), Board mit Backlog/ToDo/In Arbeit/Review/Fertig in Quickshell (Super+m), Prio, Labels, Detail-Popup, Drag & Drop, Loeschen in den Obsidian-Papierkorb, CLI `ticket` fuer Agenten; Vorschau-Raster (Super+Tab) als animiertes Quickshell-Overlay mit Filter. |
 | `HL2-v31`-`v33` | verworfener Versuch (Navigation, Fensterleiste unten, Fokus-Karte), nur lokal am Branch `backup/vor-ruecksetzung-20261115-111324`, nicht auf `master` |
-| `HL2-v34` | wie v30, Navigator (Super+f) statt Workspace-Raster und Ziel-Monitor: Bildschirm, Workspace und Fenster per Buchstabencode (`[m] [b+a/s/d] [w+a…ö] [Fenster]`), Kuerzel A/S/D statt U/I/O, Vollbild auf Super+Ctrl+f, Super+Kippen raus, Trainer `tools/nav-trainer.html`. **Aktueller Standard** fuer neue Themes |
+| `HL2-v34` | wie v30, Navigator (Super+f) statt Workspace-Raster und Ziel-Monitor: Bildschirm, Workspace und Fenster per Buchstabencode (`[m] [b+a/s/d] [w+a…ö] [Fenster]`), Kuerzel A/S/D statt U/I/O, Vollbild auf Super+Ctrl+f, Super+Kippen raus, Trainer `tools/nav-trainer.html`. |
+| `HL2-v35` | wie v34, Befehlsleiste unter der waybar statt Fensterliste links und Navigator-Overlay: Tabs des Workspaces mit Code links, Kommandozeile rechts (Super+f), Befehle `:all` (Baum mit Befehl je App) und `:clear`, neue Befehle per `commands/commands.json` + Skript; Super+b und `custom/wins` raus. **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v34` (Vorschau,
+Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v35` (Vorschau,
 Zwischenablage, Konsole, Pickup-Popups, Workspace-Nummern und Fensterzahl in waybar,
-Ticket-Board, Navigator). Alles in dieser Liste gilt fuer
+Ticket-Board, Navigator, Befehlsleiste). Alles in dieser Liste gilt fuer
 **jedes** neue Theme, nicht nur fuer HL2: es aendert nur den **Look**
-(Farben, Schrift, Formen), nicht Tasten, Workspace-Schema, Fensterliste oder
+(Farben, Schrift, Formen), nicht Tasten, Workspace-Schema, Befehlsleiste oder
 die Bausteine unten. Basis fuer ein neues Theme ist immer der neueste Standard-Tag.
 Wer davon abweicht, fragt vorher.
 
@@ -135,47 +136,71 @@ Wer davon abweicht, fragt vorher.
   wandern die Fenster nicht zurueck. Alte Namen mit `u`/`i`/`o` gelten dabei als
   fremd und werden so beim ersten Lauf auf `a`/`s`/`d` umbenannt.
 - **Tasten:** `Super+N` / `Super+Shift+N` = Workspace N des aktuellen Monitors
-  (hin / Fenster schieben). Andere Monitore ueber den **Navigator** (`Super+f`, unten).
+  (hin / Fenster schieben). Andere Monitore ueber die **Befehlsleiste** (`Super+f`, unten).
   `Super+j` / `Super+k` = Fokus auf den Bildschirm links / rechts (`focus output`,
   ohne Umlauf); Fokus innerhalb des Monitors per `Super+l/ö` und Pfeile.
-  `Super+q` / `Super+Ctrl+q` = naechstes / voriges Fenster der Liste links,
+  `Super+q` / `Super+Ctrl+q` = naechstes / voriges Fenster der Tabs,
   bleibt auf dem Monitor. Dasselbe per Mausrad kippen (ohne Taste, `button7` =
   rechts = naechstes, `button6` = links = voriges, `--whole-window`, nur `--input-device=$tiltmouse` = Funkmaus, sonst loest seitliches Touchpad-Wischen es aus).
-  Kippen mit Super ist nicht belegt. `Super+Ctrl+f` = Vollbild. `Super+b` = Liste an/aus. `Super+Shift+z` = Hilfe.
+  Kippen mit Super ist nicht belegt. `Super+Ctrl+f` = Vollbild. `Super+Shift+z` = Hilfe.
   `Super+Tab` = alle Fenster aller Monitore als Vorschau-Raster (Quickshell; Bild =
   letzter sichtbarer Stand, sway kann verdeckte Fenster nicht abfotografieren).
   `Super+m` = Ticket-Board. `Super+Print` = OCR: Bereich aufziehen,
   erkannter Text (tesseract, `deu+eng`) landet in der Zwischenablage, Popup bestaetigt.
   `Super+Ctrl+m` = Ticket schnell eintragen (nur Eingabezeile `ask.sh`: `PROJ: Titel #label !prio`, Board bleibt zu).
-- **Navigator** (`Super+f`, Quickshell `quickshell/Navigator.qml`, Decodierung
-  `quickshell/nav.js`, `quickshell ipc call nav toggle|open|close`, zum Testen
-  `type TEXT`, `press NAME`, `info`): Overlay auf dem fokussierten Monitor, oben
-  ein Eingabefeld, darunter eine Zeile je Bildschirm (Kopf `A/S/D` + Anschluss) mit
-  zehn Feldern (Taste, Nummer, Bereich, App-Icons, ● = sichtbar), darunter die
-  Fenster des Ziel-Workspaces mit Code, App und Titel. Eingabe
-  `[m] [b + a|s|d] [w + a…ö] [Fenstercode]`:
-  `b` + Buchstabe = Bildschirm (fehlt = der aktuelle, andere Zeilen gedimmt),
+- **Befehlsleiste** (Quickshell `quickshell/CommandBar.qml`, Decodierung
+  `quickshell/nav.js`, Befehle `quickshell/commands/`; `quickshell ipc call bar
+  toggle|open|close`, zum Testen `type TEXT`, `press NAME`, `info`): je Monitor eine
+  Leiste direkt unter der waybar, volle Breite, 30 px, immer sichtbar, reserviert
+  Platz (Ebene `bottom` + `exclusiveZone`: sway setzt die waybar auf `top` zuerst).
+  **Links die Tabs** = Fenster des sichtbaren Workspaces (`wins` aus `sidebar.json`,
+  Baum-Reihenfolge) mit Code, Icon, App und Titel; aktives Fenster (`active`, auch
+  ohne Tastaturfokus) mit federnd gleitender Markierung, Eintraege ploppen rein/raus.
+  Klick fokussiert, Mittelklick schliesst, Mausrad sortiert (`sidebar.py nudge`),
+  Hover = voller Titel als Popup (deckend, ohne Ausblenden: halbtransparent gab
+  Geisterbilder). Breite je Tab 120-260 px, sonst die ersten + `+N`.
+  **Rechts die Kommandozeile**: `Super+f` (oder Klick) oeffnet ein Overlay mit
+  exklusivem Tastaturfokus genau ueber dem Eingabefeld (eine Leiste auf `bottom`
+  bekommt unter sway keinen Fokus; die Leiste selbst wechselt die Ebene nie, sonst
+  rutscht sie ueber die waybar). Esc, Klick daneben oder ein ausgefuehrter Befehl
+  geben den Fokus zurueck. Eingabe `[m] [b + a|s|d] [w + a…ö] [Fenstercode]`:
+  `b` + Buchstabe = Bildschirm (fehlt = der aktuelle),
   `w` + `a s d f g h j k l ö` = Workspace 1-10 (fehlt = der sichtbare), der Wechsel
-  passiert **sofort**, das Panel bleibt fuer den Fenstercode offen. Fenstercodes
+  passiert **sofort**, die Eingabe bleibt fuer den Fenstercode offen. Fenstercodes
   `a`…`ö` = 1-10, `aa` = 11, `as` = 12 … `aö` = 20, `sa` = 21 (gleich, auch wenn
   Fenster dazukommen); ist ein Code zugleich Anfang eines laengeren (`a` bei 11+
   Fenstern), wartet er ohne Timeout: Enter = Fenster 1, `aa` = Fenster 11.
-  Ein eindeutiger Code fokussiert sofort und schliesst. `m` vorne = das beim
-  Oeffnen aktive Fenster verschieben: nach dem Workspace ausgefuehrt, Fokus bleibt,
-  Panel zu; `m b<x>` + Enter = auf den sichtbaren Workspace von `<x>`.
-  `b<x>` + Enter = Fokus auf diesen Bildschirm. Backspace = eine Stufe zurueck,
-  Esc oder Klick daneben = zu (ein schon gemachter Wechsel bleibt), falsche Taste =
-  Eingabefeld wackelt rot. Beispiele: `bawsaa` = A2, Fenster 11; `wf` = Workspace 4
-  hier; `d` = Fenster 3 hier; `mbawd` = aktives Fenster nach A4. Maus: Klick aufs
-  Feld = hin (mit `m`: verschieben), Klick auf ein Fenster = dorthin.
+  Ein eindeutiger Code fokussiert sofort. `m` vorne = das beim Oeffnen aktive
+  Fenster verschieben: nach dem Workspace ausgefuehrt, Fokus bleibt;
+  `m b<x>` + Enter = auf den sichtbaren Workspace von `<x>`. `b<x>` + Enter = Fokus
+  auf diesen Bildschirm. Backspace = eine Stufe zurueck, falsche Taste = Eingabefeld
+  wackelt rot. Beispiele: `bawsaa` = A2, Fenster 11; `wf` = Workspace 4 hier;
+  `d` = Fenster 3 hier; `mbawd` = aktives Fenster nach A4. Beim Tippen leuchten die
+  passenden Tabs; geht es um einen anderen Bildschirm/Workspace, klappt unter dem
+  Eingabefeld eine Liste auf (nach `b` die Bildschirme, nach `w` die Workspaces mit
+  Icons, dann die Fenster dort mit Code; Zeilen anklickbar).
+  **Befehle** `:wort arg …` mit Enter (nur am Leerzeichen getrennt); `:` allein
+  listet alle mit Hilfe. Eingebaut: `:all` = Baum Bildschirm -> Workspace -> App
+  mit dem kuerzesten Befehl je App (`nav.js` `route()`), direkt daraus tippen,
+  Enter/Esc klappt zu; `:clear` = alle Fenster im fokussierten Workspace schliessen
+  (sway `kill`, Apps mit ungespeicherten Aenderungen fragen selbst).
+  **Neuer Befehl** = Eintrag in `commands/commands.json` + Skript daneben, keine
+  QML-Aenderung: `{"name": {"help": "...", "exec": ["skript", ...]}}`, Skript
+  ausfuehrbar, beliebige Sprache, Woerter nach `:name` als Argumente (nie durch eine
+  Shell-Zeile), stdout optional `{"notify": "Text"}` = Meldung im Eingabefeld (4 s),
+  Exit != 0 = rote Meldung (letzte stderr-Zeile). `{"builtin": "tree"}` nur fuer
+  Befehle, die die Leiste selbst kann; wenige halten. Codes bleiben feste
+  Grammatik in `nav.js` (Rueckmeldung je Taste, kein Prozessstart).
   Daten = `"grid"` aus `sidebar.json`, beim Oeffnen eingefroren (Codes stabil,
   geschlossene Fenster tun nichts); aktives Fenster = `focused` darin.
   Workspace hin/verschieben ueber `sidebar.py workspaces apply go|move OUTPUT N CON`
   (legt den Workspace auf dem richtigen Monitor an), Fenster und Bildschirm per
   `I3.dispatch`. Test: `node tests/nav.cjs`. Ueben: `tools/nav-trainer.html` lokal
   im Browser oeffnen (gleiche `nav.js`, simulierter Desktop, Runde = 20 Aufgaben,
-  Bestwert im localStorage). Ersetzt seit HL2-v34 das Workspace-Raster (Super+u),
-  den Ziel-Monitor (Super+Esc, Super+Ctrl+N, waybar `custom/target`) und Super+Kippen.
+  Bestwert im localStorage). Seit HL2-v34 statt Workspace-Raster (Super+u),
+  Ziel-Monitor (Super+Esc, Super+Ctrl+N) und Super+Kippen; seit HL2-v35 als Leiste
+  statt Overlay (Navigator) und statt der Fensterliste links (samt Super+b und
+  waybar `custom/wins`).
 - **Trading-Journal** (`Super+Ctrl+j`, `sway/scripts/journal.py`, eww `journal`):
   Screenshot des fokussierten Monitors (per `crop_chart()` auf die helle
   Chart-Flaeche samt Achsen zugeschnitten, ImageMagick; ohne helle Flaeche bleibt
@@ -235,7 +260,7 @@ Wer davon abweicht, fragt vorher.
 - **Vorschau-Raster** (`Super+Tab`, Quickshell `quickshell/Overview.qml`,
   `quickshell ipc call overview toggle|open|close`, zum Testen `press NAME`,
   `type TEXT` (= Filter), `info`): Overlay auf dem fokussierten Monitor,
-  alle Fenster aller Monitore als Kacheln (Reihenfolge wie der Navigator,
+  alle Fenster aller Monitore als Kacheln (Reihenfolge wie der Baum `:all`,
   Daten = `"grid"` aus `sidebar.json`), Spaltenzahl so, dass die Kacheln am
   groessten werden. Kachel = Bild + Kennzeichen `<Kuerzel> <Bereich>` (● =
   Workspace gerade sichtbar) + App-Icon, Name, Titel. Startet auf dem
@@ -312,35 +337,28 @@ Wer davon abweicht, fragt vorher.
 - **Fenster:** `workspace_layout tabbed`, Tab-Zeile per Schrift 1 + leerem
   `title_format` + Titelbar-Farben = Hintergrund auf ~3px geschrumpft (ganz weg
   geht in Sway nicht). Kein `Super+s` (stacking). Rahmen nur ueber `child_border`.
-- **Fensterliste links** (Quickshell `quickshell/shell.qml`, 60px, volle Hoehe, reserviert Platz, Kaesten wie die waybar-Workspaces): Icon + App-Name je Fenster des
-  sichtbaren Workspaces, erst ab 2 Fenstern, Klick fokussiert, Mittelklick
-  schliesst, Mausrad ueber einem Eintrag schiebt das Fenster hoch/runter (`sidebar.py nudge`, swap mit dem Nachbarn), Hover = Fenstertitel als Popout (deckend, ohne Ausblenden: halbtransparent gab Geisterbilder). Animiert: Leiste faehrt ein, Eintraege ploppen rein/raus, leuchtende Markierung gleitet federnd zum zuletzt fokussierten Fenster des Workspaces (`active` in `sidebar.json`, auch ohne Tastaturfokus). Ebene `bottom`, damit waybar (Ebene top) immer volle Breite hat. Daten: `sidebar.py watch` schreibt `{"wins", "show"}` atomar, Quickshell liest per `FileView` mit `watchChanges`; der Watcher startet Quickshell (vorher `pkill -x quickshell`). Fehler: `quickshell log`.
 - **Hilfe-Panel** (eww `info`, `?` neben AMMO): Matrix Monitor x Nummer +
   alle Shortcuts. **Statisch**: bei neuen Binds oder Assigns mitziehen.
 - **waybar oben:** Badge A/S/D (`custom/monitor`) + je Workspace `<Taste> <Icon>`
   (`1` … `9`, `0` fuer 10, wie Super+N; steht in `format-icons`). Der sichtbare
   Workspace jedes Monitors ist gleich hervorgehoben wie der fokussierte
   (`button.visible, button.focused` in `style.css`), damit jede Bar zeigt, was
-  auf ihrem Monitor gerade offen ist. Daneben `custom/wins` (`sidebar.py bar`):
-  Zahl der Fenster im sichtbaren Workspace + Symbol der Fensterliste
-  (Spalten = offen, gedimmt = erst ab 2 Fenstern, Vollbild = per Super+b aus),
-  Klick schaltet die Liste. Der Watcher schreibt den Stand nach
-  `$XDG_RUNTIME_DIR/eww-sidebar.bar` und weckt waybar per `SIGRTMIN+9`.
+  auf ihrem Monitor gerade offen ist. Die Fenster selbst zeigt die Befehlsleiste
+  darunter.
   Seit HL2-v24 bleiben Workspace-Breiten beim Wechsel konstant; kurze Farb-
   uebergaenge geben Rueckmeldung. Die IPv6-Anzeige ist aus der Leiste entfernt.
   `sway/scratchpad` (≡ N) zaehlt die Fenster im Scratchpad, also die Konsole.
 
 Ein neues Theme uebernimmt `ws.sh`, `sidebar.py`, `agents.py`, `clip.sh`, `market.py`, `journal.py`, `note.py`, `park.py`, `ticket.py`, `ask.sh`, die
-`format-icons` der waybar (Nummer vor dem Icon) und die Module `custom/wins`, `custom/market` und `custom/agents`, die
+`format-icons` der waybar (Nummer vor dem Icon) und die Module `custom/market` und `custom/agents`, die
 Workspace-/Bind-Bloecke, den Mode `[ AGENTS ]` und die Konsolen-Regel (`console.py`, `for_window` auf
 cool-retro-term) der sway-Config, die
-Fensterliste `quickshell/shell.qml`, den Navigator (`Navigator.qml`, `nav.js`, `tools/nav-trainer.html`), die eww-Fenster `info`/`agents`/`agents-board`/`journal`, das Ticket-Board (`Tickets.qml`/`TicketCard.qml`/`TicketDetail.qml`/`Chip.qml`, `ticket.py`), das Vorschau-Raster (`Overview.qml`) und Lage/Timeout der swaync-Popups
-(`swaync/config.json`) und passt nur Farben und Schrift an: `eww.scss`, die Farb-Properties oben in `quickshell/shell.qml` (gelten auch fuer Navigator, Ticket-Board und Vorschau-Raster; `root` hat `hud bg font barBg edge box fill hover` und `warn` = Rot wie waybar `@warn`),
+Befehlsleiste (`CommandBar.qml`, `nav.js`, `commands/`, `tools/nav-trainer.html`), die eww-Fenster `info`/`agents`/`agents-board`/`journal`, das Ticket-Board (`Tickets.qml`/`TicketCard.qml`/`TicketDetail.qml`/`Chip.qml`, `ticket.py`), das Vorschau-Raster (`Overview.qml`) und Lage/Timeout der swaync-Popups
+(`swaync/config.json`) und passt nur Farben und Schrift an: `eww.scss`, die Farb-Properties oben in `quickshell/shell.qml` (gelten auch fuer Befehlsleiste, Ticket-Board und Vorschau-Raster; `root` hat `hud bg font barBg edge box fill hover` und `warn` = Rot wie waybar `@warn`),
 waybar `style.css`, den Popup-Block in `swaync/style.css` und die
 `-theme-str`-Teile in `clip.sh` und `ask.sh` (die rofi-Theme-Datei liefert den Rest); in
 `eww.scss` auch die Bloecke `.ms-*` (nur noch vom Journal-Panel benutzt), `.jr-*` (Journal) und `.ag-*` (Agenten). In `style.css` muss `button.visible` dieselbe
-Hervorhebung bekommen wie `button.focused`; `#custom-wins` mit den Klassen
-`open`/`idle`/`off`, `#custom-market` (Klassen `active`/`idle`/`closed`) und `#custom-agents` (Klassen `busy`/`idle`/`new`/`none`) umfaerben; `cool-retro-term/profile.json` mit den Farben
+Hervorhebung bekommen wie `button.focused`; `#custom-market` (Klassen `active`/`idle`/`closed`) und `#custom-agents` (Klassen `busy`/`idle`/`new`/`none`) umfaerben; `cool-retro-term/profile.json` mit den Farben
 des Themes neu einstellen (`fontColor`, `backgroundColor`, Effekte).
 
 **Allgemeine Aenderungen** (Bedienung, Bausteine, Verhalten, nicht nur Farben)

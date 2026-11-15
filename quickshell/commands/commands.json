@@ -1,0 +1,4 @@
+{
+  "all":   { "help": "Baum aller Apps mit ihrem Befehl", "builtin": "tree" },
+  "clear": { "help": "alle Apps im fokussierten Workspace schliessen", "exec": ["clear.sh"] }
+}

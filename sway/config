@@ -6,7 +6,7 @@
 # Session "i3" waehlen.
 
 # Diese Schrift traegt nur die Tab-Titel im tabbed/stacked-Layout. Die Titel
-# stehen links in der Fensterliste (Quickshell) und oben in waybar (sway/window), die
+# stehen in der Befehlsleiste unter der waybar (Quickshell, Tabs) und in waybar (sway/window), die
 # Tab-Zeile ist deshalb auf einen Streifen geschrumpft: winzige Schrift, leerer
 # Titel. Sway kann sie bei tabbed nicht ganz abschalten, ~3px bleiben.
 font pango:Iosevka Nerd Font 1
@@ -189,7 +189,7 @@ bindsym $mod+Left   focus left
 bindsym $mod+Down   focus down
 bindsym $mod+Up     focus up
 bindsym $mod+Right  focus right
-# q laeuft im Kreis durch die Fensterliste links (sichtbarer Workspace dieses
+# q laeuft im Kreis durch die Tabs der Befehlsleiste (sichtbarer Workspace dieses
 # Monitors). Nicht `focus next`: das springt am Ende auf den Nachbarmonitor.
 bindsym $mod+q      exec ~/.config/eww/scripts/sidebar.py next
 bindsym $mod+Ctrl+q exec ~/.config/eww/scripts/sidebar.py prev
@@ -202,9 +202,6 @@ bindsym $mod+Ctrl+q exec ~/.config/eww/scripts/sidebar.py prev
 set $tiltmouse 12994:18:HS6209_2.4G_Wireless_Receiver_Mouse
 bindsym --whole-window --input-device=$tiltmouse button7 exec ~/.config/eww/scripts/sidebar.py next
 bindsym --whole-window --input-device=$tiltmouse button6 exec ~/.config/eww/scripts/sidebar.py prev
-# Fensterliste links an/aus. Nicht Super+Shift_R: das faellt bei jedem
-# Super+Shift+N mit.
-bindsym $mod+b      exec ~/.config/eww/scripts/sidebar.py toggle
 
 bindsym $mod+Shift+$left  move left
 bindsym $mod+Shift+$down  move down
@@ -222,7 +219,7 @@ bindsym $mod+Ctrl+f     fullscreen toggle
 # anderen. Die Tab-Zeile selbst ist unsichtbar (siehe font/title_format oben).
 workspace_layout tabbed
 # kein $mod+s (stacking): das zeichnet eine Titelzeile je Fenster, die
-# Fensterliste links ersetzt es
+# Tabs der Befehlsleiste ersetzen es
 bindsym $mod+w          layout tabbed
 bindsym $mod+e          layout toggle split
 bindsym $mod+Shift+space floating toggle
@@ -347,8 +344,9 @@ bindsym $mod+x       exec --no-startup-id keepassxc
 bindsym $mod+Shift+p exec --no-startup-id alacritty -e calcurse
 bindsym $mod+Shift+v exec --no-startup-id ~/.config/sway/scripts/clip.sh
 bindsym $mod+Tab     exec --no-startup-id ~/.local/bin/quickshell ipc call overview toggle
-# Navigator: [m] [b+a/s/d] [w+a..oe] [Fenstercode], siehe quickshell/Navigator.qml
-bindsym $mod+f       exec --no-startup-id ~/.local/bin/quickshell ipc call nav toggle
+# Befehlsleiste: Fokus in die Kommandozeile, [m] [b+a/s/d] [w+a..oe] [Fenster] oder :befehl,
+# siehe quickshell/CommandBar.qml
+bindsym $mod+f       exec --no-startup-id ~/.local/bin/quickshell ipc call bar toggle
 # Notification-Center auch per Tastatur, nicht nur ueber die Glocke
 bindsym $mod+n       exec --no-startup-id swaync-client -t -sw
 bindsym $mod+Shift+n exec --no-startup-id swaync-client -d -sw
@@ -407,8 +405,8 @@ mode "[ RESIZE ]" {
 # ~/.config/i3status/config loeschen.
 
 # eww: HL2-HUD (HEALTH/SUIT unten links, AMMO = Lern-Timer unten rechts) auf dem Laptop (eDP-1), Super+Z klappt das Lern-Panel auf/zu
-# + Fensterliste links (Quickshell), eine pro Monitor. sidebar.py watch startet eww + quickshell neu,
-# oeffnet das HUD und haelt die Sidebars aktuell (auch bei Hotplug). exec_always:
+# + Befehlsleiste (Quickshell), eine pro Monitor. sidebar.py watch startet eww + quickshell neu,
+# oeffnet das HUD und haelt die Tabs aktuell (auch bei Hotplug). exec_always:
 # jeder Reload ersetzt den alten Watcher.
 exec_always --no-startup-id ~/.config/eww/scripts/sidebar.py watch
 bindsym $mod+z exec --no-startup-id eww open --toggle learn
