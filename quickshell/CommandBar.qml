@@ -8,7 +8,7 @@
 // deshalb oeffnet Super+f (`quickshell ipc call bar toggle`) ein Overlay mit
 // exklusivem Fokus, das genau ueber dem Eingabefeld liegt, samt Liste darunter.
 // Eingabe = nav.js: Codes wie `bawss`, `wf`, `d`, `mbawd` (je Taste), Befehle
-// `#wort arg …` mit Enter aus commands/commands.json:
+// `#wort arg …` mit Enter aus commands/commands.json (Tab ergaenzt den Namen):
 //   {"name": {"help": "...", "exec": ["skript", ...]}}  exec[0] = Datei in
 //     commands/, "~/…" oder absoluter Pfad; Woerter nach #name als Argumente
 //     (nie durch eine Shell). Umgebung BAR_CONTEXT = JSON des eingefrorenen
@@ -39,6 +39,8 @@ Scope {
     property bool tree: false                // #all offen
     property string output: ""
     property string typed: ""
+    property var tabHits: []                 // Tab blaettert gerade durch diese Befehle
+    property int tabIdx: -1
     property var snap: []                    // "grid" beim Oeffnen
     property int con: 0                      // aktives Fenster beim Oeffnen (fuer m)
     property var msg: ({ text: "", warn: false, output: "" })
@@ -82,8 +84,8 @@ Scope {
         }
         if (r.cmd !== null) {
             const p = Nav.parse(r.cmd)
-            return Object.keys(cmds).filter(n => n.indexOf(p.name) === 0)
-                         .map(n => ({ key: "#" + n, label: cmds[n].help || "", hit: n === p.name, act: { cmd: n } }))
+            const names = tabHits.length ? tabHits : Object.keys(cmds).filter(n => n.indexOf(p.name) === 0).sort()
+            return names.map(n => ({ key: "#" + n, label: cmds[n].help || "", hit: n === p.name, act: { cmd: n } }))
         }
         if (tree) {
             const out = []
@@ -182,9 +184,25 @@ Scope {
         else if (act.output) { I3.dispatch(`focus output ${JSON.stringify(act.output)}`); hide() }
         else if (act.cmd) { typed = "#" + act.cmd; keys.forceActiveFocus() }
     }
+    // Tab / Shift+Tab: Befehlsnamen ergaenzen (nav.js complete), ergaenzt das
+    // nichts mehr, durch die Treffer blaettern. Nur solange der Name getippt wird.
+    function tab(dir) {
+        if (r.cmd === null || /\s/.test(r.cmd)) return
+        if (!tabHits.length) {
+            const c = Nav.complete(r.cmd, Object.keys(cmds))
+            if (!c) return reject()
+            if (c.text !== r.cmd) { typed = "#" + c.text; return }
+            tabHits = c.hits; tabIdx = dir > 0 ? -1 : 0
+        }
+        tabIdx = (tabIdx + dir + tabHits.length) % tabHits.length
+        typed = "#" + tabHits[tabIdx]
+    }
     function handle(name, text) {
         if (!open) return false
-        if (name === "Escape") hide()
+        if (name !== "Tab" && name !== "Backtab") { tabHits = []; tabIdx = -1 }
+        if (name === "Tab") tab(1)
+        else if (name === "Backtab") tab(-1)
+        else if (name === "Escape") hide()
         else if (name === "Return") enter()
         else if (name === "Backspace") typed = Nav.back(typed, ctx)
         else if (text && text.length === 1) {
@@ -451,7 +469,8 @@ Scope {
             focus: true
             Keys.onPressed: ev => {
                 const names = { [Qt.Key_Escape]: "Escape", [Qt.Key_Return]: "Return",
-                                [Qt.Key_Enter]: "Return", [Qt.Key_Backspace]: "Backspace" }
+                                [Qt.Key_Enter]: "Return", [Qt.Key_Backspace]: "Backspace",
+                                [Qt.Key_Tab]: "Tab", [Qt.Key_Backtab]: "Backtab" }
                 ev.accepted = cb.handle(names[ev.key] || "", ev.text)
             }
         }

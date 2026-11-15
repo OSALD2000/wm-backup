@@ -57,4 +57,11 @@ assert.strictEqual(nav.route("a", 2, 10, 11, "d", 2), "baaa")
 assert.strictEqual(nav.route("a", 2, 10, 11, "d", 5), "bawsaa")
 assert.strictEqual(nav.route("d", 3, 0, 12, "d", 3), "a ⏎")
 assert.strictEqual(nav.route("d", 3, 2, 2, "d", 1), "wdd")
+// Tab-Ergaenzung der Befehlsnamen
+const names = ["all", "split", "park", "unpark", "close", "clear", "note"]
+assert.strictEqual(nav.complete("sp", names).text, "split ")
+assert.strictEqual(nav.complete("c", names).text, "cl")       // close/clear: gemeinsamer Anfang
+assert.strictEqual(JSON.stringify(nav.complete("cl", names).hits), JSON.stringify(["clear", "close"]))
+assert.strictEqual(nav.complete("", names).hits.length, 7)
+assert.strictEqual(nav.complete("x", names), null)
 console.log("ok")

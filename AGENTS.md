@@ -106,14 +106,15 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v34` | wie v30, Navigator (Super+f) statt Workspace-Raster und Ziel-Monitor: Bildschirm, Workspace und Fenster per Buchstabencode (`[m] [b+a/s/d] [w+a…ö] [Fenster]`), Kuerzel A/S/D statt U/I/O, Vollbild auf Super+Ctrl+f, Super+Kippen raus, Trainer `tools/nav-trainer.html`. |
 | `HL2-v35` | wie v34, Befehlsleiste unter der waybar statt Fensterliste links und Navigator-Overlay: Tabs des Workspaces mit Code links, Kommandozeile rechts (Super+f), Befehle `:all` (Baum mit Befehl je App) und `:clear`, neue Befehle per `commands/commands.json` + Skript; Super+b und `custom/wins` raus. |
 | `HL2-v36` | wie v35, Befehle mit `#` statt `:` (`#all`, `#clear`; `#` ohne Shift). |
-| `HL2-v37` | wie v36, mehr Befehle: `#split` (alle / `a,s` als geteilter Tab / `> ziel`), `#reset`, `#close`, `#only`, `#full`, `#back`, `#open`, `#park`/`#unpark`, `#note`, `#ticket`; geteilte Tabs unterstrichen; Befehls-Skripte bekommen `BAR_CONTEXT`. **Aktueller Standard** fuer neue Themes |
+| `HL2-v37` | wie v36, mehr Befehle: `#split` (alle / `a,s` als geteilter Tab / `> ziel`), `#reset`, `#close`, `#only`, `#full`, `#back`, `#open`, `#park`/`#unpark`, `#note`, `#ticket`; geteilte Tabs unterstrichen; Befehls-Skripte bekommen `BAR_CONTEXT`. |
+| `HL2-v38` | wie v37, Tab / Shift+Tab ergaenzt Befehlsnamen in der Befehlsleiste. **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v37` (Vorschau,
+Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v38` (Vorschau,
 Zwischenablage, Konsole, Pickup-Popups, Workspace-Nummern und Fensterzahl in waybar,
 Ticket-Board, Navigator, Befehlsleiste). Alles in dieser Liste gilt fuer
 **jedes** neue Theme, nicht nur fuer HL2: es aendert nur den **Look**
@@ -183,7 +184,10 @@ Wer davon abweicht, fragt vorher.
   Icons, dann die Fenster dort mit Code; Zeilen anklickbar).
   **Befehle** `#wort arg …` mit Enter (nur am Leerzeichen getrennt, `#` ohne Shift auf
   deutscher Tastatur; bis HL2-v35 `:`); `#` allein
-  listet alle mit Hilfe. Codes in Befehlen = Codes der Tabs (Liste mit Komma),
+  listet alle mit Hilfe. **Tab** ergaenzt den Befehlsnamen (`nav.js` `complete()`):
+  ein Treffer = ganzer Name + Leerzeichen, mehrere = gemeinsamer Anfang, danach
+  blaettern Tab / Shift+Tab durch die Treffer (Zeile leuchtet), kein Treffer =
+  rot wackeln; Argumente werden (noch) nicht ergaenzt. Codes in Befehlen = Codes der Tabs (Liste mit Komma),
   Ziel mit `>` + Grammatik ohne Fenstercode (`bawj` = A7, `wf` = Workspace 4 hier):
   `#all` = Baum Bildschirm -> Workspace -> App mit dem kuerzesten Befehl je App
   (`nav.js` `route()`), direkt daraus tippen, Enter/Esc klappt zu.

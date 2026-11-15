@@ -105,3 +105,15 @@ function route(s, w, i, n, here, visible) {
     for (var k = 0; k < n; k++) if (k !== i && code(k).indexOf(c) === 0) more = true
     return (s === here ? "" : "b" + s) + (w === visible ? "" : "w" + KEYS[w - 1]) + c + (more ? " ⏎" : "")
 }
+
+// Tab-Ergaenzung fuer Befehlsnamen: prefix (ohne "#") -> { text, hits } oder null
+// (kein Treffer). Ein Treffer = ganzer Name + " ", mehrere = gemeinsamer Anfang;
+// ergaenzt der nichts mehr, blaettert die Leiste per Tab durch hits.
+function complete(prefix, names) {
+    var hits = names.filter(function (n) { return n.indexOf(prefix) === 0 }).sort()
+    if (!hits.length) return null
+    if (hits.length === 1) return { text: hits[0] + " ", hits: hits }
+    var p = hits[0]
+    hits.forEach(function (h) { while (h.indexOf(p) !== 0) p = p.slice(0, -1) })
+    return { text: p, hits: hits }
+}
