@@ -9,7 +9,7 @@ Gibt es die Notiz schon, wird sie nur geoeffnet.
 Vorlage:  Templates/Schnellnotiz.md im Vault, beim ersten Aufruf angelegt und
 danach in Obsidian frei aenderbar. Platzhalter wie beim Obsidian-Plugin
 "Vorlagen": {{title}} {{date}} {{time}}, dazu {{tags}}.
-Aufruf: note.py | note.py selftest
+Aufruf: note.py [TEXT] | note.py selftest   (TEXT = #note der Befehlsleiste, sonst ask.sh)
 """
 import os
 import re
@@ -61,10 +61,13 @@ def render(tpl, title, tags, now):
                .replace("{{time}}", f"{now:%H:%M}").replace("{{tags}}", "[" + ", ".join(tags) + "]"))
 
 
-def main():
-    ask = subprocess.run([os.path.expanduser("~/.config/sway/scripts/ask.sh"), "NEUE NOTIZ"],
-                         capture_output=True, text=True)
-    p = parse(ask.stdout.strip()) if ask.returncode == 0 else None
+def main(text=None):
+    """text = Name wie in ask.sh (#note der Befehlsleiste), sonst fragen."""
+    if text is None:
+        ask = subprocess.run([os.path.expanduser("~/.config/sway/scripts/ask.sh"), "NEUE NOTIZ"],
+                             capture_output=True, text=True)
+        text = ask.stdout.strip() if ask.returncode == 0 else ""
+    p = parse(text)
     if not p:
         return
     rel, title, tags = p
@@ -99,4 +102,4 @@ def selftest():
 
 
 if __name__ == "__main__":
-    selftest() if sys.argv[1:] == ["selftest"] else main()
+    selftest() if sys.argv[1:] == ["selftest"] else main(" ".join(sys.argv[1:]) or None)

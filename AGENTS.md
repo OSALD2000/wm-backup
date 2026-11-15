@@ -105,14 +105,15 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v31`-`v33` | verworfener Versuch (Navigation, Fensterleiste unten, Fokus-Karte), nur lokal am Branch `backup/vor-ruecksetzung-20261115-111324`, nicht auf `master` |
 | `HL2-v34` | wie v30, Navigator (Super+f) statt Workspace-Raster und Ziel-Monitor: Bildschirm, Workspace und Fenster per Buchstabencode (`[m] [b+a/s/d] [w+a…ö] [Fenster]`), Kuerzel A/S/D statt U/I/O, Vollbild auf Super+Ctrl+f, Super+Kippen raus, Trainer `tools/nav-trainer.html`. |
 | `HL2-v35` | wie v34, Befehlsleiste unter der waybar statt Fensterliste links und Navigator-Overlay: Tabs des Workspaces mit Code links, Kommandozeile rechts (Super+f), Befehle `:all` (Baum mit Befehl je App) und `:clear`, neue Befehle per `commands/commands.json` + Skript; Super+b und `custom/wins` raus. |
-| `HL2-v36` | wie v35, Befehle mit `#` statt `:` (`#all`, `#clear`; `#` ohne Shift). **Aktueller Standard** fuer neue Themes |
+| `HL2-v36` | wie v35, Befehle mit `#` statt `:` (`#all`, `#clear`; `#` ohne Shift). |
+| `HL2-v37` | wie v36, mehr Befehle: `#split` (alle / `a,s` als geteilter Tab / `> ziel`), `#reset`, `#close`, `#only`, `#full`, `#back`, `#open`, `#park`/`#unpark`, `#note`, `#ticket`; geteilte Tabs unterstrichen; Befehls-Skripte bekommen `BAR_CONTEXT`. **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v36` (Vorschau,
+Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v37` (Vorschau,
 Zwischenablage, Konsole, Pickup-Popups, Workspace-Nummern und Fensterzahl in waybar,
 Ticket-Board, Navigator, Befehlsleiste). Alles in dieser Liste gilt fuer
 **jedes** neue Theme, nicht nur fuer HL2: es aendert nur den **Look**
@@ -182,17 +183,38 @@ Wer davon abweicht, fragt vorher.
   Icons, dann die Fenster dort mit Code; Zeilen anklickbar).
   **Befehle** `#wort arg …` mit Enter (nur am Leerzeichen getrennt, `#` ohne Shift auf
   deutscher Tastatur; bis HL2-v35 `:`); `#` allein
-  listet alle mit Hilfe. Eingebaut: `#all` = Baum Bildschirm -> Workspace -> App
-  mit dem kuerzesten Befehl je App (`nav.js` `route()`), direkt daraus tippen,
-  Enter/Esc klappt zu; `#clear` = alle Fenster im fokussierten Workspace schliessen
-  (sway `kill`, Apps mit ungespeicherten Aenderungen fragen selbst).
-  **Neuer Befehl** = Eintrag in `commands/commands.json` + Skript daneben, keine
-  QML-Aenderung: `{"name": {"help": "...", "exec": ["skript", ...]}}`, Skript
-  ausfuehrbar, beliebige Sprache, Woerter nach `#name` als Argumente (nie durch eine
-  Shell-Zeile), stdout optional `{"notify": "Text"}` = Meldung im Eingabefeld (4 s),
-  Exit != 0 = rote Meldung (letzte stderr-Zeile). `{"builtin": "tree"}` nur fuer
-  Befehle, die die Leiste selbst kann; wenige halten. Codes bleiben feste
-  Grammatik in `nav.js` (Rueckmeldung je Taste, kein Prozessstart).
+  listet alle mit Hilfe. Codes in Befehlen = Codes der Tabs (Liste mit Komma),
+  Ziel mit `>` + Grammatik ohne Fenstercode (`bawj` = A7, `wf` = Workspace 4 hier):
+  `#all` = Baum Bildschirm -> Workspace -> App mit dem kuerzesten Befehl je App
+  (`nav.js` `route()`), direkt daraus tippen, Enter/Esc klappt zu.
+  `#split` = alle Fenster nebeneinander als ein geteilter Tab (ab 4 zwei Reihen),
+  `#split a,s` = nur diese als geteilter Tab, der Rest bleibt Vollbild-Tabs,
+  `#split a,s > bawj` = dasselbe dort (Fokus geht mit; Paar rutscht ans Ende der
+  Tabs), `#reset` = alle Teilungen aufloesen, wieder Tabs. Geteilte Tabs haben in
+  der Leiste eine gemeinsame Unterstreichung (`group` in `sidebar.json`).
+  `#close a,s` / `#only a` / `#clear` = diese / alle ausser / alle Fenster im
+  Workspace schliessen (sway `kill`, Apps mit ungespeicherten Aenderungen fragen
+  selbst). `#full [a]` = Vollbild an/aus. `#back` = voriger Workspace
+  (`back_and_forth`, auch ueber Bildschirme). `#open name [> ziel]` = App aus den
+  Desktop-Eintraegen starten (Kennung oder Name, genau vor Anfang vor enthalten,
+  `gtk-launch`), mit Ziel dort. `#park name` / `#unpark [name]` = `park.py`,
+  `#note Titel #tag` = `note.py`, `#ticket PROJ: Titel #label !prio` = Ticket in
+  ToDo (`ticket.py quick todo`).
+  **Neuer Befehl** = Eintrag in `commands/commands.json` + Skript, keine
+  QML-Aenderung: `{"name": {"help": "...", "exec": ["skript", ...]}}`; `exec[0]` =
+  Datei in `commands/`, `~/…` oder absoluter Pfad, ausfuehrbar, beliebige Sprache
+  (aber nicht node: das gibt es nur ueber nvm, nicht im PATH von sway). Woerter
+  nach `#name` als Argumente (nie durch eine Shell-Zeile). Umgebung `BAR_CONTEXT`
+  = JSON des eingefrorenen Stands (`output`, `here`, `con` = aktives Fenster,
+  `tabs` mit `code`/`id`/`name`/`title`, `grid`). stdout = `{"notify": "Text"}`
+  oder Klartext (erste Zeile) = Meldung im Eingabefeld (4 s), Exit != 0 = rote
+  Meldung (letzte stderr-Zeile). Fenster-Befehle in `commands/win.py`
+  (`selftest`; plant sway-Befehle als Liste: Abloesen ueber den Hilfs-Workspace
+  `99:umbau`, Teilen per `split` + `move container to mark` - auf ein Fenster =
+  dahinter, auf einen Container = hinein; `split` auf einem Einzelkind aendert nur
+  das Layout, deshalb Reihen erst einzeln). `{"builtin": "tree"}` nur fuer Befehle,
+  die die Leiste selbst kann; wenige halten. Codes bleiben feste Grammatik in
+  `nav.js` (Rueckmeldung je Taste, kein Prozessstart).
   Daten = `"grid"` aus `sidebar.json`, beim Oeffnen eingefroren (Codes stabil,
   geschlossene Fenster tun nichts); aktives Fenster = `focused` darin.
   Workspace hin/verschieben ueber `sidebar.py workspaces apply go|move OUTPUT N CON`
@@ -224,7 +246,7 @@ Wer davon abweicht, fragt vorher.
   `<erfasst>_HHMMSS.png` daneben. Letztes Setup in `~/.local/state/journal-last.json`,
   offener Screenshot in `$XDG_RUNTIME_DIR/journal-pending.json`. Alte Eintraege
   (auch das fruehere `Trading/Backtesting`) liegen in `Trading/journaling/legacy/`.
-- **Schnellnotiz** (`Super+Ctrl+n`, `sway/scripts/note.py`): Name per `ask.sh`,
+- **Schnellnotiz** (`Super+Ctrl+n`, `sway/scripts/note.py [TEXT]`, `#note`): Name per `ask.sh` (oder als Argument),
   `Titel` -> `Notizen/Titel.md`, `Titel #a #b` -> dazu `tags: [a, b]`,
   `Ordner/Titel` -> ab Vault-Wurzel. Inhalt aus `Templates/Schnellnotiz.md` im
   Vault (beim ersten Mal angelegt, in Obsidian frei aenderbar; Platzhalter
@@ -236,8 +258,8 @@ Wer davon abweicht, fragt vorher.
   und Wochenende = `zu`. Klassen `active`/`idle`/`closed`, Tooltip mit Ortszeiten.
 - **TradingView** (app_id `tradingview`) hat `inhibit_idle visible`: kein
   Sperrbildschirm, solange der Chart zu sehen ist.
-- **Session parken** (`sway/scripts/park.py`): `Super+Ctrl+p` fragt per `ask.sh`
-  einen Namen, merkt sich je Fenster aller Monitore (ohne Scratchpad) den
+- **Session parken** (`sway/scripts/park.py save|restore [NAME]`, `#park`/`#unpark`): `Super+Ctrl+p` fragt per `ask.sh`
+  einen Namen (ohne NAME), merkt sich je Fenster aller Monitore (ohne Scratchpad) den
   Workspace und schiebt alle auf `36:d6`. `Super+Ctrl+Shift+p` zeigt die
   geparkten Sessions (`ask.sh TITEL -` = Auswahlliste), schiebt jedes noch
   offene Fenster zurueck und vergisst die Session. Gleicher Name = Session

@@ -9,9 +9,11 @@
 // exklusivem Fokus, das genau ueber dem Eingabefeld liegt, samt Liste darunter.
 // Eingabe = nav.js: Codes wie `bawss`, `wf`, `d`, `mbawd` (je Taste), Befehle
 // `#wort arg …` mit Enter aus commands/commands.json:
-//   {"name": {"help": "...", "exec": ["skript", ...]}}  Skript in commands/,
-//     Woerter nach #name als Argumente (nie durch eine Shell), stdout optional
-//     {"notify": "Text"}, Exit != 0 = Fehler (stderr) -> Meldung in der Leiste.
+//   {"name": {"help": "...", "exec": ["skript", ...]}}  exec[0] = Datei in
+//     commands/, "~/…" oder absoluter Pfad; Woerter nach #name als Argumente
+//     (nie durch eine Shell). Umgebung BAR_CONTEXT = JSON des eingefrorenen
+//     Stands (context()). stdout = {"notify": "Text"} oder Klartext (erste
+//     Zeile), Exit != 0 = Fehler (letzte stderr-Zeile) -> Meldung in der Leiste.
 //   {"name": {"help": "...", "builtin": "tree"}}  kann nur die Leiste (#all).
 // Daten beim Oeffnen eingefroren ("grid"): Codes bleiben stabil.
 // `quickshell ipc call bar toggle|open|close|type TEXT|press NAME|info`.
@@ -123,6 +125,14 @@ Scope {
         keys.forceActiveFocus()
     }
     function hide() { open = false; tree = false; typed = "" }
+    // Stand fuer Befehls-Skripte: Tabs des sichtbaren Workspaces hier (mit Code)
+    // und alle Workspaces, wie beim Tippen zu sehen
+    function context() {
+        return { output: output, here: here, con: con, screens: ctx.screens,
+                 tabs: ctx.wins(here, 0).map((w, i) => ({ code: Nav.code(i), id: w.id, name: w.name, title: w.title })),
+                 grid: snap.map(c => ({ output: c.output, letter: c.letter, number: c.number, name: c.name,
+                                        area: c.area, visible: c.visible, wins: c.wins.map(w => ({ id: w.id, name: w.name })) })) }
+    }
     function say(text, warn) { msg = { text: text, warn: !!warn, output: output }; msgTimer.restart() }
     function reject() { shake.restart() }
 
@@ -159,8 +169,11 @@ Scope {
         if (!c) { reject(); return say("unbekannt: #" + p.name, true) }
         if (c.builtin === "tree") { tree = true; typed = ""; return }
         if (!c.exec || !c.exec.length) { reject(); return say("#" + p.name + ": weder exec noch builtin", true) }
+        const x = c.exec[0], home = Quickshell.env("HOME")
+        const bin = x[0] === "/" ? x : x.indexOf("~/") === 0 ? home + x.slice(1) : dir + "/" + x
         call.createObject(cb, { name: p.name, running: true,
-                                command: [dir + "/" + c.exec[0], ...c.exec.slice(1), ...p.args] })
+                                environment: { BAR_CONTEXT: JSON.stringify(context()) },
+                                command: [bin, ...c.exec.slice(1), ...p.args] })
         hide()
     }
     function click(act) {
@@ -192,8 +205,9 @@ Scope {
             onExited: c => code = c
             onRunningChanged: if (!running) {
                 if (code === 0) {
-                    let out = {}
-                    try { out = JSON.parse(stdout.text.trim() || "{}") } catch (e) {}
+                    const text = stdout.text.trim()
+                    let out = { notify: text.split("\n")[0] }
+                    try { out = JSON.parse(text) } catch (e) {}
                     if (out.notify) cb.say("#" + name + "  " + out.notify, false)
                 } else {
                     cb.say("#" + name + "  " + (stderr.text.trim().split("\n").pop()
@@ -291,13 +305,21 @@ Scope {
                     id: tab
                     required property var modelData
                     required property int index
-                    readonly property string code: Nav.code(index)
+                    readonly property string code: index >= 0 ? Nav.code(index) : ""  // -1 beim Ausblenden
                     readonly property bool current: index === bar.active
                     readonly property bool lit: bar.typing && cb.hit(code)
                     width: bar.tabW; height: tabs.height
                     opacity: bar.typing && cb.r.code !== "" && !lit ? 0.35 : 1
                     Behavior on opacity { NumberAnimation { duration: 120 } }
 
+                    // geteilter Tab (#split): gemeinsame Unterstreichung bis zum Nachbarn
+                    Rectangle {
+                        visible: !!tab.modelData.group
+                        anchors { left: parent.left; bottom: parent.bottom; bottomMargin: -2 }
+                        width: parent.width + ((bar.wins[tab.index + 1] || {}).group === tab.modelData.group ? 4 : 0)
+                        height: 2
+                        color: cb.shell.hud
+                    }
                     Rectangle {
                         anchors.fill: parent
                         radius: 3

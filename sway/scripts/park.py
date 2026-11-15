@@ -1,14 +1,16 @@
 #!/usr/bin/python3
 """Session parken (Super+Ctrl+p) / zurueckholen (Super+Ctrl+Shift+p).
 
-park.py save     Name per ask.sh, alle Fenster aller Monitore (ohne Scratchpad)
-                 merken und auf 36:d6 schieben.
-park.py restore  Session per ask.sh-Liste waehlen, jedes noch offene Fenster
-                 zurueck auf seinen alten Workspace; die Session ist danach weg.
+park.py save [NAME]     Name (sonst per ask.sh), alle Fenster aller Monitore
+                        (ohne Scratchpad) merken und auf 36:d6 schieben.
+park.py restore [NAME]  Session (sonst per ask.sh-Liste) waehlen, jedes noch
+                        offene Fenster zurueck auf seinen alten Workspace; die
+                        Session ist danach weg. NAME = #park / #unpark der
+                        Befehlsleiste.
 Gespeichert in $XDG_RUNTIME_DIR/parked.json ({name: {con_id: workspace}}):
 con_ids gelten nur bis zum Neustart von sway, danach waere die Datei wertlos.
 Fehlt der alte Monitor, zieht collapse() in sidebar.py den Workspace um.
-Aufruf: park.py save|restore|selftest
+Aufruf: park.py save|restore [NAME] | selftest
 """
 import json
 import os
@@ -69,12 +71,12 @@ def notify(msg):
     subprocess.run(["notify-send", "SESSION", msg])
 
 
-def save():
+def save(name=None):
     tree = json.loads(subprocess.check_output(["swaymsg", "-t", "get_tree"]))
     wins = windows(tree)
     if not wins:
         return notify("keine Fenster zum Parken")
-    name = ask("SESSION PARKEN")
+    name = name or ask("SESSION PARKEN")
     if not name:
         return
     db = load()
@@ -85,13 +87,13 @@ def save():
     notify(f"{name}: {len(wins)} Fenster auf d6")
 
 
-def restore():
+def restore(name=None):
     db = load()
     if not db:
         return notify("keine geparkte Session")
-    name = ask("SESSION ZURUECK", list(db))
+    name = name or ask("SESSION ZURUECK", list(db))
     if name not in db:
-        return
+        return notify(f"keine Session {name}") if name else None
     wins = db.pop(name)
     store(db)
     # geschlossene Fenster weglassen, sonst bricht swaymsg die Kette ab
@@ -114,4 +116,7 @@ def selftest():
 
 
 if __name__ == "__main__":
-    {"save": save, "restore": restore, "selftest": selftest}[sys.argv[1]]()
+    if sys.argv[1] == "selftest":
+        selftest()
+    else:
+        {"save": save, "restore": restore}[sys.argv[1]](" ".join(sys.argv[2:]) or None)

@@ -112,15 +112,20 @@ def win_entry(node, apps, index=None):
 
 
 def visible_windows(tree, apps, index=None):
-    """-> {output: [{id, name, title, focused, icon}]}: nur der sichtbare
-    Workspace je Output (current_workspace), Floating-Fenster hinten dran."""
+    """-> {output: [{id, name, title, focused, icon, active, group}]}: nur der
+    sichtbare Workspace je Output (current_workspace), Floating-Fenster hinten
+    dran. group = Kennung des obersten Containers mit Layout splith/splitv
+    ueber dem Fenster (unterhalb des Workspaces), also des geteilten Tabs aus
+    #split; sonst None."""
     out = {}
 
-    def collect(node, acc):
+    def collect(node, acc, group=None):
         if node.get("pid") and node.get("type") in ("con", "floating_con"):
-            acc.append(win_entry(node, apps, index))
+            acc.append(dict(win_entry(node, apps, index), group=group))
+        elif group is None and node.get("layout") in ("splith", "splitv") and node.get("type") != "workspace":
+            group = node.get("id")
         for child in node.get("nodes", []) + node.get("floating_nodes", []):
-            collect(child, acc)
+            collect(child, acc, group)
 
     for o in tree.get("nodes", []):
         if o.get("name") == "__i3":  # Scratchpad
@@ -359,6 +364,9 @@ def selftest():
     assert (b["name"], b["focused"]) == ("IntelliJ", True)
     assert (c["icon"], c["name"]) == ("/snap/x.png", "snap")
     assert visible_windows(tree, {}, index)["DP-7"][0]["icon"] == "/i/fb.svg"
+    assert [x["group"] for x in w["DP-7"]] == [None, None, None]  # Container ohne split-Layout
+    tree["nodes"][1]["nodes"][1]["nodes"][0].update(id=40, layout="splith")  # nach #split
+    assert [x["group"] for x in visible_windows(tree, {})["DP-7"]] == [40, 40, None]
     assert resolve("gibtsnicht", {}) == ""
     assert focused_output(tree) == "DP-7"
     assert step(w["DP-7"], 1) == 3 and step(w["DP-7"], -1) == 1

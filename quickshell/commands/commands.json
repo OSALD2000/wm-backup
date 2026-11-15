@@ -1,4 +1,15 @@
 {
-  "all":   { "help": "Baum aller Apps mit ihrem Befehl", "builtin": "tree" },
-  "clear": { "help": "alle Apps im fokussierten Workspace schliessen", "exec": ["clear.sh"] }
+  "all":    { "help": "Baum aller Apps mit ihrem Befehl", "builtin": "tree" },
+  "split":  { "help": "nebeneinander: alle / a,s / a,s > bawj", "exec": ["win.py", "split"] },
+  "reset":  { "help": "Teilungen aufloesen, wieder Tabs", "exec": ["win.py", "reset"] },
+  "close":  { "help": "Fenster schliessen: a,s,d", "exec": ["win.py", "close"] },
+  "only":   { "help": "alle ausser a schliessen", "exec": ["win.py", "only"] },
+  "clear":  { "help": "alle Apps im Workspace schliessen", "exec": ["clear.sh"] },
+  "full":   { "help": "Vollbild an/aus (aktives Fenster oder a)", "exec": ["win.py", "full"] },
+  "back":   { "help": "zurueck zum vorigen Workspace", "exec": ["/usr/bin/swaymsg", "-q", "workspace back_and_forth"] },
+  "open":   { "help": "App starten: firefox / firefox > bawj", "exec": ["win.py", "open"] },
+  "park":   { "help": "Session parken: name", "exec": ["~/.config/sway/scripts/park.py", "save"] },
+  "unpark": { "help": "Session zurueck: name (ohne = Auswahl)", "exec": ["~/.config/sway/scripts/park.py", "restore"] },
+  "note":   { "help": "Schnellnotiz: Titel #tag", "exec": ["~/.config/sway/scripts/note.py"] },
+  "ticket": { "help": "Ticket in ToDo: PROJ: Titel #label !prio", "exec": ["~/.config/sway/scripts/ticket.py", "quick", "todo"] }
 }
