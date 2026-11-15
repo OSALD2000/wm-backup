@@ -232,9 +232,17 @@ Wer davon abweicht, fragt vorher.
   geschlossene Fenster tun nichts); aktives Fenster = `focused` darin.
   Workspace hin/verschieben ueber `sidebar.py workspaces apply go|move OUTPUT N CON`
   (legt den Workspace auf dem richtigen Monitor an), Fenster und Bildschirm per
-  `I3.dispatch`. Test: `node tests/nav.cjs`. Ueben: `tools/nav-trainer.html` lokal
-  im Browser oeffnen (gleiche `nav.js`, simulierter Desktop, Runde = 20 Aufgaben,
-  Bestwert im localStorage). Seit HL2-v34 statt Workspace-Raster (Super+u),
+  `I3.dispatch`. Test: `node tests/nav.cjs`. **Ueben**: `tools/nav-trainer.html` lokal
+  im Browser oeffnen = Spiel mit Nachbildung der Leiste (Tabs, Eingabe, Liste, Baum,
+  Tab-Ergaenzung) auf einem simulierten Desktop, gleiche `nav.js`, `#`-Befehle als
+  JS-Nachbildung von `win.py` (ohne open/park/note/ticket). Level 1 Fenster, 2
+  Workspaces, 3 Bildschirme, 4 Verschieben, 5 Befehle, 6 Suchen, 7 Mix; Runde = 20
+  Aufgaben, 3 Leben, Punkte mit Tempo-Bonus und Combo. Bewertet wird das Ergebnis
+  auf dem Spiel-Desktop, nicht die Tippfolge; nach einem Fehler steht der kuerzeste
+  Weg da. Zeit: je Aufgabe Gesamt- und Denkzeit (bis zur ersten Taste), Zielzeit =
+  eigener Schnitt je Aufgabentyp (gleitend), Bestzeiten, Verlauf der Runden; alles
+  im localStorage (`nav-game-v1`). Leertaste = gleiches Level nochmal. Test:
+  `node tests/trainer.cjs` spielt jedes Level mit den Musterloesungen durch. Seit HL2-v34 statt Workspace-Raster (Super+u),
   Ziel-Monitor (Super+Esc, Super+Ctrl+N) und Super+Kippen; seit HL2-v35 als Leiste
   statt Overlay (Navigator) und statt der Fensterliste links (samt Super+b und
   waybar `custom/wins`).

@@ -1,251 +1,561 @@
 <!doctype html>
-<!-- Trainer fuer die Codes der Befehlsleiste (Super+f): lokal im Browser oeffnen
-     (file:///…/wm-backup/tools/nav-trainer.html). Nutzt dieselbe Decodierung
-     wie Quickshell (../quickshell/nav.js), ein simulierter Desktop mit A/S/D
-     und je 10 Workspaces. Runde = 20 Aufgaben, Bestwert im localStorage. -->
+<!-- Trainer fuer die Befehlsleiste (Super+f) als Spiel: lokal im Browser oeffnen
+     (file:///…/wm-backup/tools/nav-trainer.html). Gleiche Decodierung wie die
+     echte Leiste (../quickshell/nav.js), die #-Befehle als kleine Nachbildung von
+     quickshell/commands/win.py auf einem simulierten Desktop (A/S/D, je 10
+     Workspaces). Bewertet wird das Ergebnis, nicht die Tippfolge. Schwerpunkt
+     Tempo: Denkzeit + Gesamtzeit je Aufgabe, Zielzeit je Aufgabentyp aus dem
+     eigenen Schnitt, Bestwerte und Verlauf im localStorage. -->
 <html lang="de">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Navigator-Trainer</title>
+<title>Befehls-Trainer</title>
 <script src="../quickshell/nav.js"></script>
 <style>
-  :root { --hud: #FFDC00; --bg: #141310; --box: rgba(40,36,24,.55); --fill: rgba(255,220,0,.16);
+  :root { --hud: #FFDC00; --bg: #141310; --bar: rgba(22,20,13,.95); --box: rgba(40,36,24,.55); --fill: rgba(255,220,0,.16);
           --edge: rgba(255,220,0,.14); --dim: rgba(255,220,0,.5); --warn: #FF5A3C; --ok: #7CFC6A; }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--hud); padding: 16px;
          font: 13px "Iosevka Nerd Font", "Iosevka", ui-monospace, monospace; }
   main { max-width: 1320px; margin: 0 auto; }
-  h1 { font-size: 22px; margin: 0 0 12px; letter-spacing: 2px; }
-  .bar { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; margin-bottom: 12px; color: var(--dim); }
-  .bar b { color: var(--hud); }
-  button, label { font: inherit; color: var(--hud); }
-  button { background: var(--box); border: 1px solid var(--edge); padding: 4px 10px; cursor: pointer; }
-  button:hover { background: var(--fill); }
-  .task { border: 1px solid var(--dim); padding: 14px 18px; margin-bottom: 12px; }
-  .task .what { font-size: 22px; font-weight: bold; }
-  .task .ctx { color: var(--dim); margin-top: 6px; }
-  .task .sol { margin-top: 6px; letter-spacing: 2px; }
-  .input { display: inline-block; min-width: 180px; border: 1px solid var(--hud); padding: 6px 12px;
-           font-size: 20px; font-weight: bold; letter-spacing: 3px; margin: 4px 0 12px; }
+  h1 { font-size: 22px; margin: 0 0 10px; letter-spacing: 2px; }
+  button { font: inherit; color: var(--hud); background: var(--box); border: 1px solid var(--edge); padding: 4px 10px; cursor: pointer; }
+  button:hover, button.on { background: var(--fill); border-color: var(--hud); }
+  .levels { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .hud { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: stretch; margin-bottom: 10px; }
+  .task { border: 1px solid var(--dim); padding: 12px 16px; }
+  .task .what { font-size: 21px; font-weight: bold; }
+  .task .ctx { color: var(--dim); margin-top: 5px; }
+  .task .sol { margin-top: 6px; letter-spacing: 2px; color: var(--warn); min-height: 1.2em; }
+  .meter { height: 4px; background: var(--box); margin-top: 8px; }
+  .meter div { height: 100%; background: var(--ok); width: 0; }
+  .meter div.slow { background: var(--warn); }
+  .clock { border: 1px solid var(--dim); padding: 10px 16px; min-width: 230px; text-align: right; }
+  .clock .t { font-size: 36px; font-weight: bold; }
+  .clock .t.fast { color: var(--ok); } .clock .t.slow { color: var(--warn); }
+  .clock small { display: block; color: var(--dim); }
+  .stats { display: flex; flex-wrap: wrap; gap: 18px; color: var(--dim); margin-bottom: 10px; }
+  .stats b { color: var(--hud); }
+  /* Nachbildung der Befehlsleiste */
+  .bar { display: flex; gap: 4px; align-items: center; background: var(--bar); border-bottom: 1px solid var(--edge); padding: 3px 6px; min-height: 30px; }
+  .tab { position: relative; flex: 0 1 230px; min-width: 110px; border: 1px solid var(--edge); background: var(--box); border-radius: 3px;
+         padding: 3px 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: rgba(255,220,0,.65); }
+  .tab b { color: var(--hud); margin-right: 7px; }
+  .tab.cur { background: var(--fill); border-color: rgba(255,220,0,.5); color: var(--hud); }
+  .tab.lit { border-color: var(--hud); background: var(--fill); }
+  .tab.off { opacity: .35; }
+  .tab.grp { box-shadow: inset 0 -2px 0 var(--hud); }
+  .tab.full::after { content: " ⛶"; }
+  .spacer { flex: 1; }
+  .input { width: 340px; flex: none; border: 1px solid var(--hud); border-radius: 3px; padding: 3px 9px; font-weight: bold; letter-spacing: 1px;
+           display: flex; justify-content: space-between; }
+  .input span:last-child { color: var(--dim); font-weight: normal; letter-spacing: 0; font-size: 11px; }
   .input.bad { border-color: var(--warn); animation: shake .25s; }
   .input.good { border-color: var(--ok); }
   @keyframes shake { 25% { transform: translateX(6px); } 75% { transform: translateX(-6px); } }
-  .hint { color: var(--dim); margin-left: 12px; }
-  .grid { display: grid; grid-template-columns: 56px repeat(10, minmax(0, 1fr)); gap: 6px; margin-bottom: 12px; }
-  .head { text-align: center; font-size: 24px; font-weight: bold; align-self: center; }
-  .head small { display: block; font-size: 9px; color: var(--dim); }
-  .row-off { opacity: .35; }
-  .cell { background: var(--box); border: 1px solid var(--edge); border-radius: 4px; padding: 4px 6px; min-height: 64px; overflow: hidden; }
+  .under { display: flex; justify-content: flex-end; min-height: 8px; }
+  .drop { width: 340px; border: 1px solid rgba(255,220,0,.5); background: var(--bg); padding: 6px; margin-top: 4px; max-height: 330px; overflow: auto; }
+  .drop div { padding: 2px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .drop .head { color: rgba(255,220,0,.7); font-weight: bold; }
+  .drop .hit { background: var(--fill); outline: 1px solid var(--hud); }
+  .drop .dim { opacity: .4; }
+  .drop b { display: inline-block; min-width: 70px; }
+  /* Karte aller Bildschirme */
+  .map { display: grid; grid-template-columns: 50px repeat(10, minmax(0, 1fr)); gap: 5px; margin-top: 12px; }
+  .map .h { text-align: center; font-size: 22px; font-weight: bold; align-self: center; }
+  .map .h small { display: block; font-size: 9px; color: var(--dim); }
+  .map .h.here { text-decoration: underline; }
+  .cell { background: var(--box); border: 1px solid var(--edge); border-radius: 4px; padding: 3px 5px; min-height: 52px; overflow: hidden; font-size: 10px; }
   .cell.vis { background: var(--fill); }
-  .cell.sel { border: 2px solid var(--hud); box-shadow: 0 0 10px rgba(255,220,0,.5); }
-  .cell .k { font-size: 17px; font-weight: bold; }
-  .cell .n { float: right; font-size: 9px; color: var(--dim); }
-  .cell .apps { font-size: 9px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .list { display: flex; flex-wrap: wrap; gap: 6px; }
-  .win { width: 300px; background: var(--box); border: 1px solid var(--edge); padding: 5px 8px;
-         white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .win b { display: inline-block; width: 30px; font-size: 15px; }
-  .win.hit { background: var(--fill); border-color: var(--hud); }
-  .win.off { opacity: .4; }
-  .done { border: 1px solid var(--hud); padding: 18px; margin-top: 12px; }
+  .cell .k { font-size: 15px; font-weight: bold; }
+  .cell .n { float: right; color: var(--dim); }
+  .cell .a { color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .done { border: 1px solid var(--hud); padding: 16px; margin-top: 12px; }
   .done table { border-collapse: collapse; margin-top: 8px; }
-  .done td { padding: 2px 12px 2px 0; }
-  @media (max-width: 800px) { .grid { grid-template-columns: 36px repeat(10, minmax(0, 1fr)); } .cell .apps, .cell .n { display: none; } }
+  .done td, .done th { padding: 2px 14px 2px 0; text-align: left; }
+  .done .up { color: var(--ok); } .done .down { color: var(--warn); }
+  p.help { color: var(--dim); }
+  @media (max-width: 800px) { .input, .drop { width: 220px; } .cell .a, .cell .n { display: none; } }
 </style>
 </head>
 <body>
 <main>
-  <h1>λ NAVIGATOR-TRAINER</h1>
-  <div class="bar">
-    <span>Aufgabe <b id="no"></b>/20</span>
-    <span>Zeit <b id="clock">0.0</b> s</span>
-    <span>Fehler <b id="errs">0</b></span>
-    <span>Serie <b id="streak">0</b></span>
-    <span>Bestwert <b id="best">–</b></span>
-    <label><input type="checkbox" id="showSol"> Loesung zeigen</label>
-    <button id="restart">Neue Runde</button>
+  <h1>λ BEFEHLS-TRAINER</h1>
+  <div class="levels" id="levels"></div>
+  <div class="hud">
+    <div class="task">
+      <div class="what" id="what"></div>
+      <div class="ctx" id="ctx"></div>
+      <div class="sol" id="sol"></div>
+      <div class="meter"><div id="meter"></div></div>
+    </div>
+    <div class="clock"><div class="t" id="clock">0.00</div>
+      <small id="target"></small><small id="think"></small></div>
   </div>
-  <div class="task">
-    <div class="what" id="what"></div>
-    <div class="ctx" id="ctx"></div>
-    <div class="sol" id="sol" hidden></div>
+  <div class="stats">
+    <span>Aufgabe <b id="no"></b>/20</span><span>Leben <b id="lives"></b></span>
+    <span>Punkte <b id="score">0</b></span><span>Combo <b id="combo">x1</b></span>
+    <span>Fehltasten <b id="miss">0</b></span><span>Highscore <b id="best">–</b></span>
   </div>
-  <div><span class="input" id="input"></span><span class="hint" id="hint"></span></div>
-  <div class="grid" id="grid"></div>
-  <div id="title"></div>
-  <div class="list" id="list"></div>
+  <div class="bar" id="bar"></div>
+  <div class="under"><div class="drop" id="drop" hidden></div></div>
+  <div class="map" id="map"></div>
   <div class="done" id="done" hidden></div>
-  <p class="hint">[m] [b a/s/d] [w a…ö] [Fenster] · Enter = los · Backspace = zurueck · Esc = Eingabe leeren</p>
+  <p class="help">Wie die echte Leiste: [m] [b a/s/d] [w a…ö] [Fenster] · #befehl arg … ⏎ · Tab ergaenzt · Backspace = zurueck · Esc = leeren.
+    Bewertet wird das Ergebnis. Zielzeit = dein bisheriger Schnitt fuer diesen Aufgabentyp.</p>
 </main>
 <script>
 const SCREENS = "asd", NAMES = { a: "links", s: "Mitte", d: "Laptop" }
 const AREAS = ["TERMINAL", "BROWSER", "CODE", "CODE 2", "TRADING", "FREI", "TOOLS", "TODOS", "CHAT", "MEDIEN"]
 const APPS = ["Firefox", "Chrome", "Alacritty", "VS Code", "IntelliJ", "Teams", "Obsidian", "Slack", "Spotify",
               "KeePassXC", "TradingView", "Dateien", "Thunderbird", "Discord", "YouTube", "Outlook", "Postman", "DBeaver"]
-const TITLES = ["README.md", "Pull Request #12", "NQ 5m", "Daily Standup", "Inbox", "server.log", "Ticket-Board",
-                "Notizen", "build", "Release 3.1", "Kalender", "main.py", "Doku", "Backtest", "Musik"]
+const TITLES = ["README.md", "Pull Request", "NQ 5m", "Standup", "Inbox", "server.log", "Ticket-Board", "Notizen",
+                "build", "Release", "Kalender", "main.py", "Doku", "Backtest", "Musik"]
+const SESSIONS = [["claude", "wm-backup Befehlsleiste"], ["claude", "fairgleichen Redesign"], ["codex", "ratingki Review"],
+                  ["codex", "atlas Regressionstests"], ["claude", "trading Journal"]]
+const TOOLS = { claude: ["✳", "Claude"], codex: ["◎", "Codex"] }
+const COMMANDS = ["all", "back", "clear", "close", "full", "only", "reset", "split"]  // geuebt; open/park/note/ticket nicht
+const LEVELS = [
+  ["1 Fenster", ["winHere"]], ["2 Workspaces", ["goHere"]], ["3 Bildschirme", ["winAny", "output"]],
+  ["4 Verschieben", ["move", "output"]],
+  ["5 Befehle", ["splitPair", "splitAll", "splitTo", "close", "only", "full", "reset", "back"]],
+  ["6 Suchen", ["search"]],
+  ["7 Mix", ["winHere", "goHere", "winAny", "output", "move", "splitPair", "splitAll", "splitTo", "close", "only", "full", "reset", "back", "search"]]]
+const KIND_NAMES = { winHere: "Fenster hier", goHere: "Workspace hier", winAny: "Fenster woanders", output: "Bildschirm",
+  move: "Verschieben", splitPair: "#split a,s", splitAll: "#split", splitTo: "#split > Ziel", close: "#close", only: "#only",
+  full: "#full", reset: "#reset", back: "#back", search: "#all Suche" }
+const ROUND = 20, LIVES = 3, STORE = "nav-game-v1"
 const $ = id => document.getElementById(id)
 const rnd = n => Math.floor(Math.random() * n), any = a => a[rnd(a.length)]
-let best = null
-try { best = JSON.parse(localStorage.getItem("nav-trainer-best")) } catch (e) {}
+const key = (s, w) => s + w
+const lbl = (s, w) => s.toUpperCase() + (w % 10)
+const clone = o => JSON.parse(JSON.stringify(o))
 
-let desk, task, typed, t0, no, errs, streak, log, timer
+// ── gespeicherte Werte: Bestwerte je Level, Schnitt je Aufgabentyp, Verlauf ──
+let store = { best: {}, kinds: {}, rounds: [] }
+try { store = Object.assign(store, JSON.parse(localStorage.getItem(STORE)) || {}) } catch (e) {}
+function save() { try { localStorage.setItem(STORE, JSON.stringify(store)) } catch (e) {} }
 
-// Desktop: je Bildschirm 10 Workspaces, wenige Fenster, zwei volle (11-25 Fenster)
+// ── simulierter Desktop ──────────────────────────────────────────────────────
+let uid = 1, gid = 1
+function mkWin() { return { id: uid++, name: any(APPS), title: any(TITLES), group: 0 } }
+function mkAgent(t) { return { id: uid++, name: "Alacritty", title: t[1], tool: t[0], group: 0 } }
 function makeDesk() {
   const ws = {}
-  for (const s of SCREENS) for (let w = 1; w <= 10; w++)
-    ws[s + w] = Array.from({ length: Math.random() < 0.35 ? 0 : 1 + rnd(4) }, win)
-  for (let i = 0; i < 2; i++) ws[any(SCREENS) + (1 + rnd(10))] = Array.from({ length: 11 + rnd(15) }, win)
-  const visible = {}
-  for (const s of SCREENS) visible[s] = 1 + rnd(10)
-  return { ws, visible, here: "d" }
+  for (const s of SCREENS) for (let w = 1; w <= 10; w++) ws[key(s, w)] = Array.from({ length: Math.random() < .3 ? 0 : 1 + rnd(4) }, mkWin)
+  ws[key(any(SCREENS), 1 + rnd(10))] = Array.from({ length: 11 + rnd(9) }, mkWin)   // ein voller: Codes aa …
+  for (const t of SESSIONS) ws[key(any(SCREENS), any([1, 3, 4]))].push(mkAgent(t))
+  const d = { ws, visible: {}, here: any(SCREENS), focus: 0, full: 0, prev: null, last: {} }
+  for (const s of SCREENS) d.visible[s] = 1 + rnd(10)
+  d.focus = (here(d)[0] || {}).id || 0
+  return d
 }
-function win() { return { name: any(APPS), title: any(TITLES) + " " + (1 + rnd(9)) } }
-const wsOf = (s, w) => w || desk.visible[s]
-const ctx = () => ({ screens: SCREENS, here: desk.here, wins: (s, w) => desk.ws[s + wsOf(s, w)] })
-const active = () => desk.ws[desk.here + desk.visible[desk.here]][0]
-const label = (s, w) => s.toUpperCase() + (w % 10)
-
-// Aufgabe + kuerzeste Loesung
-function makeTask() {
-  const s = any(SCREENS), w = 1 + rnd(10), pre = s === desk.here ? "" : "b" + s
-  const r = Math.random()
-  if (r < 0.15) {
-    const o = any(SCREENS.replace(desk.here, ""))
-    return { kind: "output", s: o, text: `Fokus auf Bildschirm ${o.toUpperCase()} (${NAMES[o]})`, sol: "b" + o + " ⏎" }
-  }
-  if (r < 0.32 && active()) {
-    return { kind: "move", s, w, text: `Aktives Fenster nach ${label(s, w)} (${AREAS[w - 1]}) verschieben`,
-             sol: "m" + pre + "w" + KEYS[w - 1] }
-  }
-  if (r < 0.55) return { kind: "go", s, w, text: `Gehe zu ${label(s, w)} (${AREAS[w - 1]})`, sol: pre + "w" + KEYS[w - 1] }
-  // Fenster: ein Workspace mit Fenstern, volle bevorzugt
-  const full = Object.keys(desk.ws).filter(k => desk.ws[k].length > 10)
-  const k = Math.random() < 0.4 && full.length ? any(full) : any(Object.keys(desk.ws).filter(k => desk.ws[k].length))
-  const ts = k[0], tw = Number(k.slice(1)), list = desk.ws[k], i = rnd(list.length), c = code(i)
-  const amb = list.some((x, j) => j !== i && code(j).startsWith(c))
-  const p = (ts === desk.here ? "" : "b" + ts) + (tw === desk.visible[ts] ? "" : "w" + KEYS[tw - 1])
-  return { kind: "win", s: ts, w: tw, i,
-           text: `Fenster ${list[i].name} · „${list[i].title}“ auf ${label(ts, tw)} (Nr. ${i + 1})`,
-           sol: p + c + (amb ? " ⏎" : "") }
+const here = d => d.ws[key(d.here, d.visible[d.here])]
+function where(d, id) {
+  for (const k in d.ws) { const i = d.ws[k].findIndex(w => w.id === id); if (i >= 0) return { s: k[0], w: +k.slice(1), i } }
+  return null
+}
+function look(w) {
+  const t = w.tool && TOOLS[w.tool]
+  return t ? { glyph: t[0], name: t[1], title: w.title } : { glyph: "", name: w.name, title: w.title }
+}
+// sicherstellen, dass genug da ist: leere Workspaces hier und Fenster nachfuellen
+function refill(d) {
+  const all = Object.values(d.ws).flat().length
+  if (all < 25) for (let i = 0; i < 12; i++) d.ws[key(any(SCREENS), 1 + rnd(10))].push(mkWin())
+  if (here(d).length < 3) here(d).push(mkWin(), mkWin())
+  if (!here(d).some(w => w.id === d.focus)) d.focus = here(d)[0].id
 }
 
-function newRound() {
-  desk = makeDesk(); no = 0; errs = 0; streak = 0; log = []
+// ── Aktionen auf dem Desktop (Wirkung wie in sway) ───────────────────────────
+function goWs(d, s, w) {
+  if (d.here !== s || d.visible[s] !== w) d.prev = { s: d.here, w: d.visible[d.here] }
+  d.last[key(d.here, d.visible[d.here])] = d.focus
+  d.here = s; d.visible[s] = w
+  const list = d.ws[key(s, w)], keep = d.last[key(s, w)]
+  d.focus = list.some(x => x.id === keep) ? keep : (list[0] || {}).id || 0
+}
+function focusWin(d, id) { const p = where(d, id); if (!p) return; goWs(d, p.s, p.w); d.focus = id }
+function moveWin(d, id, s, w) {
+  const p = where(d, id); if (!p) return
+  const [x] = d.ws[key(p.s, p.w)].splice(p.i, 1); x.group = 0; d.ws[key(s, w)].push(x)
+}
+function kill(d, ids) {
+  for (const id of ids) { const p = where(d, id); if (p) d.ws[key(p.s, p.w)].splice(p.i, 1) }
+  if (!where(d, d.focus)) d.focus = (here(d)[0] || {}).id || 0
+  if (!where(d, d.full)) d.full = 0
+}
+
+// ── #-Befehle: Nachbildung von commands/win.py ───────────────────────────────
+class Fail extends Error {}
+function splitArgs(args) {
+  const t = args.join(" "), i = t.indexOf(">")
+  return i < 0 ? [t.trim(), ""] : [t.slice(0, i).trim(), t.slice(i + 1).trim()]
+}
+function idsOf(snap, codes) {
+  const tabs = here(snap)
+  return codes.split(/[\s,]+/).filter(x => x).map(c => {
+    const i = tabs.findIndex((_, j) => code(j) === c)
+    if (i < 0) throw new Fail("kein Fenster mit Code " + c)
+    return tabs[i].id
+  })
+}
+function targetOf(snap, t) {
+  const m = new RegExp("^(?:b([asd]))?(?:w([" + KEYS + "]))?$").exec(t)
+  if (!t || !m) throw new Fail("Ziel versteht nur [b a|s|d] [w a…ö]")
+  const s = m[1] || snap.here
+  return { s, w: m[2] ? KEYS.indexOf(m[2]) + 1 : snap.visible[s] }
+}
+function command(d, snap, text) {
+  const p = parse(text), [head, dest] = splitArgs(p.args)
+  const homeK = key(snap.here, snap.visible[snap.here])
+  switch (p.name) {
+    case "split": {
+      const ids = head ? idsOf(snap, head) : here(snap).map(w => w.id)
+      if (ids.length < 2) throw new Fail("split braucht mindestens 2 Fenster")
+      const t = dest ? targetOf(snap, dest) : { s: snap.here, w: snap.visible[snap.here] }
+      for (const id of ids) moveWin(d, id, t.s, t.w)           // ans Ende, wie in sway
+      const g = gid++; for (const id of ids) where(d, id) && (d.ws[key(t.s, t.w)].find(x => x.id === id).group = g)
+      if (dest) focusWin(d, ids[0])
+      return "split"
+    }
+    case "reset": for (const w of d.ws[homeK]) w.group = 0; return "reset"
+    case "close": case "only": {
+      const ids = idsOf(snap, head)
+      if (!ids.length) throw new Fail(p.name + " braucht Codes")
+      kill(d, p.name === "close" ? ids : d.ws[homeK].map(w => w.id).filter(id => !ids.includes(id)))
+      return p.name
+    }
+    case "clear": kill(d, d.ws[homeK].map(w => w.id)); return "clear"
+    case "full": { const id = head ? idsOf(snap, head)[0] : snap.focus; d.full = d.full === id ? 0 : id; return "full" }
+    case "back": if (d.prev) goWs(d, d.prev.s, d.prev.w); return "back"
+    case "all": return "all"
+    default: throw new Fail("unbekannt: #" + p.name)
+  }
+}
+
+// ── Aufgaben: Ziel als Pruefung am Desktop + kuerzester Weg (⏎ = Enter) ───────
+// eigener Name: route/fail/code/… gehoeren nav.js (globale Funktionen)
+function pathTo(d, id) {
+  const p = where(d, id), n = d.ws[key(p.s, p.w)].length
+  return route(p.s, p.w, p.i, n, d.here, d.visible[p.s]).replace(" ⏎", "⏎")
+}
+const desc = w => { const L = look(w); return (L.glyph ? L.glyph + " " : "") + L.name + " · „" + L.title + "“" }
+function otherWs(d, s) { let w; do { w = 1 + rnd(10) } while (w === d.visible[s]); return w }
+const MAKERS = {
+  winHere(d) {
+    const l = here(d), w = any(l)
+    return { text: `Fokus auf ${desc(w)}`, where: "hier", sol: pathTo(d, w.id), ok: x => x.focus === w.id }
+  },
+  goHere(d) {
+    const w = otherWs(d, d.here)
+    return { text: `Gehe zu Workspace ${w % 10} ${AREAS[w - 1]}`, where: "hier", sol: "w" + KEYS[w - 1], to: [d.here, w],
+             ok: x => x.here === d.here && x.visible[d.here] === w }
+  },
+  winAny(d) {
+    const ks = Object.keys(d.ws).filter(k => d.ws[k].length && k !== key(d.here, d.visible[d.here]))
+    const k = any(ks), w = any(d.ws[k])
+    return { text: `Fokus auf ${desc(w)}`, where: "auf " + lbl(k[0], +k.slice(1)), sol: pathTo(d, w.id),
+             to: [k[0], +k.slice(1)], ok: x => x.focus === w.id }
+  },
+  output(d) {
+    const s = any(SCREENS.replace(d.here, ""))
+    return { text: `Fokus auf Bildschirm ${s.toUpperCase()} (${NAMES[s]})`, sol: "b" + s + "⏎", ok: x => x.here === s }
+  },
+  move(d) {
+    const a = where(d, d.focus), s = any(SCREENS); let w = 1 + rnd(10)
+    if (s === a.s && w === a.w) w = w % 10 + 1
+    const id = d.focus
+    return { text: `Aktives Fenster (${desc(here(d).find(x => x.id === id))}) nach ${lbl(s, w)} ${AREAS[w - 1]}`,
+             sol: "m" + (s === d.here ? "" : "b" + s) + "w" + KEYS[w - 1],
+             ok: x => { const p = where(x, id); return p && p.s === s && p.w === w } }
+  },
+  splitPair(d) {
+    const l = here(d); if (l.length < 3) return null
+    const [i, j] = pick2(l.length), a = l[i].id, b = l[j].id
+    return { text: `${l[i].name} und ${l[j].name} nebeneinander (Rest bleibt Tabs)`, sol: `#split ${code(i)},${code(j)}⏎`,
+             ok: x => grouped(x, [a, b]) }
+  },
+  splitAll(d) {
+    const l = here(d); if (l.length < 2 || l.length > 6) return null
+    const ids = l.map(w => w.id)
+    return { text: `Alle ${l.length} Fenster hier nebeneinander`, sol: "#split⏎", ok: x => grouped(x, ids) }
+  },
+  splitTo(d) {
+    const l = here(d); if (l.length < 2) return null
+    const [i, j] = pick2(l.length), a = l[i].id, b = l[j].id, s = any(SCREENS), w = otherWs(d, s)
+    return { text: `${l[i].name} und ${l[j].name} nebeneinander auf ${lbl(s, w)} ${AREAS[w - 1]}`,
+             sol: `#split ${code(i)},${code(j)} > ${s === d.here ? "" : "b" + s}w${KEYS[w - 1]}⏎`,
+             ok: x => grouped(x, [a, b]) && [a, b].every(id => { const p = where(x, id); return p.s === s && p.w === w }) }
+  },
+  close(d) {
+    const l = here(d); if (l.length < 3) return null
+    const [i, j] = pick2(l.length), ids = [l[i].id, l[j].id], n = l.length   // l schrumpft beim Schliessen
+    return { text: `${l[i].name} und ${l[j].name} schliessen`, sol: `#close ${code(i)},${code(j)}⏎`,
+             ok: x => ids.every(id => !where(x, id)) && here(x).length === n - 2 }
+  },
+  only(d) {
+    const l = here(d); if (l.length < 3) return null
+    const i = rnd(l.length), id = l[i].id
+    return { text: `Nur ${desc(l[i])} behalten, alle anderen hier schliessen`, sol: `#only ${code(i)}⏎`,
+             ok: x => here(x).length === 1 && here(x)[0].id === id }
+  },
+  full(d) {
+    const l = here(d), free = l.map((w, i) => i).filter(i => l[i].id !== d.full)   // schon Vollbild = Umschalten aus
+    if (!free.length) return null
+    const i = any(free), id = l[i].id
+    return { text: `${desc(l[i])} als Vollbild`, sol: `#full ${code(i)}⏎`, ok: x => x.full === id }
+  },
+  reset(d) {
+    const l = here(d); if (l.length < 3) return null
+    const [i, j] = pick2(l.length), g = gid++; l[i].group = g; l[j].group = g     // vorher geteilt
+    return { text: `Teilung hier aufloesen (unterstrichene Tabs)`, sol: "#reset⏎", ok: x => here(x).every(w => !w.group) }
+  },
+  back(d) {
+    if (!d.prev || (d.prev.s === d.here && d.prev.w === d.visible[d.here])) return null
+    const p = d.prev
+    return { text: `Zurueck zum vorigen Workspace (${lbl(p.s, p.w)})`, sol: "#back⏎",
+             ok: x => x.here === p.s && x.visible[p.s] === p.w }
+  },
+  search(d) {
+    const all = Object.values(d.ws).flat(), w = Math.random() < .6 ? any(all.filter(x => x.tool)) : any(all)
+    const words = (w.tool ? w.title : w.name + " " + w.title).split(/\s+/).filter(x => x.length > 2)
+    const word = any(words).toLowerCase(), hits = treeRows(d, word).filter(r => r.id)
+    const first = hits[0] && hits[0].id === w.id
+    return { text: `Suche und spring zu ${desc(w)}`, where: "irgendwo", sol: `#all ${word}⏎` + (first ? "⏎" : pathTo(d, w.id)),
+             ok: x => x.focus === w.id }
+  },
+}
+function pick2(n) { const i = rnd(n); let j = rnd(n - 1); if (j >= i) j++; return i < j ? [i, j] : [j, i] }
+function grouped(d, ids) {
+  const g = ids.map(id => { const p = where(d, id); return p && d.ws[key(p.s, p.w)][p.i].group })
+  return g[0] && g.every(x => x === g[0]) && Object.values(d.ws).flat().filter(w => w.group === g[0]).length === ids.length
+}
+
+// ── Runde, Eingabe, Wertung ──────────────────────────────────────────────────
+let desk, snap, task, typed, t0, tFirst, level = 0, no, lives, score, combo, miss, log, tree, filter, tabHits, tabIdx, busy
+
+function newRound(l) {
+  level = l; desk = makeDesk(); no = 0; lives = LIVES; score = 0; combo = 0; miss = 0; log = []
   $("done").hidden = true
   next()
 }
 function next() {
-  if (no === 20) return finish()
-  no++; typed = ""; task = makeTask(); t0 = performance.now()
+  if (no >= ROUND || lives <= 0) return finish()
+  refill(desk)
+  let t = null
+  for (let i = 0; i < 30 && !t; i++) {
+    const kind = any(LEVELS[level][1]); t = MAKERS[kind](desk); if (t) t.kind = kind
+  }
+  task = t; no++; typed = ""; tree = false; filter = ""; tabHits = []; busy = false
+  snap = clone(desk)                       // wie die echte Leiste: Stand beim Oeffnen
+  t0 = performance.now(); tFirst = 0
+  $("sol").textContent = ""
   render()
 }
-// Ergebnis einer Aktion pruefen: passt sie zur Aufgabe?
-function done(kind, s, w, i) {
-  const ok = kind === task.kind && s === task.s && (task.kind === "output" || w === task.w) &&
-             (task.kind !== "win" || i === task.i)
-  if (!ok) return fail()
-  const ms = performance.now() - t0
-  log.push({ text: task.text, sol: task.sol, ms })
-  streak++
-  // Desktop wie in echt weiterfuehren
-  if (kind === "go" || kind === "win") { desk.visible[s] = w; desk.here = s }
-  if (kind === "output") desk.here = s
-  if (kind === "move") {
-    const from = desk.ws[desk.here + desk.visible[desk.here]]
-    desk.ws[s + w].push(from.shift())
-  }
-  flash("good")
-  setTimeout(next, 250)
+function targetMs(kind) {
+  const k = store.kinds[kind]
+  return k && k.n >= 3 ? k.avg : 600 + 280 * (task.sol.replace("⏎", "x").length)
 }
-function fail() {
-  errs++; streak = 0; typed = ""
+function done() {
+  if (busy) return; busy = true
+  const ms = performance.now() - t0, think = tFirst ? tFirst - t0 : ms, goal = targetMs(task.kind)
+  combo++
+  const speed = Math.max(.5, Math.min(2, goal / ms))
+  score += Math.round(100 * speed * Math.min(combo, 8))
+  log.push({ kind: task.kind, text: task.text, sol: task.sol, ms, think, ok: true })
+  const k = store.kinds[task.kind] || { n: 0, avg: 0, best: Infinity }
+  k.avg = k.n ? k.avg * .8 + ms * .2 : ms; k.n++; k.best = Math.min(k.best, ms)
+  store.kinds[task.kind] = k; save()
+  flash("good"); setTimeout(next, 220)
+}
+function lose(why) {
+  if (busy) return; busy = true
+  lives--; combo = 0
+  log.push({ kind: task.kind, text: task.text, sol: task.sol, ms: performance.now() - t0, think: 0, ok: false })
+  $("sol").textContent = (why ? why + " · " : "") + "kuerzester Weg: " + task.sol
   flash("bad"); render()
+  setTimeout(next, 1600)
 }
-function flash(cls) {
-  const el = $("input")
-  el.classList.remove("bad", "good"); void el.offsetWidth; el.classList.add(cls)
+function flash(cls) { const el = $("input"); if (!el) return; el.classList.remove("bad", "good"); void el.offsetWidth; el.classList.add(cls) }
+function reject() { miss++; flash("bad"); renderStats() }
+
+const ctx = () => ({ screens: SCREENS, here: snap.here, wins: (s, w) => snap.ws[key(s, w || snap.visible[s])] || [] })
+function treeRows(d, f) {
+  const out = []
+  for (const s of SCREENS) for (let w = 1; w <= 10; w++) {
+    const l = d.ws[key(s, w)]
+    l.forEach((x, i) => {
+      const L = look(x), hay = [x.name, x.title, L.name, x.tool || "", AREAS[w - 1], lbl(s, w)].join(" ").toLowerCase()
+      if (!f || hay.includes(f)) out.push({ id: x.id, key: route(s, w, i, l.length, d.here, d.visible[s]), x, s, w })
+    })
+  }
+  return out
 }
+
+function handleKey(name, ch) {
+  if (!task || busy || !$("done").hidden) return false
+  if (!tFirst) tFirst = performance.now()
+  const c = ctx(), r = decode(typed, c)
+  if (name !== "Tab" && name !== "Backtab") tabHits = []
+  if (name === "Escape") { typed = ""; tree = false; filter = "" }
+  else if (name === "Backspace") typed = back(typed, c)
+  else if (name === "Tab" || name === "Backtab") {
+    if (r.cmd === null || /\s/.test(r.cmd)) return true
+    if (!tabHits.length) {
+      const m = complete(r.cmd, COMMANDS)
+      if (!m) { reject(); return true }
+      if (m.text !== r.cmd) { typed = "#" + m.text; render(); return true }
+      tabHits = m.hits; tabIdx = name === "Tab" ? -1 : 0
+    }
+    tabIdx = (tabIdx + (name === "Tab" ? 1 : -1) + tabHits.length) % tabHits.length
+    typed = "#" + tabHits[tabIdx]
+  } else if (name === "Enter") {
+    if (tree && filter && typed === "") {
+      const f = treeRows(snap, filter)[0]
+      if (!f) { reject(); return true }
+      focusWin(desk, f.id); return finishAction()
+    }
+    const e = enter(r), s = r.screen || snap.here
+    if (e === "win") { focusWin(desk, (c.wins(s, r.ws)[r.match] || {}).id); return finishAction() }
+    if (e === "output") { goWs(desk, s, desk.visible[s]); return finishAction() }
+    if (e === "move") { moveWin(desk, snap.focus, s, snap.visible[s]); return finishAction() }
+    if (e === "cmd") {
+      try {
+        const kind = command(desk, snap, r.cmd)
+        if (kind === "all") { tree = true; filter = parse(r.cmd).args.join(" ").toLowerCase(); typed = ""; render(); return true }
+      } catch (err) { if (err instanceof Fail) { lose(err.message); return true } throw err }
+      return finishAction()
+    }
+    if (e === "close") { if (tree) { tree = false; filter = "" } else { reject(); return true } }
+  } else if (ch && ch.length === 1) {
+    if (r.cmd !== null) typed += ch
+    else {
+      const k = ch.toLowerCase()
+      if (typed === "" && k === "m" && !snap.focus) { reject(); return true }
+      const n = decode(typed + k, c), a = act(r, n)
+      if (a === "error") { reject(); return true }
+      typed += k
+      const s = n.screen || snap.here
+      if (a === "go") {
+        goWs(desk, s, n.ws)
+        if (task.ok(desk)) { done(); return true }
+        if (task.to && (task.to[0] !== s || task.to[1] !== n.ws)) { lose("falscher Workspace"); return true }
+      } else if (a === "move") { moveWin(desk, snap.focus, s, n.ws); return finishAction() }
+      else if (a === "win") { focusWin(desk, (c.wins(s, n.ws)[n.win] || {}).id); return finishAction() }
+    }
+  } else return false
+  render()
+  return true
+}
+// eine Aktion ist fertig: Ziel erreicht oder Fehler
+function finishAction() { if (task.ok(desk)) done(); else lose("Ziel nicht erreicht"); return true }
 
 document.addEventListener("keydown", ev => {
-  if (!task || !$("done").hidden || ev.ctrlKey || ev.altKey || ev.metaKey) return
-  const c = ctx(), r = decode(typed, c)
-  if (ev.key === "Escape") typed = ""
-  else if (ev.key === "Backspace") typed = back(typed, c)
-  else if (ev.key === "Enter") {
-    const e = enter(r), s = r.screen || desk.here
-    if (e === "win") return done("win", s, wsOf(s, r.ws), r.match)
-    if (e === "output") return done("output", s)
-    if (e === "move") return done("move", s, desk.visible[s])
-    if (e === "close") return fail()
-  } else if (ev.key.length === 1) {
-    const ch = ev.key.toLowerCase(), n = decode(typed + ch, c), a = act(r, n), s = n.screen || desk.here
-    if (a === "error") { errs++; streak = 0; flash("bad"); ev.preventDefault(); return render() }
-    typed += ch
-    if (a === "move") return done("move", s, n.ws)
-    if (a === "win") return done("win", s, wsOf(s, n.ws), n.win)
-    // go: in echt wechselt der Workspace sofort; falsches Ziel = Fehler, bei
-    // Fensteraufgaben geht es danach mit dem Code weiter
-    if (a === "go" && (task.kind === "go" || task.kind === "win")) {
-      if (s !== task.s || n.ws !== task.w) return fail()
-      if (task.kind === "go") return done("go", s, n.ws)
-    } else if (a === "go") return fail()
-  } else return
-  ev.preventDefault()
-  render()
+  if (ev.ctrlKey || ev.altKey || ev.metaKey) return
+  const names = { Escape: "Escape", Backspace: "Backspace", Enter: "Enter", Tab: ev.shiftKey ? "Backtab" : "Tab" }
+  if (handleKey(names[ev.key] || "", ev.key.length === 1 ? ev.key : "")) ev.preventDefault()
 })
 
+// ── Anzeige ──────────────────────────────────────────────────────────────────
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c])
+function renderStats() {
+  $("no").textContent = no; $("lives").textContent = "♥".repeat(Math.max(0, lives)) || "–"
+  $("score").textContent = score; $("combo").textContent = "x" + Math.max(1, Math.min(combo, 8)); $("miss").textContent = miss
+  const b = store.best[level]; $("best").textContent = b ? b.score + " · " + (b.avg / 1000).toFixed(2) + " s" : "–"
+}
 function render() {
-  const c = ctx(), r = decode(typed, c), s = r.screen || desk.here, w = wsOf(s, r.ws), list = desk.ws[s + w]
-  $("no").textContent = no; $("errs").textContent = errs; $("streak").textContent = streak
-  $("best").textContent = best ? best.avg.toFixed(2) + " s" : "–"
+  renderStats()
+  $("levels").innerHTML = LEVELS.map((l, i) => `<button class="${i === level ? "on" : ""}" data-l="${i}">${l[0]}</button>`).join("")
   $("what").textContent = task.text
-  const a = active()
-  $("ctx").textContent = `Du bist auf ${label(desk.here, desk.visible[desk.here])} (${NAMES[desk.here]})` +
-    (a ? ` · aktives Fenster: ${a.name}` : " · kein aktives Fenster")
-  $("sol").textContent = "Loesung: " + task.sol
-  $("sol").hidden = !$("showSol").checked
-  $("input").textContent = (r.move ? "⇢ " : "") + typed + "▏"
-  $("hint").textContent = r.wait === "b" ? "Bildschirm: a s d" : r.wait === "w" ? "Workspace: a … ö"
-    : r.code && r.win < 0 && r.match >= 0 ? `Enter = Fenster ${r.match + 1} · weiter tippen` : ""
-  let g = ""
-  for (const x of SCREENS) {
-    const off = r.screen && r.screen !== x ? " row-off" : ""
-    g += `<div class="head${off}">${x.toUpperCase()}<small>${NAMES[x]}${x === desk.here ? " ◆" : ""}</small></div>`
-    for (let k = 1; k <= 10; k++) {
-      const ws = desk.ws[x + k], vis = desk.visible[x] === k
-      const sel = (r.screen || desk.here) === x && r.ws === k
-      g += `<div class="cell${vis ? " vis" : ""}${sel ? " sel" : ""}${off}"><span class="k">${KEYS[k - 1]}</span>` +
-           `<span class="n">${vis ? "● " : ""}${k % 10} ${AREAS[k - 1]}</span>` +
-           `<div class="apps">${ws.length ? ws.length + ": " + [...new Set(ws.map(x => x.name))].join(", ") : ""}</div></div>`
+  $("ctx").textContent = `Du bist auf ${lbl(snap.here, snap.visible[snap.here])} (${NAMES[snap.here]})` + (task.where ? " · Ziel " + task.where : "")
+  const goal = targetMs(task.kind)
+  $("target").textContent = "Ziel " + (goal / 1000).toFixed(2) + " s" + (store.kinds[task.kind] ? " · Bestzeit " + (store.kinds[task.kind].best / 1000).toFixed(2) + " s" : " (geschaetzt)")
+  const c = ctx(), r = decode(typed, c), local = r.cmd === null && !r.screen && !r.ws && !r.wait && !tree
+  // Leiste: Tabs des sichtbaren Workspaces hier
+  const tabs = here(snap).map((w, i) => {
+    const cd = code(i), L = look(w), lit = local && r.code && cd.startsWith(r.code)
+    const cls = ["tab", w.id === snap.focus && "cur", lit && "lit", local && r.code && !lit && "off", w.group && "grp", snap.full === w.id && "full"]
+    return `<div class="${cls.filter(Boolean).join(" ")}"><b>${cd}</b>${L.glyph ? L.glyph + " " : ""}${esc(L.name)} · ${esc(L.title)}</div>`
+  }).join("")
+  const hint = r.wait === "b" ? "Bildschirm" : r.wait === "w" ? "Workspace" : r.code && r.win < 0 && r.match >= 0 ? "Enter = Fenster " + (r.match + 1)
+    : tree && filter && !typed ? "Suche: " + filter + " · Enter = erster" : ""
+  $("bar").innerHTML = tabs + `<div class="spacer"></div><div class="input" id="input"><span>${r.move ? "⇢" : "λ"} ${esc(typed)}▏</span><span>${esc(hint)}</span></div>`
+  // Liste unter dem Eingabefeld (wie CommandBar.qml)
+  let rows = []
+  if (r.cmd !== null) {
+    const names = tabHits.length ? tabHits : COMMANDS.filter(n => n.startsWith(parse(r.cmd).name))
+    rows = names.map(n => `<div class="${n === parse(r.cmd).name ? "hit" : ""}"><b>#${n}</b></div>`)
+  } else if (tree) {
+    rows = treeRows(snap, filter).map(t => {
+      const L = look(t.x), k = t.key.replace(" ⏎", ""), cls = typed ? (k.startsWith(typed) ? "hit" : "dim") : ""
+      return `<div class="${cls}"><b>${t.key}</b>${lbl(t.s, t.w)} ${L.glyph} ${esc(L.name)} · ${esc(L.title)}</div>`
+    })
+    if (!rows.length) rows = [`<div class="head">keine Treffer</div>`]
+  } else if (r.wait === "b") rows = SCREENS.split("").map(s => `<div><b>${s}</b>${NAMES[s]} · sichtbar ${snap.visible[s] % 10}</div>`)
+  else if (r.wait === "w") {
+    const s = r.screen || snap.here
+    rows = AREAS.map((a, i) => { const l = snap.ws[key(s, i + 1)]; return `<div class="${l.length ? "" : "dim"}"><b>${KEYS[i]}</b>${(i + 1) % 10} ${a} · ${l.map(x => look(x).name).join(", ")}</div>` })
+  } else if (r.screen || r.ws) {
+    rows = c.wins(r.screen || snap.here, r.ws).map((w, i) => {
+      const cd = code(i), L = look(w), cls = r.code ? (cd.startsWith(r.code) ? "hit" : "dim") : ""
+      return `<div class="${cls}"><b>${cd}</b>${L.glyph} ${esc(L.name)} · ${esc(L.title)}</div>`
+    })
+  }
+  $("drop").hidden = !rows.length; $("drop").innerHTML = rows.join("")
+  // Karte
+  let m = ""
+  for (const s of SCREENS) {
+    m += `<div class="h ${s === snap.here ? "here" : ""}">${s.toUpperCase()}<small>${NAMES[s]}</small></div>`
+    for (let w = 1; w <= 10; w++) {
+      const l = snap.ws[key(s, w)], vis = snap.visible[s] === w
+      m += `<div class="cell ${vis ? "vis" : ""}"><span class="k">${KEYS[w - 1]}</span><span class="n">${vis ? "● " : ""}${w % 10} ${AREAS[w - 1]}</span>` +
+           `<div class="a">${l.length ? l.length + ": " + esc([...new Set(l.map(x => look(x).name))].join(", ")) : ""}</div></div>`
     }
   }
-  $("grid").innerHTML = g
-  $("title").textContent = `${label(s, w)} · ${AREAS[w - 1]} · ${list.length ? list.length + " Fenster" : "leer"}`
-  $("list").innerHTML = list.map((x, i) => {
-    const cd = code(i), hit = r.code && cd.startsWith(r.code)
-    return `<div class="win${hit ? " hit" : r.code ? " off" : ""}"><b>${cd}</b>${x.name} · ${x.title}</div>`
-  }).join("")
+  $("map").innerHTML = m
 }
-
 function finish() {
-  const avg = log.reduce((a, x) => a + x.ms, 0) / log.length / 1000
-  const slow = [...log].sort((a, b) => b.ms - a.ms).slice(0, 5)
-  const isBest = !best || avg < best.avg
-  if (isBest) { best = { avg, errs }; try { localStorage.setItem("nav-trainer-best", JSON.stringify(best)) } catch (e) {} }
+  task = null
+  const okl = log.filter(x => x.ok), avg = okl.length ? okl.reduce((a, x) => a + x.ms, 0) / okl.length : 0
+  const think = okl.length ? okl.reduce((a, x) => a + x.think, 0) / okl.length : 0
+  const acc = log.length ? okl.length / log.length : 0
+  const prev = store.rounds.filter(x => x.level === level).slice(-1)[0]
+  store.rounds.push({ t: Date.now(), level, avg, acc, score }); store.rounds = store.rounds.slice(-60)
+  const b = store.best[level], isBest = !b || score > b.score
+  if (isBest) store.best[level] = { score, avg }
+  save()
+  const kinds = {}
+  for (const x of okl) (kinds[x.kind] = kinds[x.kind] || []).push(x.ms)
+  const delta = prev && avg ? avg - prev.avg : 0
+  const hist = store.rounds.filter(x => x.level === level && x.avg).slice(-15)
+  const max = Math.max(...hist.map(x => x.avg), 1), pts = hist.map((x, i) => `${i * 30},${60 - x.avg / max * 55}`).join(" ")
   $("done").hidden = false
-  $("done").innerHTML = `<b>Runde fertig.</b> Schnitt ${avg.toFixed(2)} s je Aufgabe, ${errs} Fehler` +
-    (isBest ? " · neuer Bestwert!" : "") + `<table>${slow.map(x =>
-      `<tr><td>${(x.ms / 1000).toFixed(1)} s</td><td>${x.sol}</td><td>${x.text}</td></tr>`).join("")}</table>` +
-    `<p>Langsamste Aufgaben mit kuerzester Loesung. „Neue Runde“ startet von vorn.</p>`
+  $("done").innerHTML = `<b>Runde vorbei${lives <= 0 ? " (keine Leben mehr)" : ""}.</b> Punkte ${score}${isBest ? " · neuer Highscore!" : ""}
+    · Schnitt ${(avg / 1000).toFixed(2)} s` + (prev ? ` <span class="${delta <= 0 ? "up" : "down"}">(${delta <= 0 ? "" : "+"}${(delta / 1000).toFixed(2)} s zur letzten Runde)</span>` : "") +
+    ` · Denkzeit ${(think / 1000).toFixed(2)} s · Treffer ${Math.round(acc * 100)} % · Fehltasten ${miss}
+    <table><tr><th>Typ</th><th>diese Runde</th><th>dein Schnitt</th><th>Bestzeit</th></tr>${Object.entries(kinds).map(([k, v]) => {
+      const s = store.kinds[k], a = v.reduce((x, y) => x + y, 0) / v.length
+      return `<tr><td>${KIND_NAMES[k]}</td><td>${(a / 1000).toFixed(2)} s</td><td>${(s.avg / 1000).toFixed(2)} s</td><td>${(s.best / 1000).toFixed(2)} s</td></tr>`
+    }).join("")}</table>
+    <p>Langsamste Aufgaben:</p><table>${[...log].sort((a, b) => b.ms - a.ms).slice(0, 5).map(x =>
+      `<tr><td>${(x.ms / 1000).toFixed(1)} s</td><td>${x.ok ? "" : "✗"}</td><td>${esc(x.sol)}</td><td>${esc(x.text)}</td></tr>`).join("")}</table>
+    ${hist.length > 1 ? `<p>Verlauf Schnitt (Level ${LEVELS[level][0]}):</p><svg width="${(hist.length - 1) * 30 + 4}" height="64"><polyline points="${pts}" fill="none" stroke="#FFDC00" stroke-width="2"/></svg>` : ""}
+    <p>Gleiches Level: Leertaste · anderes Level oben waehlen.</p>`
+  renderStats()
 }
 
-$("restart").onclick = e => { e.target.blur(); newRound() }
-$("showSol").onchange = e => { e.target.blur(); render() }
-setInterval(() => { if (task && $("done").hidden) $("clock").textContent = ((performance.now() - t0) / 1000).toFixed(1) }, 100)
-newRound()
+document.addEventListener("click", ev => { const l = ev.target.dataset && ev.target.dataset.l; if (l !== undefined) { ev.target.blur(); newRound(+l) } })
+document.addEventListener("keydown", ev => { if (!task && ev.key === " ") { ev.preventDefault(); newRound(level) } })
+setInterval(() => {
+  if (!task || busy) return
+  const ms = performance.now() - t0, goal = targetMs(task.kind)
+  $("clock").textContent = (ms / 1000).toFixed(2); $("clock").className = "t " + (ms <= goal ? "fast" : "slow")
+  $("think").textContent = tFirst ? "Denkzeit " + ((tFirst - t0) / 1000).toFixed(2) + " s" : "Denkzeit läuft …"
+  $("meter").style.width = Math.min(100, ms / goal * 100) + "%"; $("meter").className = ms > goal ? "slow" : ""
+}, 50)
+newRound(0)
 </script>
 </body>
 </html>
