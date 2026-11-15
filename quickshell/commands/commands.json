@@ -1,5 +1,5 @@
 {
-  "all":    { "help": "Baum aller Apps mit ihrem Befehl", "builtin": "tree" },
+  "all":    { "help": "Baum aller Apps mit Befehl; #all text = suchen", "builtin": "tree" },
   "split":  { "help": "nebeneinander: alle / a,s / a,s > bawj", "exec": ["win.py", "split"] },
   "reset":  { "help": "Teilungen aufloesen, wieder Tabs", "exec": ["win.py", "reset"] },
   "close":  { "help": "Fenster schliessen: a,s,d", "exec": ["win.py", "close"] },

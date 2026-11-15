@@ -107,14 +107,15 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v35` | wie v34, Befehlsleiste unter der waybar statt Fensterliste links und Navigator-Overlay: Tabs des Workspaces mit Code links, Kommandozeile rechts (Super+f), Befehle `:all` (Baum mit Befehl je App) und `:clear`, neue Befehle per `commands/commands.json` + Skript; Super+b und `custom/wins` raus. |
 | `HL2-v36` | wie v35, Befehle mit `#` statt `:` (`#all`, `#clear`; `#` ohne Shift). |
 | `HL2-v37` | wie v36, mehr Befehle: `#split` (alle / `a,s` als geteilter Tab / `> ziel`), `#reset`, `#close`, `#only`, `#full`, `#back`, `#open`, `#park`/`#unpark`, `#note`, `#ticket`; geteilte Tabs unterstrichen; Befehls-Skripte bekommen `BAR_CONTEXT`. |
-| `HL2-v38` | wie v37, Tab / Shift+Tab ergaenzt Befehlsnamen in der Befehlsleiste. **Aktueller Standard** fuer neue Themes |
+| `HL2-v38` | wie v37, Tab / Shift+Tab ergaenzt Befehlsnamen in der Befehlsleiste. |
+| `HL2-v39` | wie v38, Claude-/Codex-Sessions in der Befehlsleiste als `✳ Claude` / `◎ Codex` mit Session-Titel und Status (aus `agents.json`), `#all text` sucht im Baum. **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v38` (Vorschau,
+Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v39` (Vorschau,
 Zwischenablage, Konsole, Pickup-Popups, Workspace-Nummern und Fensterzahl in waybar,
 Ticket-Board, Navigator, Befehlsleiste). Alles in dieser Liste gilt fuer
 **jedes** neue Theme, nicht nur fuer HL2: es aendert nur den **Look**
@@ -190,7 +191,15 @@ Wer davon abweicht, fragt vorher.
   rot wackeln; Argumente werden (noch) nicht ergaenzt. Codes in Befehlen = Codes der Tabs (Liste mit Komma),
   Ziel mit `>` + Grammatik ohne Fenstercode (`bawj` = A7, `wf` = Workspace 4 hier):
   `#all` = Baum Bildschirm -> Workspace -> App mit dem kuerzesten Befehl je App
-  (`nav.js` `route()`), direkt daraus tippen, Enter/Esc klappt zu.
+  (`nav.js` `route()`), direkt daraus tippen, Enter/Esc klappt zu. `#all text` =
+  **Suche**: nur Fenster, deren App, Titel, Werkzeug, Session-Titel, Verzeichnis oder
+  Bereich `text` enthaelt (Codes bleiben die Plaetze im Workspace), Enter = erster
+  Treffer. **Agenten in der Leiste**: die Leiste liest `$XDG_RUNTIME_DIR/agents.json`
+  (von `agents.py watch`, je Session `con` = sway-Fenster); laeuft in einem Fenster
+  eine Claude-/Codex-Session, zeigen Tab, Liste und Baum statt App-Icon und Name
+  `✳ Claude` / `◎ Codex`, den Session-Titel und den Status (`⚙` arbeitet, `✓`
+  bereit), `look()` in `CommandBar.qml`. Endet die Session, wird es wieder die App.
+  Keine Hooks noetig (Codex hat keine Start/Stop-Hooks).
   `#split` = alle Fenster nebeneinander als ein geteilter Tab (ab 4 zwei Reihen),
   `#split a,s` = nur diese als geteilter Tab, der Rest bleibt Vollbild-Tabs,
   `#split a,s > bawj` = dasselbe dort (Fokus geht mit; Paar rutscht ans Ende der

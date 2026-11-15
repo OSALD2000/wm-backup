@@ -16,6 +16,10 @@
 //     Zeile), Exit != 0 = Fehler (letzte stderr-Zeile) -> Meldung in der Leiste.
 //   {"name": {"help": "...", "builtin": "tree"}}  kann nur die Leiste (#all).
 // Daten beim Oeffnen eingefroren ("grid"): Codes bleiben stabil.
+// Laeuft in einem Fenster eine Claude-/Codex-Session (agents.json von
+// eww/scripts/agents.py, Feld "con" = sway-Fenster), zeigen Tabs, Liste und
+// Baum statt "Alacritty" Zeichen, Werkzeug, Session-Titel und Status (look()).
+// "#all text" = Baum nur mit passenden Fenstern, Enter = erster Treffer.
 // `quickshell ipc call bar toggle|open|close|type TEXT|press NAME|info`.
 import QtQuick
 import QtQuick.Effects
@@ -44,12 +48,29 @@ Scope {
     property var snap: []                    // "grid" beim Oeffnen
     property int con: 0                      // aktives Fenster beim Oeffnen (fuer m)
     property var msg: ({ text: "", warn: false, output: "" })
+    property string treeFilter: ""           // "#all text": Suchtext, klein geschrieben
+    property var agents: ({})                // sway-Fenster -> Session aus agents.json
+    readonly property var tools: ({ claude: { glyph: "✳", name: "Claude" }, codex: { glyph: "◎", name: "Codex" } })
 
     FileView {
         path: cb.dir + "/commands.json"
         watchChanges: true
         onFileChanged: reload()
         onLoaded: { try { cb.cmds = JSON.parse(text()) } catch (e) { cb.say("commands.json: " + e, true) } }
+    }
+    // laufende Agenten-Sessions; agents.py schreibt atomar, kaputtes JSON = alter Stand bleibt
+    FileView {
+        path: Quickshell.env("XDG_RUNTIME_DIR") + "/agents.json"
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: {
+            try {
+                const m = {}
+                for (const g of JSON.parse(text()).live || [])
+                    for (const it of g.items || []) if (it.con) m[it.con] = it
+                cb.agents = m
+            } catch (e) {}
+        }
     }
 
     readonly property var rows: {
@@ -71,6 +92,20 @@ Scope {
     function cell(s, w) { return snap.find(c => c.letter === s && (w ? c.number === w : c.visible)) }
     function visibleNr(s) { return (cell(s, 0) || {}).number || 0 }
     function hit(c) { return r.code !== "" && c.indexOf(r.code) === 0 }
+    // Anzeige eines Fensters: mit Agenten-Session Zeichen + Werkzeug + Session-Titel
+    // + Status (⚙ arbeitet, ✓ bereit), sonst App-Name + Fenstertitel
+    function look(w) {
+        const a = agents[w.id], tl = a && tools[a.tool]
+        return tl ? { glyph: tl.glyph, name: tl.name, title: a.name || w.title, mark: a.status === "busy" ? "⚙" : "✓", agent: a }
+                  : { glyph: "", name: w.name, title: w.title, mark: "", agent: null }
+    }
+    // Suchtext fuer "#all text": App, Titel, Werkzeug, Session, Verzeichnis, Bereich
+    function matches(w, c) {
+        if (!treeFilter) return true
+        const L = look(w), a = L.agent || {}
+        return [w.name, w.title, L.name, L.title, a.cwd || "", a.tool || "", c.area, c.letter + (c.number % 10)]
+               .join(" ").toLowerCase().indexOf(treeFilter) >= 0
+    }
 
     // Zeilen der Liste unter dem Eingabefeld: {key, label, icons, head, hit, dim, act}
     readonly property var drop: {
@@ -79,7 +114,9 @@ Scope {
             const key = tree ? Nav.route(s, ws, i, n, here, visibleNr(s)) : Nav.code(i)
             // im Baum zaehlt der ganze getippte Befehl, sonst nur der Fenstercode
             const k = tree ? key.replace(" ⏎", "") : key, t = tree ? typed : r.code
-            return { key: key, label: w.name + "  ·  " + w.title, icons: [w.icon],
+            const L = look(w)
+            return { key: key, label: (L.glyph ? L.glyph + "  " : "") + L.name + "  ·  " + L.title + (L.mark ? "  " + L.mark : ""),
+                     icons: L.glyph ? [] : [w.icon],
                      hit: t !== "" && k.indexOf(t) === 0, dim: t !== "" && k.indexOf(t) !== 0, act: { win: w.id } }
         }
         if (r.cmd !== null) {
@@ -88,17 +125,20 @@ Scope {
             return names.map(n => ({ key: "#" + n, label: cmds[n].help || "", hit: n === p.name, act: { cmd: n } }))
         }
         if (tree) {
+            // Code bleibt der Platz im Workspace, auch wenn der Filter Fenster ausblendet
             const out = []
             for (const row of rows) {
-                const s = row[0].letter
-                out.push({ head: true, key: s.toUpperCase(), label: NAMES[s] + "  ·  " + row[0].output })
+                const s = row[0].letter, part = []
                 for (const c of row) {
-                    if (!c.wins.length) continue
-                    out.push({ head: true, key: "  w" + Nav.KEYS[c.number - 1],
-                               label: (c.visible ? "● " : "") + (c.number % 10) + " " + c.area, act: { go: c } })
-                    c.wins.forEach((w, i) => out.push(winRow(w, i, c.wins.length, s, c.number)))
+                    const hits = c.wins.map((w, i) => matches(w, c) ? winRow(w, i, c.wins.length, s, c.number) : null)
+                                       .filter(x => x)
+                    if (!hits.length) continue
+                    part.push({ head: true, key: "  w" + Nav.KEYS[c.number - 1],
+                                label: (c.visible ? "● " : "") + (c.number % 10) + " " + c.area, act: { go: c } }, ...hits)
                 }
+                if (part.length) out.push({ head: true, key: s.toUpperCase(), label: NAMES[s] + "  ·  " + row[0].output }, ...part)
             }
+            if (!out.length) out.push({ head: true, key: "", label: "keine Treffer fuer \"" + treeFilter + "\"" })
             return out
         }
         if (r.wait === "b")
@@ -122,11 +162,11 @@ Scope {
         snap = JSON.parse(JSON.stringify(shell.state.grid || []))
         con = 0
         for (const c of snap) for (const w of c.wins || []) if (w.focused) con = w.id
-        typed = ""; tree = false
+        typed = ""; tree = false; treeFilter = ""
         open = true
         keys.forceActiveFocus()
     }
-    function hide() { open = false; tree = false; typed = "" }
+    function hide() { open = false; tree = false; typed = ""; treeFilter = "" }
     // Stand fuer Befehls-Skripte: Tabs des sichtbaren Workspaces hier (mit Code)
     // und alle Workspaces, wie beim Tippen zu sehen
     function context() {
@@ -159,6 +199,10 @@ Scope {
         else if (a === "win") focusWin((ctx.wins(t, next.ws)[next.win] || {}).id)
     }
     function enter() {
+        if (tree && treeFilter && typed === "") {            // Suche: Enter = erster Treffer
+            const first = drop.find(x => x.act && x.act.win)
+            return first ? focusWin(first.act.win) : reject()
+        }
         const e = Nav.enter(r)
         if (e === "win") focusWin((list[r.match] || {}).id)
         else if (e === "output") { I3.dispatch(`focus output ${JSON.stringify(cell(target, 0).output)}`); hide() }
@@ -169,7 +213,7 @@ Scope {
     function run(p) {
         const c = cmds[p.name]
         if (!c) { reject(); return say("unbekannt: #" + p.name, true) }
-        if (c.builtin === "tree") { tree = true; typed = ""; return }
+        if (c.builtin === "tree") { tree = true; treeFilter = p.args.join(" ").toLowerCase(); typed = ""; return }
         if (!c.exec || !c.exec.length) { reject(); return say("#" + p.name + ": weder exec noch builtin", true) }
         const x = c.exec[0], home = Quickshell.env("HOME")
         const bin = x[0] === "/" ? x : x.indexOf("~/") === 0 ? home + x.slice(1) : dir + "/" + x
@@ -326,6 +370,7 @@ Scope {
                     readonly property string code: index >= 0 ? Nav.code(index) : ""  // -1 beim Ausblenden
                     readonly property bool current: index === bar.active
                     readonly property bool lit: bar.typing && cb.hit(code)
+                    readonly property var look: cb.look(modelData)
                     width: bar.tabW; height: tabs.height
                     opacity: bar.typing && cb.r.code !== "" && !lit ? 0.35 : 1
                     Behavior on opacity { NumberAnimation { duration: 120 } }
@@ -356,17 +401,28 @@ Scope {
                             color: cb.shell.hud
                         }
                         Image {
+                            visible: !tab.look.glyph
                             anchors.verticalCenter: parent.verticalCenter
                             width: 16; height: 16
                             sourceSize: Qt.size(32, 32)
                             source: tab.modelData.icon ? "file://" + tab.modelData.icon : ""
                             opacity: tab.current || mouse.containsMouse ? 1 : 0.75
                         }
+                        // Agenten-Session statt App-Icon
+                        Text {
+                            visible: !!tab.look.glyph
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 16; horizontalAlignment: Text.AlignHCenter
+                            text: tab.look.glyph
+                            font { family: cb.shell.font; pixelSize: 14; bold: true }
+                            color: cb.shell.hud
+                        }
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             width: parent.width - x
                             elide: Text.ElideRight
-                            text: tab.modelData.name + (bar.tabW > 150 ? "  ·  " + tab.modelData.title : "")
+                            text: (tab.look.mark ? tab.look.mark + " " : "") + tab.look.name
+                                  + (bar.tabW > 150 ? "  ·  " + tab.look.title : "")
                             font { family: cb.shell.font; pixelSize: 11; bold: tab.current }
                             color: tab.current ? cb.shell.hud : Qt.alpha(cb.shell.hud, 0.65)
                         }
@@ -511,6 +567,7 @@ Scope {
                     text: cb.r.wait === "b" ? "Bildschirm" : cb.r.wait === "w" ? "Workspace"
                         : cb.r.code && cb.r.win < 0 && cb.r.match >= 0 ? "Enter = Fenster " + (cb.r.match + 1)
                         : cb.r.screen && !cb.r.ws && cb.r.cmd === null ? "Enter = " + (cb.r.move ? "verschieben" : "Bildschirm")
+                        : cb.tree && !cb.typed && cb.treeFilter ? "Suche: " + cb.treeFilter + " · Enter = erster"
                         : cb.tree && !cb.typed ? "Enter / Esc = zu" : ""
                     font { family: cb.shell.font; pixelSize: 10 }
                     color: Qt.alpha(cb.shell.hud, 0.55)
