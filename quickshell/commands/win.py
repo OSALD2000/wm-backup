@@ -11,8 +11,8 @@ win.py full [a]                 Vollbild an/aus (ohne Code: aktives Fenster)
 win.py open name [> ziel]       App (Desktop-Eintrag) starten, mit Ziel dort
 win.py selftest
 
-Codes = Codes der Tabs (a s d … aa), Liste mit Komma. Ziel = Navigator-Grammatik
-ohne Fenstercode: [b + a|s|d] [w + a…ö], z. B. bawj = A7, wf = Workspace 4 hier.
+Codes = Codes der Tabs (a s d … aa), Liste mit Komma. Ziel = [Bildschirm] Workspace
+wie in der Leiste, ohne Fenstercode: a j = A7, f = Workspace 4 hier.
 Stand kommt von der Leiste als BAR_CONTEXT (JSON: here, con, tabs, grid), also
 genau das, was beim Tippen zu sehen war. Ausgabe = Meldung fuer die Leiste.
 """
@@ -36,7 +36,7 @@ class Fail(Exception):
 
 
 def split_args(args):
-    """["a,s", ">", "bawj"] -> ("a,s", "bawj"); auch "a,s>bawj" oder ohne Ziel."""
+    """["a,s", ">", "a", "j"] -> ("a,s", "a j"); auch "a,s>a j" oder ohne Ziel."""
     text = " ".join(args)
     head, _, target = text.partition(">")
     return head.strip(), target.strip()
@@ -54,14 +54,15 @@ def ids(ctx, codes):
 
 
 def target(ctx, text):
-    """'bawj' -> Feld aus grid ({name, output, …}). ponytail: Teilmenge der
-    Grammatik aus nav.js (nur b/w), node gibt es im sway-PATH nicht."""
-    m = re.fullmatch(r"(?:b([asd]))?(?:w([" + KEYS + r"]))?", text)
-    if not text or not m:
-        raise Fail(f"Ziel {text!r} versteht nur [b a|s|d] [w a…ö]")
+    """'a j' -> Feld aus grid ({name, output, …}). ponytail: Teilmenge der
+    Grammatik aus nav.js (immer mit Workspace: parse() verschluckt leere Teile),
+    node gibt es im sway-PATH nicht."""
+    m = re.fullmatch(r"(?:([asd]) )?([" + KEYS + r"])", " ".join(text.split()))
+    if not m:
+        raise Fail(f"Ziel {text!r} versteht nur [a|s|d] a…ö, z. B. a j = A7")
     screen = m[1] or ctx["here"]
     cell = next((c for c in ctx["grid"] if c["letter"] == screen and
-                 (c["number"] == KEYS.index(m[2]) + 1 if m[2] else c["visible"])), None)
+                 c["number"] == KEYS.index(m[2]) + 1), None)
     if not cell:
         raise Fail(f"Bildschirm {screen.upper()} gibt es gerade nicht")
     return cell
@@ -209,18 +210,17 @@ def selftest():
             for l, b, o, v in [("a", 10, "HDMI-A-1", 2), ("d", 30, "eDP-1", 1)] for n in range(1, 11)]
     ctx = {"here": "d", "con": 7, "grid": grid,
            "tabs": [{"code": c, "id": i} for c, i in [("a", 5), ("s", 6), ("d", 7), ("f", 8), ("aa", 9)]]}
-    assert split_args(["a,s", ">", "bawj"]) == ("a,s", "bawj")
-    assert split_args(["a,s>bawj"]) == ("a,s", "bawj") and split_args([]) == ("", "")
+    assert split_args(["a,s", ">", "a", "j"]) == ("a,s", "a j")
+    assert split_args(["a,s>a", "j"]) == ("a,s", "a j") and split_args([]) == ("", "")
     assert ids(ctx, "a, s,aa") == [5, 6, 9] and ids(ctx, "") == []
     for bad in ["x", "a,ss"]:
         try:
             ids(ctx, bad); raise AssertionError(bad)
         except Fail:
             pass
-    assert target(ctx, "bawj")["name"] == "17:a7"
-    assert target(ctx, "wf")["name"] == "34:d4"   # ohne b: hier
-    assert target(ctx, "ba")["name"] == "12:a2"   # ohne w: sichtbarer
-    for bad in ["", "bawja", "bx", "bs"]:          # s gibt es im Test nicht
+    assert target(ctx, "a j")["name"] == "17:a7"
+    assert target(ctx, "f")["name"] == "34:d4"    # ohne Bildschirm: hier
+    for bad in ["", "a j a", "x", "s f", "aj"]:    # s gibt es im Test nicht
         try:
             target(ctx, bad); raise AssertionError(bad)
         except Fail:
@@ -238,7 +238,7 @@ def selftest():
     assert four.count("split horizontal") == 2 and four.count("split vertical") == 1
     assert four.index("split vertical") > four.index("[con_id=8] move container to mark _wsplit")
     assert four[-3] == "move container to mark _wsplit"
-    far = plan_split([5, 6], home, target(ctx, "bawj"))
+    far = plan_split([5, 6], home, target(ctx, "a j"))
     assert far[0] == 'workspace "17:a7" output "HDMI-A-1"' and "99:umbau" not in " ".join(far)
     try:
         plan_split([5], home); raise AssertionError("ein Fenster")
@@ -249,7 +249,7 @@ def selftest():
                           "[con_id=5] mark --replace _wsplit", "[con_id=6] move container to mark _wsplit"]
     assert reset[-3:] == ["[con_id=5] focus", "layout tabbed", "[con_id=6] focus"]
     assert plan_reset([5, 6], home, 99)[-1] == "[con_id=5] focus"
-    assert plan_open(("firefox_firefox", "Firefox"), target(ctx, "bawj")) == [
+    assert plan_open(("firefox_firefox", "Firefox"), target(ctx, "a j")) == [
         'workspace "17:a7" output "HDMI-A-1"', 'workspace --no-auto-back-and-forth "17:a7"',
         "exec gtk-launch firefox_firefox"]
     try:

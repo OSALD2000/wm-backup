@@ -109,14 +109,15 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v37` | wie v36, mehr Befehle: `#split` (alle / `a,s` als geteilter Tab / `> ziel`), `#reset`, `#close`, `#only`, `#full`, `#back`, `#open`, `#park`/`#unpark`, `#note`, `#ticket`; geteilte Tabs unterstrichen; Befehls-Skripte bekommen `BAR_CONTEXT`. |
 | `HL2-v38` | wie v37, Tab / Shift+Tab ergaenzt Befehlsnamen in der Befehlsleiste. |
 | `HL2-v39` | wie v38, Claude-/Codex-Sessions in der Befehlsleiste als `✳ Claude` / `◎ Codex` mit Session-Titel und Status (aus `agents.json`), `#all text` sucht im Baum. |
-| `HL2-v40` | wie v39, Caps Lock ist zweite Super-Taste statt Escape (`xkb_options caps:super`). **Aktueller Standard** fuer neue Themes |
+| `HL2-v40` | wie v39, Caps Lock ist zweite Super-Taste statt Escape (`xkb_options caps:super`). |
+| `HL2-v41` | wie v40, Befehlsleiste ohne `b`/`w`: `[m] [Bildschirm] [Workspace] Fenster` mit Leerzeichen, von rechts gelesen, Ausfuehren mit Enter (`a s aa`, `f `, `m a f`); Ziele `> a j`. **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v40` (Vorschau,
+Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v41` (Vorschau,
 Zwischenablage, Konsole, Pickup-Popups, Workspace-Nummern und Fensterzahl in waybar,
 Ticket-Board, Navigator, Befehlsleiste). Alles in dieser Liste gilt fuer
 **jedes** neue Theme, nicht nur fuer HL2: es aendert nur den **Look**
@@ -168,29 +169,32 @@ Wer davon abweicht, fragt vorher.
   exklusivem Tastaturfokus genau ueber dem Eingabefeld (eine Leiste auf `bottom`
   bekommt unter sway keinen Fokus; die Leiste selbst wechselt die Ebene nie, sonst
   rutscht sie ueber die waybar). Esc, Klick daneben oder ein ausgefuehrter Befehl
-  geben den Fokus zurueck. Eingabe `[m] [b + a|s|d] [w + a…ö] [Fenstercode]`:
-  `b` + Buchstabe = Bildschirm (fehlt = der aktuelle),
-  `w` + `a s d f g h j k l ö` = Workspace 1-10 (fehlt = der sichtbare), der Wechsel
-  passiert **sofort**, die Eingabe bleibt fuer den Fenstercode offen. Fenstercodes
+  geben den Fokus zurueck. Eingabe `[m] [Bildschirm] [Workspace] Fenster`, Teile
+  durch **ein Leerzeichen** getrennt, **von rechts gelesen**: letzter Teil = Fenster,
+  davor Workspace (`a s d f g h j k l ö` = 1-10), davor Bildschirm (`a`/`s`/`d`).
+  Endet die Eingabe auf Leerzeichen, ist kein Fenster gemeint; ein leerer Teil (zwei
+  Leerzeichen) = der aktuelle Bildschirm / sichtbare Workspace. Ausgefuehrt wird
+  **erst mit Enter** (bis HL2-v40 `b`/`w` davor und sofort): ein Buchstabe kann bis
+  zum naechsten Leerzeichen Fenster, Workspace oder Bildschirm sein. Fenstercodes
   `a`…`ö` = 1-10, `aa` = 11, `as` = 12 … `aö` = 20, `sa` = 21 (gleich, auch wenn
-  Fenster dazukommen); ist ein Code zugleich Anfang eines laengeren (`a` bei 11+
-  Fenstern), wartet er ohne Timeout: Enter = Fenster 1, `aa` = Fenster 11.
-  Ein eindeutiger Code fokussiert sofort. `m` vorne = das beim Oeffnen aktive
-  Fenster verschieben: nach dem Workspace ausgefuehrt, Fokus bleibt;
-  `m b<x>` + Enter = auf den sichtbaren Workspace von `<x>`. `b<x>` + Enter = Fokus
-  auf diesen Bildschirm. Backspace = eine Stufe zurueck, falsche Taste = Eingabefeld
-  wackelt rot. Beispiele: `bawsaa` = A2, Fenster 11; `wf` = Workspace 4 hier;
-  `d` = Fenster 3 hier; `mbawd` = aktives Fenster nach A4. Beim Tippen leuchten die
-  passenden Tabs; geht es um einen anderen Bildschirm/Workspace, klappt unter dem
-  Eingabefeld eine Liste auf (nach `b` die Bildschirme, nach `w` die Workspaces mit
-  Icons, dann die Fenster dort mit Code; Zeilen anklickbar).
+  Fenster dazukommen); Enter nimmt genau den getippten Code. `m` vorne = das beim
+  Oeffnen aktive Fenster verschieben (Fokus bleibt), ohne Fensterteil, Leerzeichen
+  am Ende egal. Backspace = ein Zeichen zurueck, Taste, die nicht passen kann (vierter
+  Teil, `f` als Bildschirm, `aa` als Workspace, Code ohne Fenster) = Eingabefeld
+  wackelt rot. Rechts im Feld steht, was Enter taete (`nav.js` `label()`).
+  Beispiele: `d` = Fenster 3 hier; `f ` = Workspace 4 hier; `f d` = dort Fenster 3;
+  `a s aa` = A2, Fenster 11; `s  ` = Fokus auf Bildschirm S; `m a f` = aktives
+  Fenster nach A4; `m a  ` = auf den sichtbaren Workspace von A. Beim Tippen
+  leuchten die passenden Tabs; geht es um einen anderen Bildschirm/Workspace, klappt
+  unter dem Eingabefeld die Fensterliste dort mit Code auf (Zeilen anklickbar).
   **Befehle** `#wort arg …` mit Enter (nur am Leerzeichen getrennt, `#` ohne Shift auf
   deutscher Tastatur; bis HL2-v35 `:`); `#` allein
   listet alle mit Hilfe. **Tab** ergaenzt den Befehlsnamen (`nav.js` `complete()`):
   ein Treffer = ganzer Name + Leerzeichen, mehrere = gemeinsamer Anfang, danach
   blaettern Tab / Shift+Tab durch die Treffer (Zeile leuchtet), kein Treffer =
   rot wackeln; Argumente werden (noch) nicht ergaenzt. Codes in Befehlen = Codes der Tabs (Liste mit Komma),
-  Ziel mit `>` + Grammatik ohne Fenstercode (`bawj` = A7, `wf` = Workspace 4 hier):
+  Ziel mit `>` + `[Bildschirm] Workspace` ohne Fenstercode (`a j` = A7, `f` = Workspace 4 hier;
+  nur Bildschirm geht hier nicht, die Argumente verlieren leere Teile):
   `#all` = Baum Bildschirm -> Workspace -> App mit dem kuerzesten Befehl je App
   (`nav.js` `route()`), direkt daraus tippen, Enter/Esc klappt zu. `#all text` =
   **Suche**: nur Fenster, deren App, Titel, Werkzeug, Session-Titel, Verzeichnis oder
@@ -203,7 +207,7 @@ Wer davon abweicht, fragt vorher.
   Keine Hooks noetig (Codex hat keine Start/Stop-Hooks).
   `#split` = alle Fenster nebeneinander als ein geteilter Tab (ab 4 zwei Reihen),
   `#split a,s` = nur diese als geteilter Tab, der Rest bleibt Vollbild-Tabs,
-  `#split a,s > bawj` = dasselbe dort (Fokus geht mit; Paar rutscht ans Ende der
+  `#split a,s > a j` = dasselbe dort (Fokus geht mit; Paar rutscht ans Ende der
   Tabs), `#reset` = alle Teilungen aufloesen, wieder Tabs. Geteilte Tabs haben in
   der Leiste eine gemeinsame Unterstreichung (`group` in `sidebar.json`).
   `#close a,s` / `#only a` / `#clear` = diese / alle ausser / alle Fenster im
@@ -228,7 +232,7 @@ Wer davon abweicht, fragt vorher.
   dahinter, auf einen Container = hinein; `split` auf einem Einzelkind aendert nur
   das Layout, deshalb Reihen erst einzeln). `{"builtin": "tree"}` nur fuer Befehle,
   die die Leiste selbst kann; wenige halten. Codes bleiben feste Grammatik in
-  `nav.js` (Rueckmeldung je Taste, kein Prozessstart).
+  `nav.js` (Pruefung je Taste, kein Prozessstart).
   Daten = `"grid"` aus `sidebar.json`, beim Oeffnen eingefroren (Codes stabil,
   geschlossene Fenster tun nichts); aktives Fenster = `focused` darin.
   Workspace hin/verschieben ueber `sidebar.py workspaces apply go|move OUTPUT N CON`
@@ -236,14 +240,19 @@ Wer davon abweicht, fragt vorher.
   `I3.dispatch`. Test: `node tests/nav.cjs`. **Ueben**: `tools/nav-trainer.html` lokal
   im Browser oeffnen = Spiel mit Nachbildung der Leiste (Tabs, Eingabe, Liste, Baum,
   Tab-Ergaenzung) auf einem simulierten Desktop, gleiche `nav.js`, `#`-Befehle als
-  JS-Nachbildung von `win.py` (ohne open/park/note/ticket). Level 1 Fenster, 2
-  Workspaces, 3 Bildschirme, 4 Verschieben, 5 Befehle, 6 Suchen, 7 Mix; Runde = 20
-  Aufgaben, 3 Leben, Punkte mit Tempo-Bonus und Combo. Bewertet wird das Ergebnis
-  auf dem Spiel-Desktop, nicht die Tippfolge; nach einem Fehler steht der kuerzeste
-  Weg da. Zeit: je Aufgabe Gesamt- und Denkzeit (bis zur ersten Taste), Zielzeit =
-  eigener Schnitt je Aufgabentyp (gleitend), Bestzeiten, Verlauf der Runden; alles
-  im localStorage (`nav-game-v1`). Leertaste = gleiches Level nochmal. Test:
-  `node tests/trainer.cjs` spielt jedes Level mit den Musterloesungen durch. Seit HL2-v34 statt Workspace-Raster (Super+u),
+  JS-Simulation aller Befehle aus `commands.json` (auch open/park/unpark/note/ticket;
+  App-Katalog im Trainer, keine echten Apps oder Vault-Dateien). Level 1 Fenster,
+  2 Workspaces, 3 Bildschirme, 4 Verschieben, 5 Befehle, 6 Suchen, 7 Mix, 8 Apps,
+  9 Sessions, 10 Notizen & Tickets. Standard = **Lernen** ohne Zeitdruck/Leben:
+  Erklaerung je Typ, F1 zeigt einen Weg, nach Fehlern Enter = gleiche Ausgangslage
+  nochmal, nach Erfolg Enter = weiter. Alle Typen unten einzeln waehlbar;
+  Fortschritt zaehlt nur Loesungen ohne Hilfe. **Tempo-Test** = drei Leben,
+  Tempo-Bonus, Combo, Gesamt-/Denkzeit, eigener Zeitschnitt und Bestwerte.
+  Runde = mindestens 20 Aufgaben (Mix alle Typen), jeder Typ vor Wiederholung.
+  Ergebnis zaehlt; Tab-Uebung verlangt zusaetzlich Tab. Alles im localStorage
+  (`nav-game-v1`); Lernen veraendert keine Tempo-Bestwerte. Leertaste = neue Runde.
+  Test: `node tests/trainer.cjs` prueft Befehlsabdeckung, Musterloesungen,
+  Simulation, Wiederholen und Moduswechsel. Seit HL2-v34 statt Workspace-Raster (Super+u),
   Ziel-Monitor (Super+Esc, Super+Ctrl+N) und Super+Kippen; seit HL2-v35 als Leiste
   statt Overlay (Navigator) und statt der Fensterliste links (samt Super+b und
   waybar `custom/wins`).

@@ -4,8 +4,8 @@
      echte Leiste (../quickshell/nav.js), die #-Befehle als kleine Nachbildung von
      quickshell/commands/win.py auf einem simulierten Desktop (A/S/D, je 10
      Workspaces). Bewertet wird das Ergebnis, nicht die Tippfolge. Schwerpunkt
-     Tempo: Denkzeit + Gesamtzeit je Aufgabe, Zielzeit je Aufgabentyp aus dem
-     eigenen Schnitt, Bestwerte und Verlauf im localStorage. -->
+     Lernen: alle Befehle mit Erklaerungen und Wiederholung; Tempo als separater
+     Test. Fortschritt, Bestwerte und Verlauf bleiben lokal im Browser. -->
 <html lang="de">
 <head>
 <meta charset="utf-8">
@@ -23,11 +23,23 @@
   button { font: inherit; color: var(--hud); background: var(--box); border: 1px solid var(--edge); padding: 4px 10px; cursor: pointer; }
   button:hover, button.on { background: var(--fill); border-color: var(--hud); }
   .levels { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .modes { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .modes span { color: var(--dim); }
+  button:focus-visible, summary:focus-visible { outline: 2px solid var(--ok); outline-offset: 3px; }
+  .lesson { border-left: 3px solid var(--hud); padding: 10px 16px; background: var(--box); margin-bottom: 12px; line-height: 1.6; }
+  .lesson p { margin: 0 0 8px; max-width: 85ch; }
+  .lesson button { margin-right: 8px; }
+  details { margin: 12px 0; }
+  summary { cursor: pointer; padding: 8px 0; }
+  .topics { display: flex; flex-wrap: wrap; gap: 6px; }
+  .topics button.solved { border-color: var(--ok); }
+  body.learning .clock, body.learning .meter, body.learning .speed-stat { display: none; }
+  body.learning .hud { grid-template-columns: 1fr; }
   .hud { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: stretch; margin-bottom: 10px; }
   .task { border: 1px solid var(--dim); padding: 12px 16px; }
   .task .what { font-size: 21px; font-weight: bold; }
   .task .ctx { color: var(--dim); margin-top: 5px; }
-  .task .sol { margin-top: 6px; letter-spacing: 2px; color: var(--warn); min-height: 1.2em; }
+  .task .sol { margin-top: 6px; color: var(--warn); min-height: 1.2em; white-space: pre-line; line-height: 1.5; }
   .meter { height: 4px; background: var(--box); margin-top: 8px; }
   .meter div { height: 100%; background: var(--ok); width: 0; }
   .meter div.slow { background: var(--warn); }
@@ -39,7 +51,8 @@
   .stats b { color: var(--hud); }
   /* Nachbildung der Befehlsleiste */
   .bar { display: flex; gap: 4px; align-items: center; background: var(--bar); border-bottom: 1px solid var(--edge); padding: 3px 6px; min-height: 30px; }
-  .tab { position: relative; flex: 0 1 230px; min-width: 110px; border: 1px solid var(--edge); background: var(--box); border-radius: 3px;
+  .tabs { display: flex; flex: 1; min-width: 0; gap: 4px; overflow-x: auto; }
+  .tab { position: relative; flex: 0 0 200px; min-width: 110px; border: 1px solid var(--edge); background: var(--box); border-radius: 3px;
          padding: 3px 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: rgba(255,220,0,.65); }
   .tab b { color: var(--hud); margin-right: 7px; }
   .tab.cur { background: var(--fill); border-color: rgba(255,220,0,.5); color: var(--hud); }
@@ -47,7 +60,6 @@
   .tab.off { opacity: .35; }
   .tab.grp { box-shadow: inset 0 -2px 0 var(--hud); }
   .tab.full::after { content: " ⛶"; }
-  .spacer { flex: 1; }
   .input { width: 340px; flex: none; border: 1px solid var(--hud); border-radius: 3px; padding: 3px 9px; font-weight: bold; letter-spacing: 1px;
            display: flex; justify-content: space-between; }
   .input span:last-child { color: var(--dim); font-weight: normal; letter-spacing: 0; font-size: 11px; }
@@ -71,39 +83,57 @@
   .cell .k { font-size: 15px; font-weight: bold; }
   .cell .n { float: right; color: var(--dim); }
   .cell .a { color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .done { border: 1px solid var(--hud); padding: 16px; margin-top: 12px; }
+  .done { border: 1px solid var(--hud); padding: 16px; margin-top: 12px; overflow-x: auto; }
   .done table { border-collapse: collapse; margin-top: 8px; }
   .done td, .done th { padding: 2px 14px 2px 0; text-align: left; }
   .done .up { color: var(--ok); } .done .down { color: var(--warn); }
   p.help { color: var(--dim); }
-  @media (max-width: 800px) { .input, .drop { width: 220px; } .cell .a, .cell .n { display: none; } }
+  @media (max-width: 800px) {
+    body { padding: 10px; } .task .what { font-size: 17px; }
+    .hud { grid-template-columns: 1fr; } .clock { text-align: left; }
+    .bar { flex-wrap: wrap; } .tabs { flex-basis: 100%; } .input, .drop { width: 100%; } .tab { min-width: 100px; }
+    .map { gap: 2px; grid-template-columns: 32px repeat(10, minmax(0, 1fr)); }
+    .cell { padding: 3px 1px; } .cell .a, .cell .n { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { .input.bad { animation: none; } }
 </style>
 </head>
 <body>
 <main>
   <h1>λ BEFEHLS-TRAINER</h1>
+  <div class="modes" id="modes">
+    <button data-mode="learn">Lernen</button><button data-mode="test">Tempo-Test</button>
+  </div>
   <div class="levels" id="levels"></div>
+  <div class="lesson" id="lesson">
+    <p id="guide"></p>
+    <button id="hint">Loesung erklaeren (F1)</button><button id="continue" hidden>Weiter (Enter)</button>
+  </div>
   <div class="hud">
     <div class="task">
       <div class="what" id="what"></div>
       <div class="ctx" id="ctx"></div>
-      <div class="sol" id="sol"></div>
+      <div class="sol" id="sol" aria-live="polite"></div>
       <div class="meter"><div id="meter"></div></div>
     </div>
     <div class="clock"><div class="t" id="clock">0.00</div>
       <small id="target"></small><small id="think"></small></div>
   </div>
   <div class="stats">
-    <span>Aufgabe <b id="no"></b>/20</span><span>Leben <b id="lives"></b></span>
-    <span>Punkte <b id="score">0</b></span><span>Combo <b id="combo">x1</b></span>
-    <span>Fehltasten <b id="miss">0</b></span><span>Highscore <b id="best">–</b></span>
+    <span>Aufgabe <b id="no"></b>/<b id="total">20</b></span><span class="speed-stat">Leben <b id="lives"></b></span>
+    <span class="speed-stat">Punkte <b id="score">0</b></span><span class="speed-stat">Combo <b id="combo">x1</b></span>
+    <span>Fehltasten <b id="miss">0</b></span><span class="speed-stat">Highscore <b id="best">–</b></span>
   </div>
   <div class="bar" id="bar"></div>
   <div class="under"><div class="drop" id="drop" hidden></div></div>
   <div class="map" id="map"></div>
   <div class="done" id="done" hidden></div>
-  <p class="help">Wie die echte Leiste: [m] [b a/s/d] [w a…ö] [Fenster] · #befehl arg … ⏎ · Tab ergaenzt · Backspace = zurueck · Esc = leeren.
-    Bewertet wird das Ergebnis. Zielzeit = dein bisheriger Schnitt fuer diesen Aufgabentyp.</p>
+  <details>
+    <summary id="coverage">Alle Uebungen</summary>
+    <div class="topics" id="topics"></div>
+  </details>
+  <p class="help">Wie die echte Leiste: [m] [Bildschirm] [Workspace] Fenster, mit Leerzeichen getrennt, von rechts gelesen, dann ⏎ · #befehl arg … ⏎ · Tab ergaenzt · Backspace = zurueck · Esc = leeren.
+    ⏎ = Enter, ⇥ = Tab. Alle Aktionen sind simuliert. Apps, Notizen und Tickets entstehen nur hier im Trainer.</p>
 </main>
 <script>
 const SCREENS = "asd", NAMES = { a: "links", s: "Mitte", d: "Laptop" }
@@ -115,16 +145,53 @@ const TITLES = ["README.md", "Pull Request", "NQ 5m", "Standup", "Inbox", "serve
 const SESSIONS = [["claude", "wm-backup Befehlsleiste"], ["claude", "fairgleichen Redesign"], ["codex", "ratingki Review"],
                   ["codex", "atlas Regressionstests"], ["claude", "trading Journal"]]
 const TOOLS = { claude: ["✳", "Claude"], codex: ["◎", "Codex"] }
-const COMMANDS = ["all", "back", "clear", "close", "full", "only", "reset", "split"]  // geuebt; open/park/note/ticket nicht
+const COMMANDS = ["all", "back", "clear", "close", "full", "only", "reset", "split", "open", "park", "unpark", "note", "ticket"]
 const LEVELS = [
   ["1 Fenster", ["winHere"]], ["2 Workspaces", ["goHere"]], ["3 Bildschirme", ["winAny", "output"]],
-  ["4 Verschieben", ["move", "output"]],
-  ["5 Befehle", ["splitPair", "splitAll", "splitTo", "close", "only", "full", "reset", "back"]],
-  ["6 Suchen", ["search"]],
-  ["7 Mix", ["winHere", "goHere", "winAny", "output", "move", "splitPair", "splitAll", "splitTo", "close", "only", "full", "reset", "back", "search"]]]
+  ["4 Verschieben", ["move", "moveVisible"]],
+  ["5 Befehle", ["splitPair", "splitAll", "splitTo", "close", "only", "clear", "full", "fullActive", "fullOff", "reset", "back", "completion"]],
+  ["6 Suchen", ["all", "search"]], ["7 Mix", []],
+  ["8 Apps", ["open", "openTo"]], ["9 Sessions", ["park", "unpark"]],
+  ["10 Notizen & Tickets", ["note", "notePath", "ticket"]]]
 const KIND_NAMES = { winHere: "Fenster hier", goHere: "Workspace hier", winAny: "Fenster woanders", output: "Bildschirm",
   move: "Verschieben", splitPair: "#split a,s", splitAll: "#split", splitTo: "#split > Ziel", close: "#close", only: "#only",
-  full: "#full", reset: "#reset", back: "#back", search: "#all Suche" }
+  full: "#full Code", reset: "#reset", back: "#back", search: "#all Suche",
+  winLong: "Fenstercodes ab 11", winAmbiguous: "Code mit Enter", moveVisible: "Auf sichtbaren Workspace",
+  clear: "#clear", fullActive: "#full aktiv", fullOff: "Vollbild aus", completion: "Tab-Ergaenzung", all: "#all Baum",
+  open: "#open hier", openTo: "#open > Ziel", park: "#park", unpark: "#unpark", note: "#note mit Tags",
+  notePath: "#note mit Ordner", ticket: "#ticket" }
+LEVELS[0][1].push("winLong", "winAmbiguous")
+const GUIDES = {
+  winHere: "Fenstercodes stehen links in den Tabs. Tippe den Code des gewuenschten Fensters und Enter.",
+  winLong: "Fenster 1–10: a s d f g h j k l ö. Ab Fenster 11 geht es mit aa, as, ad … weiter. Der Code steht am Tab, nicht in der Workspace-Karte.",
+  winAmbiguous: "Bei mehr als zehn Fenstern kann a auch der Anfang von aa sein. Enter nimmt genau das Getippte: a + Enter = Fenster 1, aa + Enter = Fenster 11.",
+  goHere: "Ein Buchstabe mit Leerzeichen dahinter ist ein Workspace: a s d f g h j k l ö = 1–10. Beispiel: f + Leerzeichen + Enter wechselt zu Workspace 4 hier.",
+  winAny: "Von rechts gelesen: letzter Teil = Fenster, davor Workspace, davor Bildschirm (a/s/d = links, Mitte, Laptop). Beispiel: a s d + Enter = A2, Fenster 3; f d = Workspace 4 hier, Fenster 3.",
+  output: "Bildschirm + zwei Leerzeichen + Enter: der leere Teil heisst dort sichtbarer Workspace. Beispiel: s, Leerzeichen, Leerzeichen, Enter = Fokus auf S.",
+  move: "m vorne verschiebt das beim Start aktive Fenster, dann [Bildschirm] Workspace und Enter. Beispiel: m a d verschiebt nach A3; der Fokus bleibt zurueck.",
+  moveVisible: "m + Bildschirm + zwei Leerzeichen + Enter verschiebt das aktive Fenster auf den dort sichtbaren Workspace (leerer Teil = sichtbarer).",
+  splitPair: "#split a,s teilt genau diese beiden Tabs; alle anderen bleiben einzelne Tabs. Codes mit Komma trennen, dann Enter.",
+  splitAll: "#split ohne Codes teilt alle Fenster dieses Workspaces. Ab vier Fenstern legt die echte Leiste zwei Reihen an. Enter fuehrt den Befehl aus.",
+  splitTo: "#split a,s > a j teilt zwei Fenster auf A7. Hinter > steht [Bildschirm] Workspace, ohne Fenstercode. Der Fokus geht mit.",
+  close: "#close a,s schliesst genau die angegebenen Fenster. Achte auf Code UND Titel, wenn dieselbe App mehrfach offen ist.",
+  only: "#only a behaelt Fenster a und schliesst den Rest hier. Auch mehrere Codes mit Komma sind erlaubt.",
+  clear: "#clear schliesst alle Fenster im aktuellen Workspace. In der echten Leiste koennen Apps bei ungespeicherten Daten noch nachfragen.",
+  full: "#full a schaltet Vollbild fuer Fenster a um. Ohne Code wirkt #full auf das aktive Fenster.",
+  fullActive: "#full ohne Argument schaltet Vollbild fuer das aktive Fenster um. Es muss kein Fenstercode dahinter stehen.",
+  fullOff: "#full ist ein Umschalter: auf einem Fenster im Vollbild schaltet derselbe Befehl Vollbild wieder aus.",
+  reset: "#reset loest alle Teilungen dieses Workspaces auf. Unterstrichene Tabs gehoeren zu einer Teilung; danach sind wieder alle einzelne Tabs.",
+  back: "#back springt zum vorherigen Workspace, auch auf einem anderen Bildschirm. Nochmal #back wechselt wieder zurueck.",
+  completion: "Tippe # und den Anfang eines Befehls, dann Tab. Ein Treffer ergaenzt Namen und Leerzeichen. Bei mehreren Treffern blaettern Tab / Shift+Tab durch die Liste.",
+  all: "#all und Enter zeigt den Fensterbaum mit dem kuerzesten Navigationscode pro Fenster. Tippe daraus den Code des Ziels. Enter oder Esc schliesst den Baum.",
+  search: "#all text und Enter filtert den Baum nach App, Titel oder Agenten-Session. Noch ein Enter nimmt den ersten Treffer; andere Treffer erreichst du mit ihrem Code.",
+  open: "#open name startet eine App im aktuellen Workspace. Hier den App-Namen aus der Aufgabe verwenden, auch mehrere Woerter. Beispiel: #open Firefox. Die echte Leiste akzeptiert auch Desktop-Kennungen.",
+  openTo: "#open name > ziel startet eine App am Ziel. Beispiel: #open firefox > a j startet Firefox auf A7 und wechselt dorthin.",
+  park: "#park name merkt sich die Plaetze aller Fenster aller Bildschirme und parkt sie auf D6. Fenster, die schon auf D6 liegen, bleiben unberuehrt. Gleicher Name erweitert die Session.",
+  unpark: "#unpark name stellt noch offene Fenster an ihre alten Plaetze zurueck und vergisst diese Session. Ohne Namen zeigt die echte Leiste eine Auswahl; hier ueben wir den direkten Aufruf.",
+  note: "#note Titel #tag legt eine Schnellnotiz unter Notizen/ an und oeffnet sie. Mehrere Tags sind erlaubt. Existiert die Notiz, wird sie nur geoeffnet.",
+  notePath: "#note Ordner/Titel #tag legt die Notiz ab der Vault-Wurzel an. Ohne Ordner landet sie in Notizen/. Der letzte Teil ist der Titel.",
+  ticket: "#ticket PROJ: Titel #label !prio legt ein Ticket in ToDo an. Prio: hoch, mittel, niedrig; Standard mittel. Ohne Projekt gilt das zuletzt benutzte. Hier immer das geforderte Projekt angeben."
+}
 const ROUND = 20, LIVES = 3, STORE = "nav-game-v1"
 const $ = id => document.getElementById(id)
 const rnd = n => Math.floor(Math.random() * n), any = a => a[rnd(a.length)]
@@ -133,7 +200,7 @@ const lbl = (s, w) => s.toUpperCase() + (w % 10)
 const clone = o => JSON.parse(JSON.stringify(o))
 
 // ── gespeicherte Werte: Bestwerte je Level, Schnitt je Aufgabentyp, Verlauf ──
-let store = { best: {}, kinds: {}, rounds: [] }
+let store = { best: {}, kinds: {}, rounds: [], learned: {} }
 try { store = Object.assign(store, JSON.parse(localStorage.getItem(STORE)) || {}) } catch (e) {}
 function save() { try { localStorage.setItem(STORE, JSON.stringify(store)) } catch (e) {} }
 
@@ -146,7 +213,7 @@ function makeDesk() {
   for (const s of SCREENS) for (let w = 1; w <= 10; w++) ws[key(s, w)] = Array.from({ length: Math.random() < .3 ? 0 : 1 + rnd(4) }, mkWin)
   ws[key(any(SCREENS), 1 + rnd(10))] = Array.from({ length: 11 + rnd(9) }, mkWin)   // ein voller: Codes aa …
   for (const t of SESSIONS) ws[key(any(SCREENS), any([1, 3, 4]))].push(mkAgent(t))
-  const d = { ws, visible: {}, here: any(SCREENS), focus: 0, full: 0, prev: null, last: {} }
+  const d = { ws, visible: {}, here: any(SCREENS), focus: 0, full: 0, prev: null, last: {}, parked: {}, notes: {}, tickets: [], treeSeen: 0, query: "" }
   for (const s of SCREENS) d.visible[s] = 1 + rnd(10)
   d.focus = (here(d)[0] || {}).id || 0
   return d
@@ -164,7 +231,10 @@ function look(w) {
 function refill(d) {
   const all = Object.values(d.ws).flat().length
   if (all < 25) for (let i = 0; i < 12; i++) d.ws[key(any(SCREENS), 1 + rnd(10))].push(mkWin())
-  if (here(d).length < 3) here(d).push(mkWin(), mkWin())
+  while (here(d).length < 3) here(d).push(mkWin())
+  const current = key(d.here, d.visible[d.here])
+  if (!Object.entries(d.ws).some(([k, l]) => k !== current && k !== "d6" && l.length))
+    d.ws[key(SCREENS.replace(d.here, "")[0], 1)].push(mkWin())
   if (!here(d).some(w => w.id === d.focus)) d.focus = here(d)[0].id
 }
 
@@ -202,10 +272,18 @@ function idsOf(snap, codes) {
   })
 }
 function targetOf(snap, t) {
-  const m = new RegExp("^(?:b([asd]))?(?:w([" + KEYS + "]))?$").exec(t)
-  if (!t || !m) throw new Fail("Ziel versteht nur [b a|s|d] [w a…ö]")
+  const m = new RegExp("^(?:([asd]) )?([" + KEYS + "])$").exec(t.split(/\s+/).join(" "))
+  if (!m) throw new Fail("Ziel versteht nur [a|s|d] a…ö, z. B. a j = A7")
   const s = m[1] || snap.here
-  return { s, w: m[2] ? KEYS.indexOf(m[2]) + 1 : snap.visible[s] }
+  return { s, w: KEYS.indexOf(m[2]) + 1 }
+}
+function parkDesk(d, name) {
+  const saved = Object.hasOwn(d.parked, name) ? d.parked[name] : {}
+  d.parked = { ...d.parked, [name]: saved }
+  for (const k of Object.keys(d.ws)) if (k !== "d6") {
+    for (const w of [...d.ws[k]]) { saved[w.id] = k; moveWin(d, w.id, "d", 6) }
+  }
+  goWs(d, "d", 6)
 }
 function command(d, snap, text) {
   const p = parse(text), [head, dest] = splitArgs(p.args)
@@ -228,9 +306,51 @@ function command(d, snap, text) {
       return p.name
     }
     case "clear": kill(d, d.ws[homeK].map(w => w.id)); return "clear"
-    case "full": { const id = head ? idsOf(snap, head)[0] : snap.focus; d.full = d.full === id ? 0 : id; return "full" }
+    case "full": { const id = head ? idsOf(snap, head)[0] : snap.focus; focusWin(d, id); d.full = d.full === id ? 0 : id; return "full" }
     case "back": if (d.prev) goWs(d, d.prev.s, d.prev.w); return "back"
     case "all": return "all"
+    case "open": {
+      if (!head) throw new Fail("open braucht einen App-Namen")
+      // shortcut: fester App-Katalog statt Desktop-Dateien, bei neuen Uebungs-Apps APPS erweitern.
+      const q = head.toLowerCase(), apps = APPS.filter(x => x.toLowerCase().includes(q))
+        .sort((a, b) => (a.toLowerCase() !== q) - (b.toLowerCase() !== q) ||
+          (!a.toLowerCase().startsWith(q)) - (!b.toLowerCase().startsWith(q)) || a.length - b.length)
+      if (!apps.length) throw new Fail("keine App zu " + head)
+      const t = dest ? targetOf(snap, dest) : { s: snap.here, w: snap.visible[snap.here] }
+      const w = { id: uid++, name: apps[0], title: "Neu gestartet", group: 0 }
+      d.ws[key(t.s, t.w)].push(w); focusWin(d, w.id); return "open"
+    }
+    case "park":
+      if (!p.args.length) throw new Fail("Hier mit Namen ueben: #park Pause")
+      parkDesk(d, p.args.join(" ")); return "park"
+    case "unpark": {
+      const name = p.args.join(" "), saved = Object.hasOwn(d.parked, name) ? d.parked[name] : null
+      if (!saved) throw new Fail("keine Session " + name)
+      for (const [id, k] of Object.entries(saved)) if (where(d, +id)) moveWin(d, +id, k[0], +k.slice(1))
+      delete d.parked[name]
+      d.focus = (here(d)[0] || {}).id || 0
+      return "unpark"
+    }
+    case "note": {
+      const text = p.args.join(" "), tags = text.match(/#[\p{L}\p{N}_/-]+/gu) || []
+      const parts = text.replace(/#[\p{L}\p{N}_/-]+/gu, "").split("/")
+        .map(x => x.replace(/[*"\\<>:|?^\[\]]/g, "").trim().replace(/^[ .]+|[ .]+$/g, "")).filter(Boolean)
+      if (!parts.length) throw new Fail("note braucht einen Titel")
+      const path = (parts.length > 1 ? parts.join("/") : "Notizen/" + parts[0]) + ".md"
+      d.notes[path] ||= { tags: tags.map(x => x.slice(1)) }
+      return "note"
+    }
+    case "ticket": {
+      let text = p.args.join(" "), project = "WORK"
+      const m = /^([A-Za-z][A-Za-z0-9]*):\s*/.exec(text)
+      if (m) { project = m[1].toUpperCase(); text = text.slice(m[0].length) }
+      const labels = [...text.matchAll(/(?:^|\s)#(\S+)/g)].map(x => x[1])
+      const prios = [...text.matchAll(/(?:^|\s)!(hoch|mittel|niedrig)(?=\s|$)/g)].map(x => x[1])
+      const title = text.replace(/(^|\s)(#\S+|!(?:hoch|mittel|niedrig))(?=\s|$)/g, " ").trim().replace(/\s+/g, " ")
+      if (!title) throw new Fail("ticket braucht einen Titel")
+      d.tickets.push({ project, title, labels, prio: prios.at(-1) || "mittel", status: "todo" })
+      return "ticket"
+    }
     default: throw new Fail("unbekannt: #" + p.name)
   }
 }
@@ -238,61 +358,83 @@ function command(d, snap, text) {
 // ── Aufgaben: Ziel als Pruefung am Desktop + kuerzester Weg (⏎ = Enter) ───────
 // eigener Name: route/fail/code/… gehoeren nav.js (globale Funktionen)
 function pathTo(d, id) {
-  const p = where(d, id), n = d.ws[key(p.s, p.w)].length
-  return route(p.s, p.w, p.i, n, d.here, d.visible[p.s]).replace(" ⏎", "⏎")
+  const p = where(d, id)
+  return route(p.s, p.w, p.i, d.here, d.visible[p.s]) + "⏎"
 }
 const desc = w => { const L = look(w); return (L.glyph ? L.glyph + " " : "") + L.name + " · „" + L.title + "“" }
+function place(d, id) {
+  const p = where(d, id)
+  return "auf " + lbl(p.s, p.w) + " · Fenster " + (p.i + 1)
+}
 function otherWs(d, s) { let w; do { w = 1 + rnd(10) } while (w === d.visible[s]); return w }
 const MAKERS = {
   winHere(d) {
-    const l = here(d), w = any(l)
+    const l = here(d), w = any(l.filter(x => x.id !== d.focus))
     return { text: `Fokus auf ${desc(w)}`, where: "hier", sol: pathTo(d, w.id), ok: x => x.focus === w.id }
   },
+  winLong(d) {
+    while (here(d).length < 12) here(d).push(mkWin())
+    const w = here(d)[10]; if (d.focus === w.id) d.focus = here(d)[1].id
+    return { text: `Fokus auf ${desc(w)} (Fenster 11)`, sol: "aa⏎", ok: x => x.focus === w.id }
+  },
+  winAmbiguous(d) {
+    while (here(d).length < 12) here(d).push(mkWin())
+    d.focus = here(d)[1].id
+    const id = here(d)[0].id
+    return { text: `Fokus auf ${desc(here(d)[0])} (Fenster 1, Code a)`, sol: "a⏎", ok: x => x.focus === id }
+  },
   goHere(d) {
-    const w = otherWs(d, d.here)
-    return { text: `Gehe zu Workspace ${w % 10} ${AREAS[w - 1]}`, where: "hier", sol: "w" + KEYS[w - 1], to: [d.here, w],
-             ok: x => x.here === d.here && x.visible[d.here] === w }
+    const s = d.here, w = otherWs(d, s)
+    return { text: `Gehe zu Workspace ${w % 10} ${AREAS[w - 1]}`, where: "hier", sol: KEYS[w - 1] + " ⏎",
+             ok: x => x.here === s && x.visible[s] === w }
   },
   winAny(d) {
     const ks = Object.keys(d.ws).filter(k => d.ws[k].length && k !== key(d.here, d.visible[d.here]))
     const k = any(ks), w = any(d.ws[k])
     return { text: `Fokus auf ${desc(w)}`, where: "auf " + lbl(k[0], +k.slice(1)), sol: pathTo(d, w.id),
-             to: [k[0], +k.slice(1)], ok: x => x.focus === w.id }
+             ok: x => x.focus === w.id }
   },
   output(d) {
     const s = any(SCREENS.replace(d.here, ""))
-    return { text: `Fokus auf Bildschirm ${s.toUpperCase()} (${NAMES[s]})`, sol: "b" + s + "⏎", ok: x => x.here === s }
+    return { text: `Fokus auf Bildschirm ${s.toUpperCase()} (${NAMES[s]})`, sol: s + "  ⏎", ok: x => x.here === s }
   },
   move(d) {
     const a = where(d, d.focus), s = any(SCREENS); let w = 1 + rnd(10)
     if (s === a.s && w === a.w) w = w % 10 + 1
     const id = d.focus
     return { text: `Aktives Fenster (${desc(here(d).find(x => x.id === id))}) nach ${lbl(s, w)} ${AREAS[w - 1]}`,
-             sol: "m" + (s === d.here ? "" : "b" + s) + "w" + KEYS[w - 1],
+             sol: "m " + (s === d.here ? "" : s + " ") + KEYS[w - 1] + "⏎",
              ok: x => { const p = where(x, id); return p && p.s === s && p.w === w } }
+  },
+  moveVisible(d) {
+    const s = any(SCREENS.replace(d.here, "")), w = d.visible[s], id = d.focus
+    return { text: `Aktives Fenster nach Bildschirm ${s.toUpperCase()}, auf den dort sichtbaren Workspace ${w % 10}`,
+      sol: "m " + s + "  ⏎", ok: x => { const p = where(x, id); return p && p.s === s && p.w === w } }
   },
   splitPair(d) {
     const l = here(d); if (l.length < 3) return null
     const [i, j] = pick2(l.length), a = l[i].id, b = l[j].id
-    return { text: `${l[i].name} und ${l[j].name} nebeneinander (Rest bleibt Tabs)`, sol: `#split ${code(i)},${code(j)}⏎`,
+    l[i].group = 0; l[j].group = 0
+    return { text: `${desc(l[i])} und ${desc(l[j])} nebeneinander (Rest bleibt Tabs)`, sol: `#split ${code(i)},${code(j)}⏎`,
              ok: x => grouped(x, [a, b]) }
   },
   splitAll(d) {
-    const l = here(d); if (l.length < 2 || l.length > 6) return null
+    const l = here(d); if (l.length < 2) return null
+    l.forEach(w => w.group = 0)
     const ids = l.map(w => w.id)
     return { text: `Alle ${l.length} Fenster hier nebeneinander`, sol: "#split⏎", ok: x => grouped(x, ids) }
   },
   splitTo(d) {
     const l = here(d); if (l.length < 2) return null
     const [i, j] = pick2(l.length), a = l[i].id, b = l[j].id, s = any(SCREENS), w = otherWs(d, s)
-    return { text: `${l[i].name} und ${l[j].name} nebeneinander auf ${lbl(s, w)} ${AREAS[w - 1]}`,
-             sol: `#split ${code(i)},${code(j)} > ${s === d.here ? "" : "b" + s}w${KEYS[w - 1]}⏎`,
+    return { text: `${desc(l[i])} und ${desc(l[j])} nebeneinander auf ${lbl(s, w)} ${AREAS[w - 1]}`,
+             sol: `#split ${code(i)},${code(j)} > ${s === d.here ? "" : s + " "}${KEYS[w - 1]}⏎`,
              ok: x => grouped(x, [a, b]) && [a, b].every(id => { const p = where(x, id); return p.s === s && p.w === w }) }
   },
   close(d) {
     const l = here(d); if (l.length < 3) return null
     const [i, j] = pick2(l.length), ids = [l[i].id, l[j].id], n = l.length   // l schrumpft beim Schliessen
-    return { text: `${l[i].name} und ${l[j].name} schliessen`, sol: `#close ${code(i)},${code(j)}⏎`,
+    return { text: `${desc(l[i])} und ${desc(l[j])} schliessen`, sol: `#close ${code(i)},${code(j)}⏎`,
              ok: x => ids.every(id => !where(x, id)) && here(x).length === n - 2 }
   },
   only(d) {
@@ -307,25 +449,83 @@ const MAKERS = {
     const i = any(free), id = l[i].id
     return { text: `${desc(l[i])} als Vollbild`, sol: `#full ${code(i)}⏎`, ok: x => x.full === id }
   },
+  fullActive(d) {
+    d.full = 0; const id = d.focus
+    return { text: "Aktives Fenster ins Vollbild schalten", sol: "#full⏎", ok: x => x.full === id }
+  },
+  fullOff(d) {
+    d.full = d.focus
+    return { text: "Vollbild des aktiven Fensters ausschalten", sol: "#full⏎", ok: x => x.full === 0 }
+  },
+  clear(d) {
+    const k = key(d.here, d.visible[d.here])
+    return { text: `Alle Fenster auf ${lbl(d.here, d.visible[d.here])} schliessen`, sol: "#clear⏎", ok: x => x.ws[k].length === 0 }
+  },
   reset(d) {
     const l = here(d); if (l.length < 3) return null
     const [i, j] = pick2(l.length), g = gid++; l[i].group = g; l[j].group = g     // vorher geteilt
     return { text: `Teilung hier aufloesen (unterstrichene Tabs)`, sol: "#reset⏎", ok: x => here(x).every(w => !w.group) }
   },
   back(d) {
-    if (!d.prev || (d.prev.s === d.here && d.prev.w === d.visible[d.here])) return null
+    if (!d.prev || (d.prev.s === d.here && d.prev.w === d.visible[d.here])) d.prev = { s: d.here, w: otherWs(d, d.here) }
     const p = d.prev
     return { text: `Zurueck zum vorigen Workspace (${lbl(p.s, p.w)})`, sol: "#back⏎",
              ok: x => x.here === p.s && x.visible[p.s] === p.w }
   },
   search(d) {
-    const all = Object.values(d.ws).flat(), w = Math.random() < .6 ? any(all.filter(x => x.tool)) : any(all)
+    const all = Object.values(d.ws).flat().filter(x => x.id !== d.focus), agents = all.filter(x => x.tool)
+    const w = Math.random() < .6 && agents.length ? any(agents) : any(all), seen = d.treeSeen
     const words = (w.tool ? w.title : w.name + " " + w.title).split(/\s+/).filter(x => x.length > 2)
     const word = any(words).toLowerCase(), hits = treeRows(d, word).filter(r => r.id)
     const first = hits[0] && hits[0].id === w.id
-    return { text: `Suche und spring zu ${desc(w)}`, where: "irgendwo", sol: `#all ${word}⏎` + (first ? "⏎" : pathTo(d, w.id)),
-             ok: x => x.focus === w.id }
+    return { text: `Suche und spring zu ${desc(w)}`, where: place(d, w.id), sol: `#all ${word}⏎` + (first ? "⏎" : pathTo(d, w.id)),
+             ok: x => x.focus === w.id && x.treeSeen > seen && !!x.query }
   },
+  all(d) {
+    const w = any(Object.values(d.ws).flat().filter(x => x.id !== d.focus)), seen = d.treeSeen
+    return { text: `Fensterbaum oeffnen und zu ${desc(w)} springen`, where: place(d, w.id), sol: "#all⏎" + pathTo(d, w.id),
+      ok: x => x.treeSeen > seen && x.focus === w.id }
+  },
+  completion(d) {
+    const t = MAKERS.reset(d)
+    return { ...t, text: "Teilung aufloesen; den Befehl mit Tab ergaenzen", sol: "#res⇥⏎", ok: x => t.ok(x) && usedTab }
+  },
+  open(d) { return openTask(d, false) },
+  openTo(d) { return openTask(d, true) },
+  park(d) {
+    const saved = Object.entries(d.ws).filter(([k]) => k !== "d6").flatMap(([, l]) => l.map(w => w.id))
+    const name = "Arbeit " + no
+    return { text: `Alle Fenster als Session „${name}“ parken`, sol: "#park " + name + "⏎",
+      ok: x => x.parked[name] && saved.every(id => x.parked[name][id] && where(x, id)?.s === "d" && where(x, id)?.w === 6) }
+  },
+  unpark(d) {
+    const name = "Pause " + no
+    parkDesk(d, name)
+    const saved = clone(d.parked[name])
+    return { text: `Session „${name}“ an die alten Plaetze zurueckholen`, sol: "#unpark " + name + "⏎",
+      ok: x => !x.parked[name] && Object.entries(saved).every(([id, k]) => { const p = where(x, +id); return p && key(p.s, p.w) === k }) }
+  },
+  note(d) { return noteTask(d, false) },
+  notePath(d) { return noteTask(d, true) },
+  ticket(d) {
+    const title = "Trainer ueben " + no, project = any(["WORK", "PRIVATE"]), prio = any(["hoch", "mittel", "niedrig"])
+    return { text: `ToDo-Ticket in ${project}: „${title}“, Label lernen, Prio ${prio}`, sol: `#ticket ${project}: ${title} #lernen !${prio}⏎`,
+      ok: x => x.tickets.some(t => t.project === project && t.title === title && t.labels.includes("lernen") && t.prio === prio && t.status === "todo") }
+  },
+}
+LEVELS[6][1] = Object.keys(MAKERS)
+function openTask(d, remote) {
+  const name = any(APPS), s = remote ? any(SCREENS.replace(d.here, "")) : d.here
+  const w = remote ? otherWs(d, s) : d.visible[s], k = key(s, w), old = d.ws[k].map(x => x.id)
+  return { text: `${name} neu starten auf ${lbl(s, w)}${remote ? "" : " (hier)"}`,
+    sol: "#open " + name + (remote ? " > " + s + " " + KEYS[w - 1] : "") + "⏎",
+    ok: x => x.ws[k].some(a => a.name === name && !old.includes(a.id)) }
+}
+function noteTask(d, folder) {
+  const title = "Lernidee " + no, path = (folder ? "Trading/Ideen/" : "Notizen/") + title + ".md"
+  return { text: `Notiz „${title}“ unter ${folder ? "Trading/Ideen" : "Notizen"}, mit Tags idee und lernen`,
+    sol: "#note " + (folder ? "Trading/Ideen/" : "") + title + " #idee #lernen⏎",
+    ok: x => x.notes[path]?.tags.includes("idee") && x.notes[path].tags.includes("lernen") }
 }
 function pick2(n) { const i = rnd(n); let j = rnd(n - 1); if (j >= i) j++; return i < j ? [i, j] : [j, i] }
 function grouped(d, ids) {
@@ -335,20 +535,29 @@ function grouped(d, ids) {
 
 // ── Runde, Eingabe, Wertung ──────────────────────────────────────────────────
 let desk, snap, task, typed, t0, tFirst, level = 0, no, lives, score, combo, miss, log, tree, filter, tabHits, tabIdx, busy
+let learning = true, focusKind = "", bag = [], usedTab = false, helped = false, retry = false, roundTimer, roundSize = ROUND
 
-function newRound(l) {
+function newRound(l, learn = learning, kind = "") {
+  clearTimeout(roundTimer)
+  learning = learn; focusKind = kind; bag = []
+  roundSize = Math.max(ROUND, kind ? 1 : LEVELS[l][1].length)
   level = l; desk = makeDesk(); no = 0; lives = LIVES; score = 0; combo = 0; miss = 0; log = []
   $("done").hidden = true
   next()
 }
+function startKind(kind) {
+  newRound(LEVELS.findIndex((l, i) => i !== 6 && l[1].includes(kind)), true, kind)
+}
 function next() {
-  if (no >= ROUND || lives <= 0) return finish()
+  if (no >= roundSize || lives <= 0) return finish()
   refill(desk)
-  let t = null
-  for (let i = 0; i < 30 && !t; i++) {
-    const kind = any(LEVELS[level][1]); t = MAKERS[kind](desk); if (t) t.kind = kind
+  if (!bag.length) {
+    bag = [...(focusKind ? [focusKind] : LEVELS[level][1])]
+    for (let i = bag.length - 1; i > 0; i--) { const j = rnd(i + 1); [bag[i], bag[j]] = [bag[j], bag[i]] }
   }
+  const kind = bag.pop(), t = MAKERS[kind](desk); t.kind = kind
   task = t; no++; typed = ""; tree = false; filter = ""; tabHits = []; busy = false
+  usedTab = false; helped = false; retry = false
   snap = clone(desk)                       // wie die echte Leiste: Stand beim Oeffnen
   t0 = performance.now(); tFirst = 0
   $("sol").textContent = ""
@@ -360,6 +569,12 @@ function targetMs(kind) {
 }
 function done() {
   if (busy) return; busy = true
+  if (learning) {
+    log.push({ kind: task.kind, text: task.text, sol: task.sol, ok: true, helped })
+    if (!helped) { store.learned[task.kind] = (store.learned[task.kind] || 0) + 1; save() }
+    $("sol").textContent = "Ziel erreicht. " + (helped ? "Mit Hilfe geuebt; versuche den Typ spaeter ohne Hilfe." : "Ohne Hilfe geloest!") + "\nEin Weg: " + task.sol
+    retry = false; render(); flash("good"); return
+  }
   const ms = performance.now() - t0, think = tFirst ? tFirst - t0 : ms, goal = targetMs(task.kind)
   combo++
   const speed = Math.max(.5, Math.min(2, goal / ms))
@@ -368,18 +583,44 @@ function done() {
   const k = store.kinds[task.kind] || { n: 0, avg: 0, best: Infinity }
   k.avg = k.n ? k.avg * .8 + ms * .2 : ms; k.n++; k.best = Math.min(k.best, ms)
   store.kinds[task.kind] = k; save()
-  flash("good"); setTimeout(next, 220)
+  flash("good"); roundTimer = setTimeout(next, 220)
 }
 function lose(why) {
   if (busy) return; busy = true
+  if (learning) {
+    helped = true; retry = true
+    log.push({ kind: task.kind, text: task.text, sol: task.sol, ok: false })
+    $("sol").textContent = (why || "Ziel nicht erreicht") + ".\nEin Weg: " + task.sol + "\nMit Enter stellst du den Anfang wieder her und versuchst dieselbe Aufgabe erneut."
+    render(); flash("bad"); return
+  }
   lives--; combo = 0
   log.push({ kind: task.kind, text: task.text, sol: task.sol, ms: performance.now() - t0, think: 0, ok: false })
-  $("sol").textContent = (why ? why + " · " : "") + "kuerzester Weg: " + task.sol
+  $("sol").textContent = (why ? why + " · " : "") + "Ein Weg: " + task.sol
   flash("bad"); render()
-  setTimeout(next, 1600)
+  roundTimer = setTimeout(next, 1600)
+}
+function showHint() {
+  if (!learning || !task || busy) return
+  helped = true
+  $("sol").textContent = "Ein Weg: " + task.sol + "\n" + GUIDES[task.kind]
+}
+function proceed() {
+  if (!learning || !busy || !task) return
+  if (!retry) return next()
+  desk = clone(snap); typed = ""; tree = false; filter = ""; tabHits = []; usedTab = false; busy = false; retry = false
+  t0 = performance.now(); tFirst = 0
+  $("sol").textContent = "Nochmal dieselbe Aufgabe. Die Ausgangslage ist wiederhergestellt."
+  render()
 }
 function flash(cls) { const el = $("input"); if (!el) return; el.classList.remove("bad", "good"); void el.offsetWidth; el.classList.add(cls) }
-function reject() { miss++; flash("bad"); renderStats() }
+function reject() {
+  miss++; flash("bad"); renderStats()
+  if (learning) {
+    helped = true
+    $("sol").textContent = "Die Eingabe passt hier nicht: hoechstens [Bildschirm] [Workspace] Fenster, Bildschirm a/s/d, Workspace ein Buchstabe. "
+      + "Backspace loescht ein Zeichen; Esc leert die Eingabe. F1 zeigt einen Loesungsweg."
+  }
+}
 
 const ctx = () => ({ screens: SCREENS, here: snap.here, wins: (s, w) => snap.ws[key(s, w || snap.visible[s])] || [] })
 function treeRows(d, f) {
@@ -388,21 +629,24 @@ function treeRows(d, f) {
     const l = d.ws[key(s, w)]
     l.forEach((x, i) => {
       const L = look(x), hay = [x.name, x.title, L.name, x.tool || "", AREAS[w - 1], lbl(s, w)].join(" ").toLowerCase()
-      if (!f || hay.includes(f)) out.push({ id: x.id, key: route(s, w, i, l.length, d.here, d.visible[s]), x, s, w })
+      if (!f || hay.includes(f)) out.push({ id: x.id, key: route(s, w, i, d.here, d.visible[s]), x, s, w })
     })
   }
   return out
 }
 
 function handleKey(name, ch) {
+  if (learning && name === "F1") { showHint(); return true }
+  if (learning && busy && name === "Enter") { proceed(); return true }
   if (!task || busy || !$("done").hidden) return false
   if (!tFirst) tFirst = performance.now()
   const c = ctx(), r = decode(typed, c)
   if (name !== "Tab" && name !== "Backtab") tabHits = []
   if (name === "Escape") { typed = ""; tree = false; filter = "" }
-  else if (name === "Backspace") typed = back(typed, c)
+  else if (name === "Backspace") typed = r.cmd !== null ? typed.slice(0, -1) : back(typed)
   else if (name === "Tab" || name === "Backtab") {
     if (r.cmd === null || /\s/.test(r.cmd)) return true
+    usedTab = true
     if (!tabHits.length) {
       const m = complete(r.cmd, COMMANDS)
       if (!m) { reject(); return true }
@@ -419,31 +663,28 @@ function handleKey(name, ch) {
     }
     const e = enter(r), s = r.screen || snap.here
     if (e === "win") { focusWin(desk, (c.wins(s, r.ws)[r.match] || {}).id); return finishAction() }
+    if (e === "go") { goWs(desk, s, r.ws); return finishAction() }
     if (e === "output") { goWs(desk, s, desk.visible[s]); return finishAction() }
-    if (e === "move") { moveWin(desk, snap.focus, s, snap.visible[s]); return finishAction() }
+    if (e === "move") { moveWin(desk, snap.focus, s, r.ws || snap.visible[s]); return finishAction() }
     if (e === "cmd") {
       try {
         const kind = command(desk, snap, r.cmd)
-        if (kind === "all") { tree = true; filter = parse(r.cmd).args.join(" ").toLowerCase(); typed = ""; render(); return true }
+        if (kind === "all") {
+          tree = true; filter = parse(r.cmd).args.join(" ").toLowerCase(); typed = ""
+          desk.treeSeen++; desk.query = filter; render(); return true
+        }
       } catch (err) { if (err instanceof Fail) { lose(err.message); return true } throw err }
       return finishAction()
     }
     if (e === "close") { if (tree) { tree = false; filter = "" } else { reject(); return true } }
+    if (e === "") { reject(); return true }
   } else if (ch && ch.length === 1) {
     if (r.cmd !== null) typed += ch
     else {
       const k = ch.toLowerCase()
       if (typed === "" && k === "m" && !snap.focus) { reject(); return true }
-      const n = decode(typed + k, c), a = act(r, n)
-      if (a === "error") { reject(); return true }
-      typed += k
-      const s = n.screen || snap.here
-      if (a === "go") {
-        goWs(desk, s, n.ws)
-        if (task.ok(desk)) { done(); return true }
-        if (task.to && (task.to[0] !== s || task.to[1] !== n.ws)) { lose("falscher Workspace"); return true }
-      } else if (a === "move") { moveWin(desk, snap.focus, s, n.ws); return finishAction() }
-      else if (a === "win") { focusWin(desk, (c.wins(s, n.ws)[n.win] || {}).id); return finishAction() }
+      if (decode(typed + k, c).error) { reject(); return true }
+      typed += k                                     // ausgefuehrt wird erst mit Enter
     }
   } else return false
   render()
@@ -454,34 +695,47 @@ function finishAction() { if (task.ok(desk)) done(); else lose("Ziel nicht errei
 
 document.addEventListener("keydown", ev => {
   if (ev.ctrlKey || ev.altKey || ev.metaKey) return
-  const names = { Escape: "Escape", Backspace: "Backspace", Enter: "Enter", Tab: ev.shiftKey ? "Backtab" : "Tab" }
+  if (ev.target.closest("button, summary")) return
+  if (ev.key === "Tab" && (!task || decode(typed, ctx()).cmd === null)) return
+  const names = { Escape: "Escape", Backspace: "Backspace", Enter: "Enter", F1: "F1", Tab: ev.shiftKey ? "Backtab" : "Tab" }
   if (handleKey(names[ev.key] || "", ev.key.length === 1 ? ev.key : "")) ev.preventDefault()
 })
 
 // ── Anzeige ──────────────────────────────────────────────────────────────────
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c])
 function renderStats() {
+  $("total").textContent = roundSize
   $("no").textContent = no; $("lives").textContent = "♥".repeat(Math.max(0, lives)) || "–"
   $("score").textContent = score; $("combo").textContent = "x" + Math.max(1, Math.min(combo, 8)); $("miss").textContent = miss
   const b = store.best[level]; $("best").textContent = b ? b.score + " · " + (b.avg / 1000).toFixed(2) + " s" : "–"
 }
 function render() {
   renderStats()
+  document.body.className = learning ? "learning" : ""
+  $("modes").innerHTML = `<button class="${learning ? "on" : ""}" data-mode="learn">Lernen</button><button class="${learning ? "" : "on"}" data-mode="test">Tempo-Test</button><span>${learning ? "Ohne Zeitdruck. Fehler lesen, wiederholen, dann weiter." : "Drei Leben. Zielzeit aus deinem bisherigen Schnitt."}</span>`
+  $("lesson").hidden = !learning
+  $("guide").textContent = GUIDES[task.kind]
+  $("continue").hidden = !learning || !busy
+  $("continue").textContent = retry ? "Nochmal versuchen (Enter)" : "Weiter (Enter)"
+  $("hint").hidden = busy
+  renderTopics()
   $("levels").innerHTML = LEVELS.map((l, i) => `<button class="${i === level ? "on" : ""}" data-l="${i}">${l[0]}</button>`).join("")
   $("what").textContent = task.text
-  $("ctx").textContent = `Du bist auf ${lbl(snap.here, snap.visible[snap.here])} (${NAMES[snap.here]})` + (task.where ? " · Ziel " + task.where : "")
+  const shown = busy ? desk : snap
+  $("ctx").textContent = `Start: ${lbl(snap.here, snap.visible[snap.here])} (${NAMES[snap.here]})` +
+    (busy ? ` · Jetzt: ${lbl(desk.here, desk.visible[desk.here])}` : "") + (task.where ? " · Ziel " + task.where : "")
   const goal = targetMs(task.kind)
   $("target").textContent = "Ziel " + (goal / 1000).toFixed(2) + " s" + (store.kinds[task.kind] ? " · Bestzeit " + (store.kinds[task.kind].best / 1000).toFixed(2) + " s" : " (geschaetzt)")
-  const c = ctx(), r = decode(typed, c), local = r.cmd === null && !r.screen && !r.ws && !r.wait && !tree
+  const c = ctx(), r = decode(typed, c), local = r.cmd === null && !r.screen && !r.ws && !tree
   // Leiste: Tabs des sichtbaren Workspaces hier
-  const tabs = here(snap).map((w, i) => {
+  const tabs = here(shown).map((w, i) => {
     const cd = code(i), L = look(w), lit = local && r.code && cd.startsWith(r.code)
-    const cls = ["tab", w.id === snap.focus && "cur", lit && "lit", local && r.code && !lit && "off", w.group && "grp", snap.full === w.id && "full"]
+    const cls = ["tab", w.id === shown.focus && "cur", lit && "lit", local && r.code && !lit && "off", w.group && "grp", shown.full === w.id && "full"]
     return `<div class="${cls.filter(Boolean).join(" ")}"><b>${cd}</b>${L.glyph ? L.glyph + " " : ""}${esc(L.name)} · ${esc(L.title)}</div>`
   }).join("")
-  const hint = r.wait === "b" ? "Bildschirm" : r.wait === "w" ? "Workspace" : r.code && r.win < 0 && r.match >= 0 ? "Enter = Fenster " + (r.match + 1)
+  const hint = typed && r.cmd === null ? label(r)
     : tree && filter && !typed ? "Suche: " + filter + " · Enter = erster" : ""
-  $("bar").innerHTML = tabs + `<div class="spacer"></div><div class="input" id="input"><span>${r.move ? "⇢" : "λ"} ${esc(typed)}▏</span><span>${esc(hint)}</span></div>`
+  $("bar").innerHTML = `<div class="tabs">${tabs}</div><div class="input" id="input"><span>${r.move ? "⇢" : "λ"} ${esc(typed)}▏</span><span>${esc(hint)}</span></div>`
   // Liste unter dem Eingabefeld (wie CommandBar.qml)
   let rows = []
   if (r.cmd !== null) {
@@ -489,35 +743,45 @@ function render() {
     rows = names.map(n => `<div class="${n === parse(r.cmd).name ? "hit" : ""}"><b>#${n}</b></div>`)
   } else if (tree) {
     rows = treeRows(snap, filter).map(t => {
-      const L = look(t.x), k = t.key.replace(" ⏎", ""), cls = typed ? (k.startsWith(typed) ? "hit" : "dim") : ""
+      const L = look(t.x), cls = typed ? (t.key.startsWith(typed) ? "hit" : "dim") : ""
       return `<div class="${cls}"><b>${t.key}</b>${lbl(t.s, t.w)} ${L.glyph} ${esc(L.name)} · ${esc(L.title)}</div>`
     })
     if (!rows.length) rows = [`<div class="head">keine Treffer</div>`]
-  } else if (r.wait === "b") rows = SCREENS.split("").map(s => `<div><b>${s}</b>${NAMES[s]} · sichtbar ${snap.visible[s] % 10}</div>`)
-  else if (r.wait === "w") {
-    const s = r.screen || snap.here
-    rows = AREAS.map((a, i) => { const l = snap.ws[key(s, i + 1)]; return `<div class="${l.length ? "" : "dim"}"><b>${KEYS[i]}</b>${(i + 1) % 10} ${a} · ${l.map(x => look(x).name).join(", ")}</div>` })
   } else if (r.screen || r.ws) {
     rows = c.wins(r.screen || snap.here, r.ws).map((w, i) => {
       const cd = code(i), L = look(w), cls = r.code ? (cd.startsWith(r.code) ? "hit" : "dim") : ""
       return `<div class="${cls}"><b>${cd}</b>${L.glyph} ${esc(L.name)} · ${esc(L.title)}</div>`
     })
   }
-  $("drop").hidden = !rows.length; $("drop").innerHTML = rows.join("")
+  $("drop").hidden = busy || !rows.length; $("drop").innerHTML = rows.join("")
   // Karte
   let m = ""
   for (const s of SCREENS) {
-    m += `<div class="h ${s === snap.here ? "here" : ""}">${s.toUpperCase()}<small>${NAMES[s]}</small></div>`
+    m += `<div class="h ${s === shown.here ? "here" : ""}">${s.toUpperCase()}<small>${NAMES[s]}</small></div>`
     for (let w = 1; w <= 10; w++) {
-      const l = snap.ws[key(s, w)], vis = snap.visible[s] === w
+      const l = shown.ws[key(s, w)], vis = shown.visible[s] === w
       m += `<div class="cell ${vis ? "vis" : ""}"><span class="k">${KEYS[w - 1]}</span><span class="n">${vis ? "● " : ""}${w % 10} ${AREAS[w - 1]}</span>` +
            `<div class="a">${l.length ? l.length + ": " + esc([...new Set(l.map(x => look(x).name))].join(", ")) : ""}</div></div>`
     }
   }
   $("map").innerHTML = m
 }
+function renderTopics() {
+  const kinds = Object.keys(MAKERS), solved = kinds.filter(k => store.learned[k]).length
+  $("coverage").textContent = `Alle ${COMMANDS.length} Befehle · ${solved}/${kinds.length} Aufgabentypen ohne Hilfe geloest · einzeln ueben`
+  $("topics").innerHTML = kinds.map(k => `<button data-kind="${k}" class="${store.learned[k] ? "solved" : ""}">${store.learned[k] ? "✓ " : ""}${KIND_NAMES[k]}</button>`).join("")
+}
 function finish() {
   task = null
+  $("continue").hidden = true; $("hint").hidden = true
+  if (learning) {
+    const clean = log.filter(x => x.ok && !x.helped).length, assisted = log.filter(x => x.ok && x.helped).length
+    $("done").hidden = false
+    $("done").innerHTML = `<b>Lernrunde abgeschlossen.</b> ${clean} ohne Hilfe, ${assisted} mit Hilfe geloest.
+      <p>Die gruen markierten Aufgabentypen hast du schon ohne Hilfe geloest. Waehle unten einen Typ zum gezielten Wiederholen.</p>
+      <p>Leertaste = neue Runde. Fuer Tempo und Highscores waehle oben Tempo-Test.</p>`
+    renderStats(); renderTopics(); return
+  }
   const okl = log.filter(x => x.ok), avg = okl.length ? okl.reduce((a, x) => a + x.ms, 0) / okl.length : 0
   const think = okl.length ? okl.reduce((a, x) => a + x.think, 0) / okl.length : 0
   const acc = log.length ? okl.length / log.length : 0
@@ -546,10 +810,21 @@ function finish() {
   renderStats()
 }
 
-document.addEventListener("click", ev => { const l = ev.target.dataset && ev.target.dataset.l; if (l !== undefined) { ev.target.blur(); newRound(+l) } })
-document.addEventListener("keydown", ev => { if (!task && ev.key === " ") { ev.preventDefault(); newRound(level) } })
+document.addEventListener("click", ev => {
+  const b = ev.target.closest("button"); if (!b) return
+  const { l, mode, kind } = b.dataset
+  b.blur()
+  if (l !== undefined) newRound(+l)
+  else if (mode) newRound(level, mode === "learn")
+  else if (kind) startKind(kind)
+  else if (b.id === "hint") showHint()
+  else if (b.id === "continue") proceed()
+})
+document.addEventListener("keydown", ev => {
+  if (!task && ev.key === " " && !ev.target.closest("button, summary")) { ev.preventDefault(); newRound(level, learning, focusKind) }
+})
 setInterval(() => {
-  if (!task || busy) return
+  if (!task || busy || learning) return
   const ms = performance.now() - t0, goal = targetMs(task.kind)
   $("clock").textContent = (ms / 1000).toFixed(2); $("clock").className = "t " + (ms <= goal ? "fast" : "slow")
   $("think").textContent = tFirst ? "Denkzeit " + ((tFirst - t0) / 1000).toFixed(2) + " s" : "Denkzeit läuft …"

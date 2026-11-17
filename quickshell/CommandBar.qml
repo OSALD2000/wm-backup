@@ -7,7 +7,7 @@
 // landet darunter. Tastatur bekommt eine Leiste auf "bottom" unter sway nicht,
 // deshalb oeffnet Super+f (`quickshell ipc call bar toggle`) ein Overlay mit
 // exklusivem Fokus, das genau ueber dem Eingabefeld liegt, samt Liste darunter.
-// Eingabe = nav.js: Codes wie `bawss`, `wf`, `d`, `mbawd` (je Taste), Befehle
+// Eingabe = nav.js: Codes wie `a s s`, `f `, `d`, `m a f` (mit Enter), Befehle
 // `#wort arg …` mit Enter aus commands/commands.json (Tab ergaenzt den Namen):
 //   {"name": {"help": "...", "exec": ["skript", ...]}}  exec[0] = Datei in
 //     commands/, "~/…" oder absoluter Pfad; Woerter nach #name als Argumente
@@ -86,7 +86,7 @@ Scope {
     })
     readonly property var r: Nav.decode(typed, ctx)
     readonly property string target: r.screen || here
-    readonly property bool local: r.cmd === null && !r.screen && !r.ws && !r.wait   // Tabs der Leiste gemeint
+    readonly property bool local: r.cmd === null && !r.screen && !r.ws   // Tabs der Leiste gemeint
     readonly property var list: ctx.wins(target, r.ws)
 
     function cell(s, w) { return snap.find(c => c.letter === s && (w ? c.number === w : c.visible)) }
@@ -110,14 +110,14 @@ Scope {
     // Zeilen der Liste unter dem Eingabefeld: {key, label, icons, head, hit, dim, act}
     readonly property var drop: {
         const NAMES = { a: "links", s: "Mitte", d: "Laptop" }
-        const winRow = (w, i, n, s, ws) => {
-            const key = tree ? Nav.route(s, ws, i, n, here, visibleNr(s)) : Nav.code(i)
+        const winRow = (w, i, s, ws) => {
+            const key = tree ? Nav.route(s, ws, i, here, visibleNr(s)) : Nav.code(i)
             // im Baum zaehlt der ganze getippte Befehl, sonst nur der Fenstercode
-            const k = tree ? key.replace(" ⏎", "") : key, t = tree ? typed : r.code
+            const t = tree ? typed : r.code
             const L = look(w)
             return { key: key, label: (L.glyph ? L.glyph + "  " : "") + L.name + "  ·  " + L.title + (L.mark ? "  " + L.mark : ""),
                      icons: L.glyph ? [] : [w.icon],
-                     hit: t !== "" && k.indexOf(t) === 0, dim: t !== "" && k.indexOf(t) !== 0, act: { win: w.id } }
+                     hit: t !== "" && key.indexOf(t) === 0, dim: t !== "" && key.indexOf(t) !== 0, act: { win: w.id } }
         }
         if (r.cmd !== null) {
             const p = Nav.parse(r.cmd)
@@ -130,10 +130,10 @@ Scope {
             for (const row of rows) {
                 const s = row[0].letter, part = []
                 for (const c of row) {
-                    const hits = c.wins.map((w, i) => matches(w, c) ? winRow(w, i, c.wins.length, s, c.number) : null)
+                    const hits = c.wins.map((w, i) => matches(w, c) ? winRow(w, i, s, c.number) : null)
                                        .filter(x => x)
                     if (!hits.length) continue
-                    part.push({ head: true, key: "  w" + Nav.KEYS[c.number - 1],
+                    part.push({ head: true, key: "  " + Nav.KEYS[c.number - 1],
                                 label: (c.visible ? "● " : "") + (c.number % 10) + " " + c.area, act: { go: c } }, ...hits)
                 }
                 if (part.length) out.push({ head: true, key: s.toUpperCase(), label: NAMES[s] + "  ·  " + row[0].output }, ...part)
@@ -141,19 +141,8 @@ Scope {
             if (!out.length) out.push({ head: true, key: "", label: "keine Treffer fuer \"" + treeFilter + "\"" })
             return out
         }
-        if (r.wait === "b")
-            return rows.map(row => {
-                const n = row.reduce((a, c) => a + c.wins.length, 0), v = row.find(c => c.visible) || {}
-                return { key: row[0].letter, label: NAMES[row[0].letter] + "  ·  " + n + " Fenster  ·  sichtbar "
-                         + (v.number % 10) + " " + (v.area || ""), act: { output: row[0].output } }
-            })
-        if (r.wait === "w")
-            return (rows.find(row => row[0].letter === target) || []).map(c => ({
-                key: Nav.KEYS[c.number - 1], label: (c.visible ? "● " : "") + (c.number % 10) + " " + c.area
-                + (c.wins.length ? "  ·  " + c.wins.length : ""), icons: c.wins.slice(0, 6).map(w => w.icon),
-                dim: !c.wins.length, act: { go: c } }))
         if (r.screen || r.ws)
-            return list.map((w, i) => winRow(w, i, list.length, target, r.ws || visibleNr(target)))
+            return list.map((w, i) => winRow(w, i, target, r.ws || visibleNr(target)))
         return []
     }
 
@@ -189,14 +178,8 @@ Scope {
     }
     function key(ch) {
         if (typed === "" && ch === "m" && !con) return reject()  // nichts zum Verschieben
-        const next = Nav.decode(typed + ch, ctx)
-        const a = Nav.act(r, next)
-        if (a === "error") return reject()
-        typed += ch
-        const t = next.screen || here
-        if (a === "go") apply("go", cell(t, next.ws))
-        else if (a === "move") { apply("move", cell(t, next.ws)); hide() }
-        else if (a === "win") focusWin((ctx.wins(t, next.ws)[next.win] || {}).id)
+        if (Nav.decode(typed + ch, ctx).error) return reject()
+        typed += ch                                          // ausgefuehrt wird erst mit Enter
     }
     function enter() {
         if (tree && treeFilter && typed === "") {            // Suche: Enter = erster Treffer
@@ -205,10 +188,12 @@ Scope {
         }
         const e = Nav.enter(r)
         if (e === "win") focusWin((list[r.match] || {}).id)
+        else if (e === "go") { apply("go", cell(target, r.ws)); hide() }
         else if (e === "output") { I3.dispatch(`focus output ${JSON.stringify(cell(target, 0).output)}`); hide() }
-        else if (e === "move") { apply("move", cell(target, 0)); hide() }
+        else if (e === "move") { apply("move", cell(target, r.ws)); hide() }
         else if (e === "cmd") run(Nav.parse(r.cmd))
         else if (e === "close") hide()
+        else reject()
     }
     function run(p) {
         const c = cmds[p.name]
@@ -248,7 +233,7 @@ Scope {
         else if (name === "Backtab") tab(-1)
         else if (name === "Escape") hide()
         else if (name === "Return") enter()
-        else if (name === "Backspace") typed = Nav.back(typed, ctx)
+        else if (name === "Backspace") typed = r.cmd !== null ? typed.slice(0, -1) : Nav.back(typed)
         else if (text && text.length === 1) {
             if (r.cmd !== null) typed += text          // Befehl: Text so, wie getippt
             else key(text.toLowerCase())
@@ -564,9 +549,7 @@ Scope {
                 }
                 Text {
                     anchors { right: parent.right; rightMargin: 9; verticalCenter: parent.verticalCenter }
-                    text: cb.r.wait === "b" ? "Bildschirm" : cb.r.wait === "w" ? "Workspace"
-                        : cb.r.code && cb.r.win < 0 && cb.r.match >= 0 ? "Enter = Fenster " + (cb.r.match + 1)
-                        : cb.r.screen && !cb.r.ws && cb.r.cmd === null ? "Enter = " + (cb.r.move ? "verschieben" : "Bildschirm")
+                    text: cb.typed && cb.r.cmd === null ? Nav.label(cb.r)
                         : cb.tree && !cb.typed && cb.treeFilter ? "Suche: " + cb.treeFilter + " · Enter = erster"
                         : cb.tree && !cb.typed ? "Enter / Esc = zu" : ""
                     font { family: cb.shell.font; pixelSize: 10 }
@@ -586,7 +569,7 @@ Scope {
                 }
             }
 
-            // Liste: Befehle, #all-Baum, Bildschirme, Workspaces oder Fenster dort
+            // Liste: Befehle, #all-Baum oder die Fenster am getippten Ziel
             Rectangle {
                 visible: cb.drop.length > 0
                 width: cb.inputW
