@@ -108,14 +108,15 @@ ein neuer Tag (`HL2-v2`). Alle Themes liegen linear auf `master`, Commits heisse
 | `HL2-v36` | wie v35, Befehle mit `#` statt `:` (`#all`, `#clear`; `#` ohne Shift). |
 | `HL2-v37` | wie v36, mehr Befehle: `#split` (alle / `a,s` als geteilter Tab / `> ziel`), `#reset`, `#close`, `#only`, `#full`, `#back`, `#open`, `#park`/`#unpark`, `#note`, `#ticket`; geteilte Tabs unterstrichen; Befehls-Skripte bekommen `BAR_CONTEXT`. |
 | `HL2-v38` | wie v37, Tab / Shift+Tab ergaenzt Befehlsnamen in der Befehlsleiste. |
-| `HL2-v39` | wie v38, Claude-/Codex-Sessions in der Befehlsleiste als `✳ Claude` / `◎ Codex` mit Session-Titel und Status (aus `agents.json`), `#all text` sucht im Baum. **Aktueller Standard** fuer neue Themes |
+| `HL2-v39` | wie v38, Claude-/Codex-Sessions in der Befehlsleiste als `✳ Claude` / `◎ Codex` mit Session-Titel und Status (aus `agents.json`), `#all text` sucht im Baum. |
+| `HL2-v40` | wie v39, Caps Lock ist zweite Super-Taste statt Escape (`xkb_options caps:super`). **Aktueller Standard** fuer neue Themes |
 
 Welcher Tag gerade live ist: `theme.sh current` (steht in
 `~/.local/state/wm-theme`; ohne die Datei gilt der Tag auf HEAD).
 
 ## Standard-Bedienung (gilt fuer jedes neue Theme)
 
-Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v39` (Vorschau,
+Seit `HL2-v4` ist die Bedienung fest, ergaenzt in `HL2-v5` bis `HL2-v40` (Vorschau,
 Zwischenablage, Konsole, Pickup-Popups, Workspace-Nummern und Fensterzahl in waybar,
 Ticket-Board, Navigator, Befehlsleiste). Alles in dieser Liste gilt fuer
 **jedes** neue Theme, nicht nur fuer HL2: es aendert nur den **Look**
@@ -462,7 +463,7 @@ Skills: `theme-erstellen` (neues Theme bauen und taggen), `theme-switch`
   `console.py dump` holt sie danach nach `profile.json`. Nur `--profile`
   (lang) wirkt, `-p` erkennt die QML-Seite nicht.
 - Quickshell ist **selbst gebaut** (`~/.cache/build/quickshell`, `cmake -GNinja -B build -DCMAKE_INSTALL_PREFIX=~/.local -DCRASH_HANDLER=OFF -DSERVICE_PIPEWIRE=OFF -DSERVICE_PAM=OFF -DSERVICE_POLKIT=OFF -DX11=OFF -DHYPRLAND=OFF -DSCREENCOPY=OFF`, dann `cmake --build build && cmake --install build`). Nutzt private Qt-APIs: nach jedem Qt-Update aus apt **neu bauen**, sonst Absturz. Build-Pakete: `qt6-{base,declarative,shadertools,svg,wayland}-dev` (+ `-private-dev`), `spirv-tools libcli11-dev ninja-build libjemalloc-dev qml6-module-qtquick-effects`.
-- Mod-Taste ist Super; Richtungen `j k l ö` (i3-Stil), aber `Super+j/k` = Bildschirm wechseln (nur mit Shift = verschieben), Caps = Escape, Layout `de`.
+- Mod-Taste ist Super; Richtungen `j k l ö` (i3-Stil), aber `Super+j/k` = Bildschirm wechseln (nur mit Shift = verschieben), Caps = zweite Super-Taste (`caps:super`, bis HL2-v39 Escape), Layout `de`.
 - `workspace_layout tabbed` gilt nur fuer **neu angelegte** Workspaces. Alte
   (oder nach `Super+h/v/e`) oeffnen Apps wieder nebeneinander: `Super+w`.
 - eww nie mehrfach gleichzeitig starten: zwei Starts = zwei Daemons, einer

@@ -19,7 +19,8 @@ for_window [all] title_format " "
 # Block laeuft jede Tastatur auf us.
 input type:keyboard {
     xkb_layout de
-    xkb_options caps:escape
+    # Caps = zweite Super-Taste (neben Win), Escape nur noch auf Esc
+    xkb_options caps:super
 }
 
 input type:touchpad {
